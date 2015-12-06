@@ -1,0 +1,22 @@
+Package: bayesmeta
+Type: Package
+Title: Bayesian Random-Effects Meta-Analysis
+Version: 1.0
+Date: 2015-12-06
+Authors@R: c(person("Christian", "Roever", role=c("aut","cre"), 
+                    email="christian.roever@med.uni-goettingen.de"),
+             person("Tim", "Friede", role="ctb",
+                    email="tim.friede@med.uni-goettingen.de"),
+             person("Beat", "Neuenschwander", role="ctb",
+                    email="beat.neuenschwander@novartis.com"),
+             person("Simon", "Wandel", role="ctb",
+                    email="simon.wandel@novartis.com"))
+Author: Christian Roever [aut, cre], Tim Friede [ctb], Beat Neuenschwander [ctb], Simon Wandel [ctb]
+Maintainer: Christian Roever <christian.roever@med.uni-goettingen.de>
+Suggests: metafor, compute.es
+Description: A collection of functions allowing to derive the posterior distribution of the two parameters in a random-effects meta-analysis, and providing functionality to evaluate joint and marginal posterior probability distributions, predictive distributions, etc.
+License: GPL (>= 2)
+Packaged: 2015-12-06 14:09:59 UTC; christian
+NeedsCompilation: no
+Repository: CRAN
+Date/Publication: 2015-12-06 22:18:46
