@@ -47,7 +47,8 @@
       \item \code{"DuMouchel"}: the DuMouchel prior
       \item \code{"BergerDeely"}: the prior due to Berger and Deely (1988).
     }
-    The default is \code{"uniform"}.
+    The default is \code{"uniform"} (which should be used with caution;
+    see remarks below).
 }
   \item{mu.prior}{
     the mean and standard deviation of the normal prior distribution for

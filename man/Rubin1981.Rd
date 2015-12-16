@@ -8,7 +8,7 @@
   \tabular{lll}{
     \bold{school} \tab \code{character} \tab school identifier \cr
     \bold{effect} \tab \code{numeric}   \tab effect estimate \cr
-    \bold{stdev}  \tab \code{numeric}   \tab associated standard error 
+    \bold{stderr} \tab \code{numeric}   \tab associated standard error 
   }
 }
 \details{
