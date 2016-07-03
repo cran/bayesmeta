@@ -59,7 +59,7 @@
   2007.}
 \examples{
 \dontrun{
-data(SidikJonkman2007)
+data("SidikJonkman2007")
 # add log-odds-ratios and corresponding standard errors:
 sj <- SidikJonkman2007
 sj <- cbind(sj, "log.or"=log(sj[,"lihr.events"])-log(sj[,"lihr.cases"]-sj[,"lihr.events"])

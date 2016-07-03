@@ -18,10 +18,11 @@
   }
 }
 \details{
-  Results from a genetic association study were combined with data from
-  two additional studies in order to determine the combined evidence
-  regarding the association of a particular genetic marker (CCR5)
-  with juvenile idiopathic arthritis (JIA).
+  Results from a genetic association study (Hinks et al, 2010) were
+  combined with data from two additional studies (Prahalad et al., 2006;
+  Lindner et al., 2007) in order to determine the combined evidence
+  regarding the association of a particular genetic marker (CCR5) with
+  juvenile idiopathic arthritis (JIA).
 }
 \source{
   A. Hinks et al.
@@ -80,8 +81,14 @@ cbind("tau"=tau,
       "I2" =bma01$I2(tau=tau))
 
 # show effect estimates:
-rbind("half-normal(1.0)" = bma01$summary[,"mu"],
-      "half-normal(0.5)" = bma02$summary[,"mu"])
+round(rbind("half-normal(1.0)" = bma01$summary[,"mu"],
+            "half-normal(0.5)" = bma02$summary[,"mu"]), 5)
+
+# show forest plot:
+forest(bma02)
+# show the "shrunk" estimate of the Hinks (2006) study in comparison:
+points(bma02$theta["median","Hinks (2006)"], -3.2, pch=22, col="red")
+lines(bma02$theta[c("95% lower","95% upper"),"Hinks (2006)"], rep(-3.2,2), col="red")
 }
 }
 \keyword{datasets}

@@ -43,7 +43,7 @@
 }
 \examples{
 \dontrun{
-data(Rubin1981)
+data("Rubin1981")
 # analysis using weakly informative half-Cauchy prior
 # (may take a few seconds to compute!):
 schools <- bayesmeta(y=Rubin1981[,"effect"], sigma=Rubin1981[,"stderr"],
@@ -52,6 +52,9 @@ schools <- bayesmeta(y=Rubin1981[,"effect"], sigma=Rubin1981[,"stderr"],
 
 # show summary:
 summary(schools)
+
+# show shrinkage effect for 8 individual estimates:
+schools$theta
 }
 }
 \keyword{datasets}

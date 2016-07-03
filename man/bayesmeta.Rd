@@ -45,7 +45,8 @@
       \item \code{"Jeffreys"}: the Jeffreys prior for \eqn{\tau}
       \item \code{"shrinkage"}: the \sQuote{uniform shrinkage} prior
       \item \code{"DuMouchel"}: the DuMouchel prior
-      \item \code{"BergerDeely"}: the prior due to Berger and Deely (1988).
+      \item \code{"BergerDeely"}: the prior due to Berger and Deely (1988)
+      \item \code{"I2"}: a uniform prior on the \sQuote{relative heterogeneity} \eqn{I^2}.
     }
     The default is \code{"uniform"} (which should be used with caution;
     see remarks below).
@@ -114,7 +115,10 @@
   then be treated numerically. As the \emph{conditional} posterior
   \eqn{p(\mu|\tau,y)} is a normal distribution, inference on the
   remaining joint (\eqn{p(\mu,\tau|y)}) or marginal (\eqn{p(\mu|y)})
-  posterior may be approached numerically as well.
+  posterior may be approached numerically as well. Accuracy of the
+  computations is determined by the \code{delta} (maximum divergence
+  \eqn{\delta}) and \code{epsilon} (tail probability \eqn{\epsilon})
+  parameters (Roever and Friede, 2016).
 
   What constitutes a sensible prior for both \eqn{\mu} and \eqn{\tau}
   depends (as usual) very much on the context.  One might argue that an
@@ -126,28 +130,42 @@
   considering the Fisher information element corresponding to the
   heterogeneity \eqn{\tau} only. This prior also constitutes the
   \emph{Berger/Bernardo reference prior} for the present problem (Bodnar
-  et al. (2015)).
-  The \emph{uniform shrinkage} and \emph{DuMouchel} priors are described
-  in Spiegelhalter et al. (2004, Sec. 5.7.3).
+  et al., 2016).  The \emph{uniform shrinkage} and \emph{DuMouchel}
+  priors are described in Spiegelhalter et al. (2004, Sec. 5.7.3).
   Potential candidates for informative (or weakly informative)
   heterogeneity priors may include the \emph{exponential}, \emph{Lomax},
   \emph{half-normal}, \emph{half-Student-\eqn{t}} or \emph{half-Cauchy}
-  distributions. A sensible informative prior might also be a
-  \emph{log-normal} or a \emph{scaled inverse \eqn{\chi^2}}
-  distribution. The procedure is also able to handle improper priors
-  (and does so by default), but of course the usual care must be taken
-  here, as the resulting posterior \emph{may} or \emph{may not} be a
-  proper probability distribution. 
+  distributions; we recommend the use of heavy-tailed prior
+  distributions if in case of prior/data conflict the prior is supposed
+  to be discounted (O'Hagan and Pericchi, 2012).  A sensible informative
+  prior might also be a \emph{log-normal} or a \emph{scaled inverse
+  \eqn{\chi^2}} distribution. The procedure is also able to handle
+  improper priors (and does so by default), but of course the usual care
+  must be taken here, as the resulting posterior \emph{may} or \emph{may
+  not} be a proper probability distribution.
   
-  Note that a range of different endpoints may be treated
+  Note that a wide range of different types of endpoints may be treated
   on a continuous scale after an appropriate transformation; for
   example, count data may be handled by considering corresponding
-  logarithmic odds ratios. A range of such transformations are
-  implemented in the \pkg{metafor} package's
-  \code{\link[metafor]{escalc}} function and may be directly used as an
-  input to the \code{bayesmeta()} function;  see also the example below.
-  Alternatively, the \pkg{compute.es} package also provides a range of
-  effect sizes to be computed from a range of different data types.
+  logarithmic odds ratios. A many such transformations are implemented
+  in the \pkg{metafor} package's \code{\link[metafor]{escalc}} function
+  and may be directly used as an input to the \code{bayesmeta()}
+  function; see also the example below.  Alternatively, the
+  \pkg{compute.es} package also provides a range of effect sizes to be
+  computed from different data types.
+
+  The \code{bayesmeta()} function eventually generates some basic
+  summary statistics, but most importantly it provides an object
+  containing a range of functions allowing to evaluate posterior
+  distributions; this includes joint and marginal posteriors, prior and
+  likelihood, predictive distributions, densities, cumulative
+  distributions and quantile functions. For more details see also the
+  documentation and examples below. Use of the \code{individual=TRUE}
+  argument allows to also access posteriors of study-specific effects
+  (\eqn{\theta_i}{theta[i]}), facilitating a
+  \emph{meta-analytic-predictive (MAP)} approach (Neuenschwander et al.,
+  2010).
+  
 }
 \value{
   A list of class \code{bayesmeta} containing the following elements:
@@ -166,29 +184,43 @@
   \item{likelihood}{a \code{function(tau=NA, mu=NA, log=FALSE)} of two
     parameters, \code{tau} and/or \code{mu}, returning either the joint or
     marginal likelihood, depending on which parameter(s) is/are provided.} 
-  \item{dposterior}{a \code{function(tau=NA, mu=NA, theta=mu, log=FALSE, predict=FALSE)}
+  \item{dposterior}{a \code{function(tau=NA, mu=NA, theta=mu, log=FALSE, predict=FALSE, individual=FALSE)}
     of two parameters, \code{tau} and/or \code{mu},
     returning either the joint or marginal posterior probability density,
     depending on which parameter(s) is/are provided. Using the argument
     \code{predict=TRUE} yields the \emph{posterior predictive
-    distribution} for \eqn{\theta}.}
-  \item{pposterior}{a \code{function(tau=NA, mu=NA, theta=mu, predict=FALSE)} of
-    one parameter (either \code{tau} or \code{mu}) returning the
+    distribution} for \eqn{\theta}. Using the \code{individual}
+    argument, you can request individual effects'
+    (\eqn{\theta_i}{theta[i]}) posterior distributions. May be an integer
+    number (\code{1,...,k}) giving the index, or a character string giving
+    the label.}
+  \item{pposterior}{a \code{function(tau=NA, mu=NA, theta=mu, predict=FALSE, individual=FALSE)} 
+    of one parameter (either \code{tau} or \code{mu}) returning the
     corresponding marginal posterior cumulative distribution
     function. Using the argument \code{predict=TRUE} yields the posterior
-    predictive distribution for \eqn{\theta}.} 
-  \item{qposterior}{a \code{function(tau.p=NA, mu.p=NA, theta.p=mu.p, predict=FALSE)}
+    predictive distribution for \eqn{\theta}. Using the \code{individual}
+    argument, you can request individual effects'
+    (\eqn{\theta_i}{theta[i]}) posterior distributions. May be an integer
+    number (\code{1,...,k}) giving the index, or a character string giving
+    the label.} 
+  \item{qposterior}{a \code{function(tau.p=NA, mu.p=NA, theta.p=mu.p, predict=FALSE, individual=FALSE)}
     of one parameter (either \code{tau.p} or \code{mu.p}) returning the
     corresponding marginal posterior quantile function. Using the argument
     \code{predict=TRUE} yields the posterior predictive distribution for
-    \eqn{\theta}.}
-  \item{rposterior}{a \code{function(n=1, predict=FALSE)} generating
+    \eqn{\theta}. Using the \code{individual} argument, you can request
+    individual effects' (\eqn{\theta_i}{theta[i]}) posterior
+    distributions. May be an integer number (\code{1,...,k}) giving the
+    index, or a character string giving the label.}
+  \item{rposterior}{a \code{function(n=1, predict=FALSE, individual=FALSE)} generating
     \code{n} independent random draws from the (2-dimensional) posterior
     distribution. Works via inversion method, so it is rather slow. Using
     the argument \code{predict=TRUE} yields the posterior predictive
-    distribution for \eqn{\theta}.}
-  \item{post.interval}{a
-    \code{function(tau.level=NA, mu.level=NA, theta.level=mu.level, method=c("shortest","central","evidentiary"), predict=FALSE)}
+    distribution for \eqn{\theta}. Using the \code{individual}
+    argument, you can request individual effects'
+    (\eqn{\theta_i}{theta[i]}) posterior distributions. May be an integer
+    number (\code{1,...,k}) giving the index, or a character string giving
+    the label.}
+  \item{post.interval}{a \code{function(tau.level=NA, mu.level=NA, theta.level=mu.level, method=c("shortest","central","evidentiary"), predict=FALSE, individual=FALSE)}
     returning a credibility interval, depending on which of the two
     parameters is provided (either \code{tau.level} or
     \code{mu.level}). The additional parameter \code{method} may be used
@@ -198,12 +230,20 @@
     \code{=} \code{"evidentiary"} returns an evidentiary interval
     (Shalloway, 2014); the former is the default option. Using the
     argument \code{predict=TRUE} yields a posterior predictive interval
-    for \eqn{\theta}.} 
-  \item{cond.moment}{a \code{function(tau, predict=FALSE, simplify=TRUE)}
+    for \eqn{\theta}. Using the \code{individual}
+    argument, you can request individual effects'
+    (\eqn{\theta_i}{theta[i]}) posterior distributions. May be an integer
+    number (\code{1,...,k}) giving the index, or a character string giving
+    the label.} 
+  \item{cond.moment}{a \code{function(tau, predict=FALSE, individual=FALSE, simplify=TRUE)}
     returning conditional moments (mean and standard deviation) of
     \eqn{\mu} as a function of \eqn{\tau}. Using the argument
     \code{predict=TRUE} yields (conditional) posterior predictive
-    moments for \eqn{\theta}.}
+    moments for \eqn{\theta}. Using the \code{individual}
+    argument, you can request individual effects'
+    (\eqn{\theta_i}{theta[i]}) posterior distributions. May be an integer
+    number (\code{1,...,k}) giving the index, or a character string giving
+    the label.}
   \item{I2}{a \code{function(tau)} returning the \sQuote{relative} heterogeneity
     \eqn{I^2} as a function of \eqn{\tau}.}
   \item{summary}{a \code{matrix} listing some summary statistics, namely
@@ -215,14 +255,22 @@
     estimates of \eqn{(\tau,\mu)}.}
   \item{MAP}{a \code{matrix} giving joint and marginal
     maximum-a-posteriori estimates of \eqn{(\tau,\mu)}.}
-%  \item{theta}{a \code{matrix} giving the \sQuote{shrinkage estimates},
-%    i.e, summary statistics of the trial-specific means
-%    \eqn{\theta_i}{theta[i]}.} 
+  \item{theta}{a \code{matrix} giving the \sQuote{shrinkage estimates},
+    i.e, summary statistics of the trial-specific means
+    \eqn{\theta_i}{theta[i]}.} 
+  \item{marginal.likelihood}{the marginal likelihood of the data (this 
+    number is only computed if proper effect and heterogeneity priors 
+    are specified).}
   \item{support}{a \code{matrix} giving the \eqn{\tau} support points used
     internally in the grid approximation, along with their associated
     weights, conditional mean and standard deviation of \eqn{\mu},
     and the standard deviation of the (conditional) predictive
     distribution of \eqn{\theta}.}
+  \item{delta, epsilon}{the \sQuote{\code{delta}} and \sQuote{\code{epsilon}}
+    input parameter determining numerical accuracy.}
+  \item{rel.tol.integrate, abs.tol.integrate}{the input parameters
+    determining the numerical accuracy of the internally used
+    \code{\link{integrate}()} function.}
   \item{call}{an object of class \code{call} giving the
     function call that generated the \code{bayesmeta} object.}
   \item{init.time}{the computation time (in seconds) used to generate
@@ -233,14 +281,23 @@
   namely, the accuracy of numerical integration as specified through the
   \code{rel.tol.integrate} and \code{abs.tol.integrate} arguments, and
   the accuracy of the grid approximation used for integrating out the
-  heterogeneity as specified through the \code{delta}  and
-  \code{epsilon} arguments. As these may also heavily impact on the
-  computation time, be careful when changing these from their default
-  values.
+  heterogeneity as specified through the \code{delta} and \code{epsilon}
+  arguments (Roever and Friede, 2016). As these may also heavily impact
+  on the computation time, be careful when changing these from their
+  default values. You can monitor the effect of different settings by
+  checking the number and range of support points returned in the
+  \code{$support} element.
 }
 \references{
-  C. Roever et al. (2015). Bayesian random-effects meta-analysis. (in
-  preparation).
+  C. Roever et al. Bayesian random-effects meta-analysis. (in
+  preparation), 2016.
+
+  C. Roever, T. Friede.
+  Discrete approximation of a mixture distribution via restricted
+  divergence. 
+  \emph{\href{http://arxiv.org/abs/1602.04060}{arXiv preprint
+      1602.04060}},
+  2016.
 
   J.O. Berger, J. Deely.
   \href{http://dx.doi.org/10.1080/01621459.1988.10478606}{A Bayesian
@@ -251,7 +308,7 @@
   O. Bodnar, A. Link, C. Elster.
   \href{http://dx.doi.org/10.1214/14-BA933}{Objective Bayesian inference
   for a generalized marginal random effects model}. \emph{Bayesian
-  Analysis}, 2015.
+  Analysis}, \bold{11}(1):25-45, 2016.
 
   A. Gelman, J.B. Carlin, H.S. Stern, D.B. Rubin. \emph{Bayesian data
   analysis}. Chapman & Hall / CRC, Boca Raton, 1997.
@@ -264,6 +321,11 @@
 
   L.V. Hedges, I. Olkin. \emph{Statistical methods for meta-analysis}.
   Academic Press, San Diego, 1985
+
+  B. Neuenschwander, G. Capkun-Niggli, M. Branson, D.J. Spiegelhalter.
+  \href{http://dx.doi.org/10.1177/1740774509356002}{Summarizing
+  historical information on controls in clinical
+  trials}. \emph{Trials}. \bold{7}(1):5-18, 2010.
 
   A. O'Hagan, L. Pericchi.
   \href{http://dx.doi.org/10.1214/11-BJPS164}{Bayesian heavy-tailed
@@ -295,7 +357,7 @@
 \examples{
 ########################################
 # example data by Snedecor and Cochran:
-data(SnedecorCochran)
+data("SnedecorCochran")
 
 \dontrun{
 # analysis using improper uniform prior
@@ -347,7 +409,7 @@ ma01$post.interval(tau.level=0.9, method="shortest")}
 
 #####################################
 # example data by Sidik and Jonkman:
-data(SidikJonkman2007)
+data("SidikJonkman2007")
 # add log-odds-ratios and corresponding standard errors:
 sj <- SidikJonkman2007
 sj <- cbind(sj, "log.or"=log(sj[,"lihr.events"])-log(sj[,"lihr.cases"]-sj[,"lihr.events"])
@@ -406,7 +468,7 @@ abline(v=sj.estimates, col="red", lty="dashed")}
 
 ###########################
 # example data by Cochran:
-data(Cochran1954)
+data("Cochran1954")
 
 \dontrun{
 # analysis using improper uniform prior
@@ -433,6 +495,37 @@ cm <- ma04$cond.moment(tau=c(0,tau))
 mu <- seq(130,200, le=200)
 lines(mu, dnorm(mu, mean=cm[1,"mean"], sd=cm[1,"sd"]), col="orange", lwd=2)
 lines(mu, dnorm(mu, mean=cm[2,"mean"], sd=cm[2,"sd"]), col="orange", lwd=2)
+
+# determine a range of tau values:
+tau <- seq(0, ma04$qposterior(tau=0.99), length=100)
+# compute conditional posterior moments:
+cm.overall <- ma04$cond.moment(tau=tau)
+# compute study-specific conditional posterior moments:
+cm.indiv <- ma04$cond.moment(tau=tau, individual=TRUE)
+# show forest plot along with conditional posterior means:
+par(mfrow=c(1,2))
+  plot(ma04, which=1, main="Cochran 1954 example")
+  matplot(tau, cm.indiv[,"mean",], type="l", lty="solid", col=1:ma04$k,
+          xlim=c(0,max(tau)*1.2), xlab=expression("heterogeneity "*tau),
+          ylab=expression("conditional posterior mean E["*mu[i]*"|"*list(tau, y, sigma)*"]"))
+  text(rep(max(tau)*1.01, ma04$k), cm.indiv[length(tau),"mean",],
+       ma04$label, col=1:ma04$k, adj=c(0,0.5))
+  lines(tau, cm.overall[,"mean"], lty="dashed", lwd=2)
+  text(max(tau)*1.01, cm.overall[length(tau),"mean"],
+       "overall", adj=c(0,0.5))
+par(mfrow=c(1,1))
+
+# show the individual effects' posterior distributions:
+theta <- seq(120, 240, le=300)
+plot(range(theta), c(0,0.1), type="n", xlab=expression(theta[i]), ylab="")
+for (i in 1:ma04$k) {
+  # draw estimate +/- uncertainty as a Gaussian:
+  lines(theta, dnorm(theta, mean=ma04$y[i], sd=ma04$sigma[i]), col=i+1, lty="dotted")
+  # draw effect's posterior distribution:
+  lines(theta, ma04$dposterior(theta=theta, indiv=i), col=i+1, lty="solid")
+}
+abline(h=0)
+legend(max(theta), 0.1, legend=ma04$label, col=(1:ma04$k)+1, pch=15, xjust=1, yjust=1)
 }
 }
 \keyword{ models }

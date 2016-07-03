@@ -71,9 +71,12 @@
   tacrolimus-basiliximab immunosuppression in pediatric liver
   transplantation: Clinical and pharmacoeconomic study in 50 children}.
   \emph{Liver Transplantation}, \bold{14}(4):469-477, 2008.}
+\seealso{
+  \code{\link{GoralczykEtAl2011}}.
+}
 \examples{
 \dontrun{
-data(CrinsEtAl2014)
+data("CrinsEtAl2014")
 # compute effect sizes (log odds ratios) from count data:
 if (require("metafor")) {
   crins.es <- escalc(measure="OR",

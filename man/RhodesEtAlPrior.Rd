@@ -130,7 +130,7 @@ RP$qprior(c(0.025,0.975))
 # load "metafor" package:
 require("metafor")
 # load data:
-data(dat.normand1999)
+data("dat.normand1999")
 # compute effect sizes (standardized mean differences):
 es <- escalc(measure="SMD", m1i=m1i, sd1i=sd1i, n1i=n1i,
              m2i=m2i, sd2i=sd2i, n2i=n2i,

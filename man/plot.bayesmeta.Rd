@@ -9,7 +9,7 @@
 }
 \usage{
   \method{plot}{bayesmeta}(x, main=deparse(substitute(x)),
-     which=1:4, prior=FALSE, bs=FALSE, ...) 
+     which=1:4, prior=FALSE, violin=FALSE, ...) 
 }
 \arguments{
   \item{x}{
@@ -25,8 +25,8 @@
     an indicator whether to also draw the prior density in marginal
     posterior density plots.
   }
-  \item{bs}{
-    an indicator whether to draw the forest plot as a \dQuote{battleship plot}.
+  \item{violin}{
+    an indicator whether to draw the forest plot as a \dQuote{violin plot}.
   }
   \item{\dots}{other graphical parameters.
   }
@@ -39,8 +39,8 @@
       a 95\% prediction interval (rectangle) for the effect \eqn{\mu}. The
       shown intervals for \eqn{\mu} are based on posterior medians and
       shortest credibility intervals (from \code{x$summary}).
-      If \code{bs=TRUE}, the forest plot is plotted as a
-      \dQuote{battleship plot}, i.e., via Gaussian densities for the
+      If \code{violin=TRUE}, the forest plot is plotted as a
+      \dQuote{violin plot}, i.e., via Gaussian densities for the
       estimates \eqn{y_i}{y[i]} (and their associated uncertainties),
       and the posterior densities for the effect \eqn{\mu}, and for the
       predictive distribution.
@@ -103,7 +103,7 @@
 \examples{
 \dontrun{
 # example data by Snedecor and Cochran:
-data(SnedecorCochran)
+data("SnedecorCochran")
 
 # analyze using a weakly informative prior
 # (may take a few seconds to compute!):
@@ -114,7 +114,7 @@ ma <- bayesmeta(y=SnedecorCochran[,"mean"], sigma=sqrt(SnedecorCochran[,"var"]),
 
 # show some plots:
 plot(ma, main="Snedecor/Cochran data", prior=TRUE)
-plot(ma, main="Snedecor/Cochran data", which=1, bs=TRUE)
+plot(ma, main="Snedecor/Cochran data", which=1, violin=TRUE)
 }
 }
 \keyword{ hplot }

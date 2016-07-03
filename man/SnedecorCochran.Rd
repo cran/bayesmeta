@@ -27,7 +27,7 @@
   Iowa State University Press, Ames, IA, USA, 6th edition, 1967.}
 \examples{
 \dontrun{
-data(SnedecorCochran)
+data("SnedecorCochran")
 
 # analyze using uniform prior:
 bma1 <- bayesmeta(y=SnedecorCochran[,"mean"],

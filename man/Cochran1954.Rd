@@ -4,7 +4,7 @@
 \title{Fly counts example data}
 \description{This data set gives average estimated counts of flies along
   with standard errors from 7 different observers.}
-\usage{data(Cochran1954)}
+\usage{data("Cochran1954")}
 \format{The data frame contains the following columns:
   \tabular{lll}{
     \bold{observer} \tab \code{character} \tab identifier \cr
@@ -32,7 +32,7 @@
     \emph{Biometrics}, \bold{10}(1):101-129, 1954.}
 \examples{
 \dontrun{
-data(Cochran1954)
+data("Cochran1954")
 # analysis using improper uniform prior
 # (may take a few seconds to compute!):
 bma <- bayesmeta(y=Cochran1954[,"mean"], sigma=sqrt(Cochran1954[,"se2"]),

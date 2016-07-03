@@ -118,7 +118,7 @@ abline(v=0, col="grey")
 
 #######################################################
 # illustrate proper/improper priors using example data:
-data(Rubin1981)
+data("Rubin1981")
 \dontrun{
 # analysis using improper uniform prior
 # (may take a few seconds to compute!):

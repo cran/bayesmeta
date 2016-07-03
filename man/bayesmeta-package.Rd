@@ -9,14 +9,14 @@
   posterior distribution of the two parameters in a random-effects
   meta-analysis, and providing functionality to evaluate joint and
   marginal posterior probability distributions, predictive
-  distributions, etc.
+  distributions, shrinkage effects, etc.
 }
 \details{
   \tabular{ll}{
     Package: \tab bayesmeta\cr
     Type:    \tab Package\cr
-    Version: \tab 1.1\cr
-    Date:    \tab 2015-12-18\cr
+    Version: \tab 1.2\cr
+    Date:    \tab 2016-07-03\cr
     License: \tab GPL (>=2)
   }
   The main functionality is provided by the \code{\link{bayesmeta}()}
@@ -29,13 +29,14 @@
 Christian Roever <christian.roever@med.uni-goettingen.de>
 }
 \references{
-  Roever, C. et al. (2015). Bayesian random-effects meta-analysis. (in preparation).
+  Roever, C. et al. Bayesian random-effects meta-analysis.
+  (in preparation), 2016.
 }
 \keyword{ models }
 \keyword{ package }
 \examples{
 # example data by Snedecor and Cochran:
-data(SnedecorCochran)
+data("SnedecorCochran")
 
 \dontrun{
 # analysis using improper uniform prior

@@ -30,7 +30,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                               mu.prior.sd  =mu.prior[2],
                               delta=0.01, epsilon=0.0001,
                               rel.tol.integrate=2*max(c(50*.Machine$double.eps, 0.5e-28)),
-                          abs.tol.integrate=rel.tol.integrate,...)
+                              abs.tol.integrate=rel.tol.integrate,...)
 {
   ptm <- proc.time()
   # some preliminary sanity checks:
@@ -47,15 +47,20 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   
   k <- length(y)
   if (is.null(labels))
-    labels <- as.character(1:k)
+    labels <- as.character(1:k)  
+  sigma2hat <- (k-1)*sum(1/sigma^2) / (sum(1/sigma^2)^2 - sum(1/sigma^4)) # Higgins/Thompson (2002), eqn. (9)
+
+  maxratio <- max(sigma)/min(sigma)
+  if (maxratio > 1000)
+    warning(paste0("Ratio of largest over smallest standard error (sigma) is ", sprintf("%.0f",maxratio), ". Extreme values may lead to computational problems."))
 
   if (is.character(tau.prior)) {
     tau.prior <- match.arg(tolower(tau.prior),
-                           c("uniform","jeffreys","shrinkage","dumouchel","bergerdeely"))
+                           c("uniform","jeffreys","shrinkage","dumouchel","bergerdeely","i2"))
     tau.prior <- c("uniform"="uniform", "jeffreys"="Jeffreys",
                    "shrinkage"="shrinkage", "dumouchel"="DuMouchel",
-                   "bergerdeely"="BergerDeely")[tau.prior]
-    stopifnot(is.element(tau.prior, c("uniform", "Jeffreys", "shrinkage", "DuMouchel", "BergerDeely")))
+                   "bergerdeely"="BergerDeely", "i2"="I2")[tau.prior]
+    stopifnot(is.element(tau.prior, c("uniform", "Jeffreys", "shrinkage", "DuMouchel", "BergerDeely", "I2")))
     if (tau.prior=="uniform") {  # uniform prior on tau:
       pdens <- function(t){d<-rep(1,length(t)); d[t<0]<-0; return(d)}
       attr(pdens, "bayesmeta.label") <- "uniform(min=0, max=Inf)"
@@ -66,6 +71,10 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       pdens <- function(t){return(apply(matrix(t,ncol=1),1,
                                         function(x){return(exp(log(x)-sum(log(sigma^2+x^2))/k))}))}
       attr(pdens, "bayesmeta.label") <- "Berger/Deely prior"
+    } else if (tau.prior=="I2") {  # uniform on I^2:
+      pdens <- function(t){return(apply(matrix(t,ncol=1),1,
+                                        function(x){return(2 * exp(log(sigma2hat)+log(x) - 2*log(sigma2hat+x^2)))}))}
+      attr(pdens, "bayesmeta.label") <- "uniform prior on I-squared"
     } else {
       # harmonic mean of squared standard errors:
       s02 <- k/sum(1/sigma^2)
@@ -152,10 +161,9 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     return(result)
   }
   
-  dposterior <- function(tau=NA, mu=NA, theta=mu, log=FALSE, predict=FALSE)#, individual=FALSE)
+  dposterior <- function(tau=NA, mu=NA, theta=mu, log=FALSE, predict=FALSE, individual=FALSE)
   # posterior density (marginal or joint)
   {
-    individual <- FALSE
     if (all(is.na(mu))) mu <- theta
     stopifnot(length(individual)==1)
     if (! (is.logical(individual) && (!individual))) {
@@ -231,10 +239,9 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   if ((!is.finite(integral)) || (integral <= 0))
     warning("failed integrating marginal posterior (tau)")
 
-  pposterior <- function(tau=NA, mu=NA, theta=mu, predict=FALSE)#, individual=FALSE)
+  pposterior <- function(tau=NA, mu=NA, theta=mu, predict=FALSE, individual=FALSE)
   # posterior cumulative distribution function (CDF) of tau
   {
-    individual <- FALSE
     if (all(is.na(mu))) mu <- theta
     stopifnot(length(individual)==1)
     if (! (is.logical(individual) && (!individual))) {
@@ -265,8 +272,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
         result <- NA
       }
       else if (indiv.logi) { # individual-effect distribution
-        #musigma <-   conditionalmoment(tau=support[,"tau"], individual=indiv.which)
-        musigma <-   conditionalmoment(tau=support[,"tau"])
+        musigma <-   conditionalmoment(tau=support[,"tau"], individual=indiv.which)
         cdf <- function(x)
         {
           p <- sum(pnorm(x, mean=musigma[,"mean"], sd=musigma[,"sd"]) * support[,"weight"])
@@ -291,10 +297,9 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     return(result)
   }
 
-  qposterior <- function(tau.p=NA, mu.p=NA, theta.p=mu.p, predict=FALSE)#, individual=FALSE)
+  qposterior <- function(tau.p=NA, mu.p=NA, theta.p=mu.p, predict=FALSE, individual=FALSE)
   # posterior quantile function of tau or mu
   {
-    individual <- FALSE
     if (all(is.na(mu.p))) mu.p <- theta.p
     stopifnot(length(individual)==1)
     if (! (is.logical(individual) && (!individual))) {
@@ -344,11 +349,9 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
           lower <- sumstats["mean","mu"] - sqrt(1/minp)*sumstats["sd","mu"]*1.1
           upper <- sumstats["mean","mu"] + sqrt(1/minp)*sumstats["sd","mu"]*1.1
         }
-        #while (pposterior(mu=lower,predict=predict,individual=individual) > minp)
-        while (pposterior(mu=lower,predict=predict) > minp)
+        while (pposterior(mu=lower,predict=predict,individual=individual) > minp)
             lower <- lower-sumstats["sd","mu"]
-        #while (pposterior(mu=upper,predict=predict,individual=individual) < (1-minp))
-        while (pposterior(mu=upper,predict=predict) < (1-minp))
+        while (pposterior(mu=upper,predict=predict,individual=individual) < (1-minp))
             upper <- upper+sumstats["sd","mu"]
       }
       qfun <- function(p)
@@ -358,9 +361,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
         else {
           if (p==1) quant <- Inf
           else
-            #quant <- uniroot(function(yy){return(pposterior(mu=yy,predict=predict,individual=individual)-p)},
-            #                 interval=c(lower,upper))$root
-            quant <- uniroot(function(yy){return(pposterior(mu=yy,predict=predict)-p)},
+            quant <- uniroot(function(yy){return(pposterior(mu=yy,predict=predict,individual=individual)-p)},
                              interval=c(lower,upper))$root
         }
         return(quant)
@@ -374,18 +375,16 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     return(result)
   }
 
-  rposterior <- function(n=1, predict=FALSE)#, individual=FALSE)
+  rposterior <- function(n=1, predict=FALSE, individual=FALSE)
   # posterior random number generation for tau and mu
   {
-    individual <- FALSE
     stopifnot(n>0, n==round(n), length(individual)==1)
     samp <- matrix(NA, nrow=n, ncol=2, dimnames=list(NULL,c("tau","mu")))
     u <- runif(n=n)
     samp[,"tau"] <- apply(matrix(u,ncol=1), 1, function(x){return(qposterior(tau.p=x))})
     cond.sample <- function(t)
     {
-      #cm <- conditionalmoment(t, predict=predict, individual=individual)
-      cm <- conditionalmoment(t, predict=predict)
+      cm <- conditionalmoment(t, predict=predict, individual=individual)
       return(rnorm(n=1, mean=cm[,"mean"], sd=cm[,"sd"]))
     }
     samp[,"mu"] <- apply(matrix(samp[,"tau"],ncol=1), 1, cond.sample)
@@ -394,10 +393,9 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
 
   post.interval <- function(tau.level=NA, mu.level=NA, theta.level=mu.level,
                             method=c("shortest","central","evidentiary"),
-                            predict=FALSE)#, individual=FALSE)
+                            predict=FALSE, individual=FALSE)
   # determine credibility interval for tau
   {
-    individual <- FALSE
     if (is.na(mu.level)) mu.level <- theta.level
     stopifnot((is.finite(tau.level) & ((tau.level>0) & (tau.level<1)))
               | (is.finite(mu.level) & ((mu.level>0) & (mu.level<1))))
@@ -444,24 +442,18 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     }
     else if (all(is.na(tau.level))) {  # CI for effect mu:
       if (method=="central")           # central interval
-        #result <- qposterior(mu.p=c((1-mu.level)/2, 1-(1-mu.level)/2), predict=predict, individual=individual)
-        result <- qposterior(mu.p=c((1-mu.level)/2, 1-(1-mu.level)/2), predict=predict)
+        result <- qposterior(mu.p=c((1-mu.level)/2, 1-(1-mu.level)/2), predict=predict, individual=individual)
       else if (method=="shortest") {   # shortest interval
         intwidth <- function(left)
         {
-          #pleft <- pposterior(mu=left, predict=predict, individual=individual)
-          pleft <- pposterior(mu=left, predict=predict)
-          #right <- qposterior(mu=mu.level+pleft, predict=predict, individual=individual)
-          right <- qposterior(mu=mu.level+pleft, predict=predict)
+          pleft <- pposterior(mu=left, predict=predict, individual=individual)
+          right <- qposterior(mu=mu.level+pleft, predict=predict, individual=individual)
           return(right-left)
         }
         opti <- optimize(intwidth,
-                         #lower=qposterior(mu=(1-mu.level)/50, predict=predict, individual=individual),
-                         lower=qposterior(mu=(1-mu.level)/50, predict=predict),
-                         #upper=qposterior(mu=1-mu.level, predict=predict, individual=individual))$minimum
-                         upper=qposterior(mu=1-mu.level, predict=predict))$minimum
-        #result <- c(opti, qposterior(mu=mu.level+pposterior(mu=opti, predict=predict, individual=individual), predict=predict, individual=individual))
-        result <- c(opti, qposterior(mu=mu.level+pposterior(mu=opti, predict=predict), predict=predict))
+                         lower=qposterior(mu=(1-mu.level)/50, predict=predict, individual=individual),
+                         upper=qposterior(mu=1-mu.level, predict=predict, individual=individual))$minimum
+        result <- c(opti, qposterior(mu=mu.level+pposterior(mu=opti, predict=predict, individual=individual), predict=predict, individual=individual))
       }
       else {                           # evidentiary interval (not yet implemented)
         warning("sorry, evidentiary credible intervals so far only implemented for heterogeneity parameter tau.")
@@ -475,14 +467,12 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     return(result)
   }
   
-  conditionalmoment <- function(tau, predict=FALSE, #individual=FALSE,
-                                simplify=TRUE)
+  conditionalmoment <- function(tau, predict=FALSE, individual=FALSE, simplify=TRUE)
   # compute conditional posterior moments (mean, sd) of mu for given value(s) of tau
   # if (predict==TRUE), moments of the /posterior predictive distribution/ are returned.
   # if (individual==TRUE), moments of the conditional posterior /of the study-specific effects/
   # (theta[i]) are returned.
   {
-    individual <- FALSE
     # interpret the "individual" argument, derive a "logical" and "numeric" component:
     if (all(is.logical(individual))) { #  (logical "individual" argument)
       indiv.logi  <- individual[1]
@@ -550,8 +540,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   # compute heterogeneity measure "I-squared" as a function of tau
   {
     I2 <- rep(NA, length(tau))
-    s2 <- (k-1)*sum(1/sigma^2) / (sum(1/sigma^2)^2 - sum(1/sigma^4))
-    I2[tau>=0] <- tau[tau>=0]^2 / (tau[tau>=0]^2 + s2)
+    I2[tau>=0] <- tau[tau>=0]^2 / (tau[tau>=0]^2 + sigma2hat)
     return(I2)
   }
 
@@ -573,18 +562,13 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       else { # evaluate divergence based also on (conditional) individual-study
              # and predictive mu posterior, and determine the maximum divergence:
         # determine array of ALL conditional moments:
-        #cm <- array(c(conditionalmoment(tau=c(tau1, tau2)),
-        #              conditionalmoment(tau=c(tau1, tau2), predict=TRUE),
-        #              conditionalmoment(tau=c(tau1, tau2), individual=TRUE)),
-        #            dim=c(2, 2, k+2))
         cm <- array(c(conditionalmoment(tau=c(tau1, tau2)),
-                      conditionalmoment(tau=c(tau1, tau2), predict=TRUE)),
-                    dim=c(2, 2, k+1))
+                      conditionalmoment(tau=c(tau1, tau2), predict=TRUE),
+                      conditionalmoment(tau=c(tau1, tau2), individual=TRUE)),
+                    dim=c(2, 2, k+2))
         # determine individual divergences and their maximum:
-        #div <- rep(NA, k+2)
-        div <- rep(NA, k+1)
-        #for (i in 1:(k+2))
-        for (i in 1:(k+1))
+        div <- rep(NA, k+2)
+        for (i in 1:(k+2))
           div[i] <- symKL(cm[1,1,i], cm[1,2,i], cm[2,1,i], cm[2,2,i])
         div <- max(div)
       }
@@ -640,6 +624,14 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       result[bin,"weight"] <- max(c(0.0, prob2-prob1))
       bin <- bin+1
     }
+    # re-normalize weights (if necessary):
+    sw <- sum(result[,"weight"])
+    if (sw <= 0) {
+      result[,"weight"] <- rep(1/nrow(result), nrow(result))
+      sw <- 1.0
+    }
+    if (sw != 1.0)
+      result[,"weight"] <- result[,"weight"] / sw
     return(result)
   }
 
@@ -648,6 +640,9 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   # compute set of tau support points & corresponding weights:
   support <- discretize(delta=delta, epsilon=epsilon, alldivs=ifelse(accelerate, FALSE, TRUE))
   rm(list=c("discretize"))
+  #if (nrow(support) <= 10)
+  #  warning(paste0("Discretization of heterogeneity parameter space yielded very few (only ",nrow(support),") support points.\n",
+  #                 "This *may* indicate numerical problems, e.g. due to a very narrow heterogeneity prior. Please double-check."))
   support <- cbind(support,
                    conditionalmoment(support[,"tau"]),
                    "sd.pred"=conditionalmoment(support[,"tau"],predict=TRUE)[,"sd"])
@@ -732,52 +727,87 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     rm(list=c("opti","maxi"))
   }
   
-  ## compute "shrinkage" estimates of theta[i]:
-  #shrink <- matrix(NA, nrow=8, ncol=k,
-  #                 dimnames=list(c("y","sigma","mode", "median", "mean","sd", "95% lower", "95% upper"),
-  #                               labels))
-  #shrink["y",] <- y
-  #shrink["sigma",] <- sigma
-  #if (all(is.finite(support)) & (!accelerate)) {
-  #  for (i in 1:k) {
-  #    musigma <- conditionalmoment(support[,"tau"], individual=i)
-  #    shrink["mean",i] <- sum(musigma[,"mean"] * support[,"weight"])
-  #    shrink["sd",i]   <- sqrt(sum(((musigma[,"mean"]-shrink["mean",i])^2 + musigma[,"sd"]^2) * support[,"weight"]))
-  #    shrink["median",i] <- qposterior(mu=0.5, individual=i)
-  #    shrink[c("95% lower", "95% upper"),i] <- post.interval(mu=0.95, individual=i)
-  #    maxi <- optimize(function(x){return(dposterior(mu=x, individual=i))},
-  #                     lower=qposterior(mu=0.1), upper=qposterior(mu=0.9), maximum=TRUE)
-  #    shrink["mode",i] <- maxi$maximum
-  #  }
-  #}
+  # compute "shrinkage" estimates of theta[i]:
+  shrink <- matrix(NA, nrow=8, ncol=k,
+                   dimnames=list(c("y","sigma","mode", "median", "mean","sd", "95% lower", "95% upper"),
+                                 labels))
+  shrink["y",] <- y
+  shrink["sigma",] <- sigma
+  if (all(is.finite(support)) & (!accelerate)) {
+    for (i in 1:k) {
+      musigma <- conditionalmoment(support[,"tau"], individual=i)
+      shrink["mean",i] <- sum(musigma[,"mean"] * support[,"weight"])
+      shrink["sd",i]   <- sqrt(sum(((musigma[,"mean"]-shrink["mean",i])^2 + musigma[,"sd"]^2) * support[,"weight"]))
+      shrink["median",i] <- qposterior(mu=0.5, individual=i)
+      shrink[c("95% lower", "95% upper"),i] <- post.interval(mu=0.95, individual=i)
+      maxi <- optimize(function(x){return(dposterior(mu=x, individual=i))},
+                       lower=qposterior(mu=0.1), upper=qposterior(mu=0.9), maximum=TRUE)
+      shrink["mode",i] <- maxi$maximum
+    }
+  }
+  
+  # compute marginal likelihood:
+  marglik <- NA
+  # check for proper effect prior:
+  if (is.finite(mu.prior.mean) 
+      && is.finite(mu.prior.sd)
+      && (mu.prior.sd > 0)) {
+    # check for proper heterogeneity prior:
+    prior.int <- integrate(function(t){return(dprior(tau=t))},
+                           lower=0, upper=Inf,
+                           rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate,
+                           stop.on.error=FALSE)
+    if ((prior.int$message == "OK")
+        && (abs(prior.int$value - 1.0) <= prior.int$abs.error)) {
+      marglik.int <- integrate(function(t){return(likelihood(tau=t)*dprior(tau=t))},
+                               rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate,
+                               lower=0, upper=Inf)
+      if (marglik.int$message == "OK") {
+        marglik <- marglik.int$value
+      } else {
+        attr(marglik, "NA.reason") <- "failed computing marginal likelihood"
+      }
+      rm("marglik.int")
+    } else {
+      attr(marglik, "NA.reason") <- "improper heterogeneity prior"
+    }
+    rm("prior.int")
+  } else {
+    attr(marglik, "NA.reason") <- "improper effect prior"
+  }
   ptm <- proc.time()[1] - ptm[1]
   
   muprior <- c(mu.prior.mean, mu.prior.sd)
   names(muprior) <- c("mean","sd")
   
   # assemble eventual result to be returned:
-  result <- list("y"             = y,
-                 "sigma"         = sigma,
-                 "labels"        = labels,
-                 "k"             = k,
-                 "tau.prior"     = tau.prior,
-                 "mu.prior"      = muprior,
-                 "dprior"        = dprior,
-                 "likelihood"    = likelihood,
-                 "dposterior"    = dposterior,
-                 "pposterior"    = pposterior,
-                 "qposterior"    = qposterior,
-                 "rposterior"    = rposterior,
-                 "post.interval" = post.interval,
-                 "cond.moment"   = conditionalmoment,
-                 "I2"            = ISquared,
-                 "summary"       = sumstats,
-                 "ML"            = ml.estimate,
-                 "MAP"           = map.estimate,
-                 #"theta"         = shrink,
-                 "support"       = support,
-                 "call"          = match.call(expand.dots=FALSE),
-                 "init.time"     = c("seconds"=unname(ptm)))
+  result <- list("y"                   = y,
+                 "sigma"               = sigma,
+                 "labels"              = labels,
+                 "k"                   = k,
+                 "tau.prior"           = tau.prior,
+                 "mu.prior"            = muprior,
+                 "dprior"              = dprior,
+                 "likelihood"          = likelihood,
+                 "dposterior"          = dposterior,
+                 "pposterior"          = pposterior,
+                 "qposterior"          = qposterior,
+                 "rposterior"          = rposterior,
+                 "post.interval"       = post.interval,
+                 "cond.moment"         = conditionalmoment,
+                 "I2"                  = ISquared,
+                 "summary"             = sumstats,
+                 "ML"                  = ml.estimate,
+                 "MAP"                 = map.estimate,
+                 "theta"               = shrink,
+                 "marginal.likelihood" = marglik,
+                 "support"             = support,
+                 "delta"               = delta,
+                 "epsilon"             = epsilon,
+                 "rel.tol.integrate"   = rel.tol.integrate,
+                 "abs.tol.integrate"   = abs.tol.integrate,
+                 "call"                = match.call(expand.dots=FALSE),
+                 "init.time"           = c("seconds"=unname(ptm)))
   class(result) <- "bayesmeta"
   return(result)
 }
@@ -878,7 +908,7 @@ summary.bayesmeta <- function(object,...)
 
 
 plot.bayesmeta <- function(x, main=deparse(substitute(x)),
-                           which=1:4, prior=FALSE, bs=FALSE,...)
+                           which=1:4, prior=FALSE, violin=FALSE,...)
 # generate forest plot and joint and marginal density plots.
 {
   q975 <- qnorm(0.975)
@@ -886,7 +916,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
   murange <- x$qposterior(mu=c(0.005,0.995))
   murange <- murange + c(-1,1)*diff(murange)*0.05
 
-  forestplot <- function(x, main="", battleship=bs)
+  forestplot <- function(x, main="", violin=violin)
   {
     # determine x-axis range:
     xrange <- range(c(x$y-q975*x$sigma, x$y+q975*x$sigma,
@@ -899,7 +929,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
     abline(h=0, col="lightgrey")
     # add vertical "posterior median effect" line:
     abline(v=x$summary["median","mu"], col="black", lty="12")
-    if (battleship) {
+    if (violin) {
       ticklength <- 0.45 # (here: maximum height of gaussian)
       maxdens <- c(dnorm(0, sd=x$sigma),
                    x$dposterior(mu=x$summary["mode","mu"]),
@@ -939,7 +969,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
       matlines(rbind(x$y, x$y),
                rbind((x$k:1)+ticklength, (x$k:1)-ticklength), col="black", lty="solid")
     }
-    if (battleship) {
+    if (violin) {
       # draw blob for mean effect estimate:
       ticklength <- 0.45 # (here: maximum height of gaussian)
       quant <- x$summary[c("95% lower","95% upper"),"mu"]
@@ -1109,7 +1139,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
             length(which)==length(unique(which)))  
   par.ask <- par("ask")
   for (i in 1:length(which)) {
-    if (which[i]==1) forestplot(x, main, battleship=bs)
+    if (which[i]==1) forestplot(x, main, violin=violin)
     else if (which[i]==2) jointdensity(x, main)
     else if (which[i]==3) mumarginal(x, main, priorline=prior)
     else if (which[i]==4) taumarginal(x, main, priorline=prior)
@@ -1304,12 +1334,12 @@ TurnerEtAlPrior <- function(outcome=c("all-cause mortality",
 
 # Rhodes & al. prior data:
 # ========================
-# list of 5 possible intervention comparison types:
+# list of 3 possible intervention comparison types:
 ctypes <- c("pharmacological vs. placebo / control",
             "pharmacological vs. pharmacological",
             "non-pharmacological (any)")
 
-# list of 16 possible outcome types:
+# list of 5 possible outcome types:
 otypes <- c("obstetric outcome",
             "resource use and hospital stay / process",
             "internal and external structure-related outcome",            
@@ -1401,23 +1431,23 @@ RhodesEtAlPrior <- function(outcome=c(NA,
 {
   # match the provided arguments:
   outcome     <- match.arg(outcome)
-  if (!is.na(outcome)) {
+  if (!is.na(outcome)) { # settings from Tables 3, A.3.1 or A.3.2
     comparator1 <- match.arg(comparator1)
     comparator2 <- match.arg(comparator2)
     area        <- match.arg(area)
     # list of 3 possible comparators:
     clist <- c("pharmacological", "non-pharmacological", "placebo / control")
-    # index matrix to match pairs of comparators to one of five possible scenarios:
+    # index matrix to match pairs of comparators to one of 3 possible scenarios:
     cmatrix <- matrix(c(2,3,1,3,3,3,1,3,NA), nrow=3, ncol=3,
                       dimnames=list(clist, clist))
-    # list of 5 possible intervention comparison types:
+    # list of 3 possible intervention comparison types:
     ctypes <- dimnames(RhodesEtAlParameters)[["comparison"]]
     # figure out current comparison scenario:
     comparisontype <- ctypes[cmatrix[comparator1, comparator2]]
     # assemble function output:
     location <- RhodesEtAlParameters[outcome, comparisontype, "location", area]
     scale    <- RhodesEtAlParameters[outcome, comparisontype, "scale", area]
-  } else {
+  } else { # the general (marginal) setting; see beginning of Sec. 3.3
     outcome <- comparisontype <- area <- "any"
     location <- -3.44
     scale <- 2.59
