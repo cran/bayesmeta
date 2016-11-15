@@ -26,9 +26,9 @@
 \references{G.W. Snedecor and W.G. Cochran. \emph{Statistical Methods}. 
   Iowa State University Press, Ames, IA, USA, 6th edition, 1967.}
 \examples{
-\dontrun{
 data("SnedecorCochran")
 
+\dontrun{
 # analyze using uniform prior:
 bma1 <- bayesmeta(y=SnedecorCochran[,"mean"],
                   sigma=sqrt(SnedecorCochran[,"var"]),
@@ -44,6 +44,9 @@ bma2 <- bayesmeta(y=SnedecorCochran[,"mean"],
 # compare results:
 print(bma1)
 print(bma2)
+
+forestplot(bma1)
+forestplot(bma2)
 }
 }
 \keyword{datasets}

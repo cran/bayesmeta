@@ -42,8 +42,9 @@
   models. \emph{Bayesian Analysis}, \bold{1}(3):515-534, 2006.
 }
 \examples{
-\dontrun{
 data("Rubin1981")
+
+\dontrun{
 # analysis using weakly informative half-Cauchy prior
 # (may take a few seconds to compute!):
 schools <- bayesmeta(y=Rubin1981[,"effect"], sigma=Rubin1981[,"stderr"],

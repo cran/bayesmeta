@@ -44,12 +44,13 @@
     effects meta-analyses}. \emph{BMJ}, \bold{342}:d549, 2011.
 } 
 \seealso{
-  \code{\link{bayesmeta}}, \code{\link[metafor]{forest.default}}, \code{\link[metafor]{addpoly}}
+  \code{\link{bayesmeta}}, \code{\link[metafor]{forest.default}},
+  \code{\link[metafor]{addpoly}}, \code{\link{forestplot.bayesmeta}}
 }
 \examples{
-\dontrun{
 data("CrinsEtAl2014")
 
+\dontrun{
 require("metafor")
 es.crins <- escalc(measure="OR",
                    ai=exp.AR.events,  n1i=exp.total,

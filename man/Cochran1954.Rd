@@ -31,8 +31,8 @@
     combination of estimates from different experiments}.
     \emph{Biometrics}, \bold{10}(1):101-129, 1954.}
 \examples{
-\dontrun{
 data("Cochran1954")
+\dontrun{
 # analysis using improper uniform prior
 # (may take a few seconds to compute!):
 bma <- bayesmeta(y=Cochran1954[,"mean"], sigma=sqrt(Cochran1954[,"se2"]),
@@ -42,6 +42,9 @@ bma <- bayesmeta(y=Cochran1954[,"mean"], sigma=sqrt(Cochran1954[,"se2"]),
 plot(bma, which=2, main="Cochran example")
 # show (known) true parameter value:
 abline(h=161)
+
+# show forest plot:
+forestplot(bma, zero=161)
 }
 }
 \keyword{datasets}

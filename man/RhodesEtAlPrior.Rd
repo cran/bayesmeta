@@ -137,14 +137,14 @@ es <- escalc(measure="SMD", m1i=m1i, sd1i=sd1i, n1i=n1i,
              slab=source, data=dat.normand1999)
 
 # derive appropriate prior:
-rp <- RhodesEtAlPrior("resource use", "non-pharma", "non-pharma")
+RP <- RhodesEtAlPrior("resource use", "non-pharma", "non-pharma")
 # show (central) prior 95 percent interval:
-rp$qprior(c(0.025, 0.975))
+RP$qprior(c(0.025, 0.975))
 # show prior 95 percent upper limit:
-rp$qprior(0.95)
+RP$qprior(0.95)
 
 # perform meta analysis:
-bma <- bayesmeta(es, tau.prior=rp$dprior)
+bma <- bayesmeta(es, tau.prior=RP$dprior)
 # show results:
 print(bma)
 plot(bma, which=4, prior=TRUE)

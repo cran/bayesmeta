@@ -54,6 +54,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   if (maxratio > 1000)
     warning(paste0("Ratio of largest over smallest standard error (sigma) is ", sprintf("%.0f",maxratio), ". Extreme values may lead to computational problems."))
 
+  tau.prior.proper <- NA
   if (is.character(tau.prior)) {
     tau.prior <- match.arg(tolower(tau.prior),
                            c("uniform","jeffreys","shrinkage","dumouchel","bergerdeely","i2"))
@@ -86,11 +87,13 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
         pdens <- function(t){return(apply(matrix(t,ncol=1),1,function(x){return(s0/(s0+x)^2)}))}
         attr(pdens, "bayesmeta.label") <- "DuMouchel prior"
       } else warning("could not make sense of 'tau.prior' argument")
-    } 
+    }
+    if (is.element(tau.prior, c("uniform", "Jeffreys", "BergerDeely")))
+      tau.prior.proper <- FALSE
     tau.prior <- pdens
     rm("pdens")
   }
-  
+
   dprior <- function(tau=NA, mu=NA, log=FALSE)
   # prior density (marginal or joint)
   {
@@ -101,21 +104,47 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
         result <- rep(ifelse(log, 0, 1), length(mu))
     }
     else if (all(is.na(mu))) { # marginal density for tau:
-      if (log) result <- log(apply(matrix(tau,ncol=1),1,tau.prior))
-      else result <- apply(matrix(tau,ncol=1),1,tau.prior)
+      if (log) {
+        if (is.element("log", names(formals(tau.prior))))
+          result <- apply(matrix(tau,ncol=1), 1, tau.prior, log=TRUE)
+        else
+          result <- log(apply(matrix(tau,ncol=1), 1, tau.prior))
+      }
+      else result <- apply(matrix(tau,ncol=1), 1, tau.prior)
     }
     else if (is.finite(mu.prior.mean) & !all(is.na(mu))) {  # joint density:
-      result <- (log(tau.prior(tau))
-                 + dnorm(mu, mean=mu.prior.mean, sd=mu.prior.sd, log=TRUE))
+      if (is.element("log", names(formals(tau.prior))))
+        result <- (apply(matrix(tau,ncol=1), 1, tau.prior, log=TRUE)
+                   + dnorm(mu, mean=mu.prior.mean, sd=mu.prior.sd, log=TRUE))
+      else
+        result <- (log(apply(matrix(tau,ncol=1), 1, tau.prior))
+                   + dnorm(mu, mean=mu.prior.mean, sd=mu.prior.sd, log=TRUE))
       if (!log) result <- exp(result)
     }
     else {  # joint density (uniform on mu):
-      result <- tau.prior(tau)
-      if (log) result <- log(result)
+      if (log) {
+        if (is.element("log", names(formals(tau.prior))))
+          result <- apply(matrix(tau,ncol=1), 1, tau.prior, log=TRUE)
+        else
+          result <- log(apply(matrix(tau,ncol=1), 1, tau.prior))
+      }
+      else result <- apply(matrix(tau,ncol=1), 1, tau.prior)
     }
     return(result)
   }
 
+  # check whether tau prior is proper
+  # (unless obvious from above specification)
+  # by trying to integrate numerically:
+  if (is.na(tau.prior.proper)) {
+    prior.int <- integrate(function(t){return(dprior(tau=t))},
+                           lower=0, upper=Inf,
+                           rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate,
+                           stop.on.error=FALSE)
+    tau.prior.proper <- ((prior.int$message == "OK") && (abs(prior.int$value - 1.0) <= prior.int$abs.error))
+    rm("prior.int")
+  }
+  
   likelihood <- function(tau=NA, mu=NA, log=FALSE)
   # likelihood function (marginal or joint)
   {
@@ -124,10 +153,23 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       return()
     }
     else if (all(is.na(tau))) { # return marginal likelihood (numerical):
-      warning("marginalization over 'tau' not implemented")
-      return()
-    }
-    else if (all(is.na(mu))) {  # return marginal likelihood (analytical):
+      #warning("marginalization over 'tau' not implemented")
+      loglikeli <- function(taumu)
+      {
+        t2s2 <- taumu[1]^2 + sigma^2
+        return(-(k/2)*log(2*pi) - 0.5*sum(log(t2s2)) - 0.5*sum((y-taumu[2])^2 / t2s2))
+      }
+      marglikeli <- function(mu)
+      {
+        integrand <- function(t){return(exp(loglikeli(c(t,mu)) + dprior(tau=t,log=TRUE)))}
+        int <- integrate(Vectorize(integrand),
+                         rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate,
+                         lower=0, upper=Inf, stop.on.error=FALSE)
+        return(ifelse(int$message == "OK", int$value, NA))
+      }
+      result <- apply(matrix(mu,ncol=1), 1, marglikeli)
+      if (log) result <- log(result)
+    } else if (all(is.na(mu))) {  # return marginal likelihood (analytical):
       logmarglikeli <- function(t)
       {
         if (is.na(mu.prior.mean)) { # uniform prior
@@ -375,19 +417,31 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     return(result)
   }
 
-  rposterior <- function(n=1, predict=FALSE, individual=FALSE)
+  rposterior <- function(n=1, predict=FALSE, individual=FALSE, tau.sample=TRUE)
   # posterior random number generation for tau and mu
   {
     stopifnot(n>0, n==round(n), length(individual)==1)
-    samp <- matrix(NA, nrow=n, ncol=2, dimnames=list(NULL,c("tau","mu")))
-    u <- runif(n=n)
-    samp[,"tau"] <- apply(matrix(u,ncol=1), 1, function(x){return(qposterior(tau.p=x))})
-    cond.sample <- function(t)
-    {
-      cm <- conditionalmoment(t, predict=predict, individual=individual)
-      return(rnorm(n=1, mean=cm[,"mean"], sd=cm[,"sd"]))
+    if (tau.sample) {
+      samp <- matrix(NA, nrow=n, ncol=2, dimnames=list(NULL,c("tau","mu")))
+      u <- runif(n=n)
+      samp[,"tau"] <- apply(matrix(u,ncol=1), 1, function(x){return(qposterior(tau.p=x))})
+      cond.sample <- function(t)
+      {
+        cm <- conditionalmoment(t, predict=predict, individual=individual)
+        return(rnorm(n=1, mean=cm[,"mean"], sd=cm[,"sd"]))
+      }
+      samp[,"mu"] <- apply(matrix(samp[,"tau"],ncol=1), 1, cond.sample)
+    } else {
+      samp <- rep(NA, n)
+      if (!predict & (is.logical(individual) && (!individual)))
+        meansd <- support[,c("mean","sd")]
+      else
+        meansd <- conditionalmoment(support[,"tau"], predict=predict, individual=individual)
+      for (i in 1:n) {
+        j <- sample(1:nrow(support), 1, prob=support[,"weight"])
+        samp[i] <- rnorm(1, mean=meansd[j,"mean"], sd=meansd[j,"sd"])
+      }          
     }
-    samp[,"mu"] <- apply(matrix(samp[,"tau"],ncol=1), 1, cond.sample)
     return(samp)
   }
 
@@ -747,23 +801,20 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   }
   
   # compute marginal likelihood:
-  marglik <- NA
+  marglik <- bayesfactor.tau0 <- bayesfactor.mu0 <- NA
   # check for proper effect prior:
   if (is.finite(mu.prior.mean) 
       && is.finite(mu.prior.sd)
       && (mu.prior.sd > 0)) {
     # check for proper heterogeneity prior:
-    prior.int <- integrate(function(t){return(dprior(tau=t))},
-                           lower=0, upper=Inf,
-                           rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate,
-                           stop.on.error=FALSE)
-    if ((prior.int$message == "OK")
-        && (abs(prior.int$value - 1.0) <= prior.int$abs.error)) {
+    if (tau.prior.proper) {
       marglik.int <- integrate(function(t){return(likelihood(tau=t)*dprior(tau=t))},
                                rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate,
                                lower=0, upper=Inf)
       if (marglik.int$message == "OK") {
         marglik <- marglik.int$value
+        bayesfactor.tau0 <- likelihood(tau=0) / marglik
+        bayesfactor.mu0  <- likelihood(mu=0) / marglik
       } else {
         attr(marglik, "NA.reason") <- "failed computing marginal likelihood"
       }
@@ -771,7 +822,6 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     } else {
       attr(marglik, "NA.reason") <- "improper heterogeneity prior"
     }
-    rm("prior.int")
   } else {
     attr(marglik, "NA.reason") <- "improper effect prior"
   }
@@ -788,6 +838,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                  "tau.prior"           = tau.prior,
                  "mu.prior"            = muprior,
                  "dprior"              = dprior,
+                 "tau.prior.proper"    = tau.prior.proper,
                  "likelihood"          = likelihood,
                  "dposterior"          = dposterior,
                  "pposterior"          = pposterior,
@@ -801,6 +852,8 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                  "MAP"                 = map.estimate,
                  "theta"               = shrink,
                  "marginal.likelihood" = marglik,
+                 "bayesfactor"         = c("tau=0"=bayesfactor.tau0,
+                                           "mu=0" =bayesfactor.mu0),
                  "support"             = support,
                  "delta"               = delta,
                  "epsilon"             = epsilon,
@@ -852,13 +905,14 @@ print.bayesmeta <- function(x,...)
   else
     cat(paste(x$labels[1:length(x$labels)], collapse=", "))
   cat("\n")
-  cat("\ntau prior:\n")
+  cat(paste0("\ntau prior (", ifelse(x$tau.prior.proper, "proper", "improper"), "):\n"))
   if (is.element("bayesmeta.label", names(attributes(x$tau.prior))))
     cat(paste(attributes(x$tau.prior)[["bayesmeta.label"]], "\n"))
   else
     print(x$tau.prior)
-  cat("\nmu prior:\n")
-  if (is.finite(x$mu.prior["mean"]))
+  mu.prior.proper <- (is.finite(x$mu.prior["mean"]) && is.finite(x$mu.prior["sd"]) && (x$mu.prior["sd"] > 0))
+  cat(paste0("\nmu prior (", ifelse(mu.prior.proper, "proper", "improper"), "):\n"))
+  if (mu.prior.proper)
     cat(paste("normal(mean=",x$mu.prior["mean"],", sd=",x$mu.prior["sd"],")\n",sep=""))
   else
     cat("uniform(min=-Inf, max=Inf)\n")
@@ -885,13 +939,14 @@ summary.bayesmeta <- function(object,...)
     print(data[1:20,])
     cat(paste(" [...]  (truncated;", object$k, "estimates total)\n"))
   }
-  cat("\ntau prior:\n")
+  cat(paste0("\ntau prior (", ifelse(object$tau.prior.proper, "proper", "improper"), "):\n"))
   if (is.element("bayesmeta.label", names(attributes(object$tau.prior))))
     cat(paste(attributes(object$tau.prior)[["bayesmeta.label"]], "\n"))
   else
     print(object$tau.prior)
-  cat("\nmu prior:\n")
-  if (is.finite(object$mu.prior["mean"]))
+  mu.prior.proper <- (is.finite(object$mu.prior["mean"]) && is.finite(object$mu.prior["sd"]) && (object$mu.prior["sd"] > 0))
+  cat(paste0("\nmu prior (", ifelse(mu.prior.proper, "proper", "improper"), "):\n"))
+  if (mu.prior.proper)
     cat(paste("normal(mean=",object$mu.prior["mean"],", sd=",object$mu.prior["sd"],")\n",sep=""))
   else
     cat("uniform(min=-Inf, max=Inf)\n")
@@ -902,6 +957,10 @@ summary.bayesmeta <- function(object,...)
               "MAP marginal"=object$MAP["marginal",]))
   cat("\nmarginal posterior summary:\n")
   print(object$summary)
+  if (any(is.finite(object$bayesfactor))) {
+    cat("\nBayes factors:\n")
+    print(object$bayesfactor)
+  }
   cat("\nrelative heterogeneity I^2 (posterior median):", object$I2(tau=object$summary["median","tau"]), "\n")
   invisible(object)
 }
@@ -916,7 +975,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
   murange <- x$qposterior(mu=c(0.005,0.995))
   murange <- murange + c(-1,1)*diff(murange)*0.05
 
-  forestplot <- function(x, main="", violin=violin)
+  forestPlot <- function(x, main="", violin=violin)
   {
     # determine x-axis range:
     xrange <- range(c(x$y-q975*x$sigma, x$y+q975*x$sigma,
@@ -1139,7 +1198,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
             length(which)==length(unique(which)))  
   par.ask <- par("ask")
   for (i in 1:length(which)) {
-    if (which[i]==1) forestplot(x, main, violin=violin)
+    if (which[i]==1) forestPlot(x, main, violin=violin)
     else if (which[i]==2) jointdensity(x, main)
     else if (which[i]==3) mumarginal(x, main, priorline=prior)
     else if (which[i]==4) taumarginal(x, main, priorline=prior)
@@ -1312,16 +1371,16 @@ TurnerEtAlPrior <- function(outcome=c("all-cause mortality",
   # assemble function output:
   mu    <- TurnerEtAlParameters[outcome, comparisontype, "mu"]
   sigma <- TurnerEtAlParameters[outcome, comparisontype, "sigma"]
-  dprior <- function(tau, logarithmic=FALSE)
+  dprior <- function(tau, log=FALSE)
   {
     result <- rep(-Inf, length(tau))
     proper <- is.finite(tau)
     proper[proper] <- (tau[proper]>0)
     result[proper] <- log(2) + log(tau[proper]) + dlnorm(tau[proper]^2, meanlog=mu, sdlog=sigma, log=TRUE)
-    if (!logarithmic) result <- exp(result)
+    if (!log) result <- exp(result)
     return(result)
   }
-  attr(dprior, "bayesmeta.label") <- paste("log-normal(mu=",sprintf("%1.2f",mu),", sigma=",sprintf("%1.2f",sigma),")",sep="")
+  attr(dprior, "bayesmeta.label") <- paste("sqr-log-normal(mu=",sprintf("%1.2f",mu),", sigma=",sprintf("%1.2f",sigma),")",sep="")
   result <- list("parameters"      = TurnerEtAlParameters[outcome, comparisontype, ],
                  "outcome.type"    = outcome,
                  "comparison.type" = comparisontype,
@@ -1458,14 +1517,14 @@ RhodesEtAlPrior <- function(outcome=c(NA,
     stopifnot(is.finite(location), is.finite(scale), scale>0)
     return(dt((log(x)-location)/scale, df=5, log=TRUE) - log(scale) - log(x))
   }
-  dprior <- function(tau, logarithmic=FALSE)
+  dprior <- function(tau, log=FALSE)
   {
     result <- rep(-Inf, length(tau))
     proper <- is.finite(tau)
     proper[proper] <- (tau[proper]>0)
     #result[proper] <- log(2) + log(tau[proper]) + dlnorm(tau[proper]^2, meanlog=mu, sdlog=sigma, log=TRUE)
     result[proper] <- log(2) + log(tau[proper]) + dlt5(tau[proper]^2, location=location, scale=scale)
-    if (!logarithmic) result <- exp(result)
+    if (!log) result <- exp(result)
     return(result)
   }
   attr(dprior, "bayesmeta.label") <- paste("log-Student-t(location=",sprintf("%1.2f",location),", scale=",sprintf("%1.2f",scale),", d.f.=5)",sep="")
@@ -1497,7 +1556,7 @@ forest.bayesmeta <- function(x, xlab="effect size", refline=0, cex=1,...)
 # forest plot for a "bayesmeta" object
 # based on the "metafor" package's plotting functions
 {
-  if (!requireNamespace("metafor"))
+  if (!requireNamespace("metafor", quietly=TRUE))
     stop("required 'metafor' package not available!")
   metafor::forest.default(x=x$y, sei=x$sigma,
                           showweight=FALSE,  # (IV-weights don't make sense here)
@@ -1517,4 +1576,158 @@ forest.bayesmeta <- function(x, xlab="effect size", refline=0, cex=1,...)
   plotdata <- rbind(plotdata, t(x$summary[c("95% lower","median","95% upper"),c("mu","theta")]))
   rownames(plotdata) <- c(x$labels, c("mean effect(mu)", "prediction (theta)"))
   invisible(plotdata)
+}
+
+
+forestplot.bayesmeta <- function(x, labeltext,
+                                 exponentiate = FALSE,
+                                 prediction   = TRUE,
+                                 shrinkage    = TRUE,
+                                 digits       = 2,
+                                 plot         = TRUE,
+                                 fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
+#
+# ARGUMENTS:
+#   x            :  a "bayesmeta" object.
+#   labeltext    :  you may provide an alternative "labeltext" argument here
+#                   (see also the "forestplot()" help).
+#   exponentiate :  flag indicating whether to exponentiate numbers (figure and table).
+#   prediction   :  flag indicating whether to show prediction interval.
+#   shrinkage    :  flag indicating whether to show shrinkage estimates.
+#   digits       :  number of significant digits to be shown (based on standard deviations).
+#   plot         :  flag you can use to suppress actual plotting.
+#   ...          :  further arguments passed to the "forestplot" function.
+#   
+# VALUE:
+#   a list with components
+#     $data       :  the meta-analyzed data, and mean and prediction estimates
+#     $shrinkage  :  the shrinkage estimates for each study
+#     $labeltext  :  the "forestplot()" function's "labeltext" argument used internally
+#     $forestplot :  the "forestplot()" function's returned value
+#
+{
+  if (!requireNamespace("forestplot", quietly=TRUE))
+    stop("required 'forestplot' package not available!")
+  if (utils::packageVersion("forestplot") < "1.5.2")
+    warning("you may need to update 'forestplot' to a more recent version (>=1.5.2).")
+  # some sanity checks for the provided arguments:
+  stopifnot(is.element("bayesmeta", class(x)),
+            length(digits)==1, digits==round(digits), digits>=0,
+            length(exponentiate)==1, is.logical(exponentiate),
+            length(prediction)==1, is.logical(prediction),
+            length(shrinkage)==1, is.logical(shrinkage),
+            length(plot)==1, is.logical(plot))
+  # plotting data (1) -- the quoted estimates:
+  q95 <- qnorm(0.975)
+  ma.dat <- rbind(NA,
+                  cbind(x$y, x$y - q95*x$sigma, x$y + q95*x$sigma),
+                  x$summary[c("median", "95% lower", "95% upper"),"mu"],
+                  x$summary[c("median", "95% lower", "95% upper"),"theta"])
+  colnames(ma.dat) <- c("estimate", "lower", "upper")
+  rownames(ma.dat) <- c("", x$label, "mean", "prediction")
+  if (! prediction) ma.dat <- ma.dat[-(x$k+3),]
+  # plotting data (2) -- the shrinkage estimates:
+  ma.shrink <- rbind(NA,
+                     t(x$theta)[,c("median","95% lower","95% upper")],
+                     NA,NA)
+  colnames(ma.shrink) <- c("estimate", "lower", "upper")
+  rownames(ma.shrink) <- c("", x$label, "mean", "prediction")
+  if (! prediction) ma.shrink <- ma.shrink[-(x$k+3),]
+  if (exponentiate) {
+    ma.dat    <- exp(ma.dat)
+    ma.shrink <- exp(ma.shrink)
+  }
+  # generate "labeltext" data table for plot (unless already provided):
+  if (missing(labeltext)) {
+    decplaces <- function(x, signifdigits=3)
+    # number of decimal places (after decimal point)
+    # to be displayed if you want at least "signifdigits" digits
+    {
+      return(max(c(0, -(floor(log10(x))-(signifdigits-1)))))
+    }
+    # determine numbers of digits based on standard deviations:
+    if (exponentiate) {
+      stdevs <- c(exp(x$y)*x$sigma,
+                  exp(x$summary["median","mu"])*x$summary["sd","mu"])
+      if (prediction) stdevs <- c(stdevs, exp(x$summary["median","theta"])*x$summary["sd","theta"])
+    } else {
+      stdevs <- c(x$sigma, x$summary["sd","mu"])
+      if (prediction) stdevs <- c(stdevs, x$summary["sd","theta"])
+    }
+    stdevs <- abs(stdevs[is.finite(stdevs) & (stdevs != 0)])
+    formatstring <- paste0("%.", decplaces(stdevs, digits), "f")
+    # fill data table:
+    labeltext <- matrix(NA_character_, nrow=nrow(ma.dat), ncol=3)
+    labeltext[1,] <- c("study","estimate", "95% CI")
+    labeltext[,1] <- c("study", x$labels, "mean", "prediction")[1:nrow(ma.dat)]
+    for (i in 2:(nrow(ma.dat))) {
+      labeltext[i,2] <- sprintf(formatstring, ma.dat[i,"estimate"])
+      labeltext[i,3] <- paste0("[", sprintf(formatstring, ma.dat[i,"lower"]),
+                                 ", ", sprintf(formatstring, ma.dat[i,"upper"]), "]")
+    }
+  }
+  # add horizontal lines to plot:
+  horizl <- list(grid::gpar(col="grey"), grid::gpar(col="grey"))
+  names(horizl) <- as.character(c(2,x$k+2))
+  # specify function(s) for drawing estimates / shrinkage estimates:
+  if (missing(fn.ci_norm)) {
+    if (shrinkage) {
+      fn.ci_norm <- list(function(...) {forestplot::fpDrawPointCI(pch=15,...)},
+                         function(...) {forestplot::fpDrawPointCI(pch=18,...)})
+    } else {
+      fn.ci_norm <- function(...) {forestplot::fpDrawPointCI(pch=15,...)}
+    }
+  }
+  # specify function(s) for drawing summaries (diamond / bar):
+  if (missing(fn.ci_sum)) {
+    fn.ci_sum <- list(NULL)
+    for (i in 1:(x$k+2))
+      fn.ci_sum[[i]] <- function(y.offset,...) {forestplot::fpDrawSummaryCI(y.offset=0.5,...)}
+    if (prediction)
+      fn.ci_sum[[x$k+3]] <- function(y.offset,...) {forestplot::fpDrawBarCI(y.offset=0.5,...)}
+  }
+  # specify colors:
+  if (missing(col)) {
+    if (shrinkage) {
+      col <- forestplot::fpColors(box=c("black", "grey45"),
+                                  lines=c("black","grey45"),
+                                  summary="grey30")
+    } else {
+      col <- forestplot::fpColors(box="black", lines="black", summary="grey30")
+    }
+  }
+  # specify plotting sizes:
+  if (missing(boxsize)) {
+    boxsize <- c(rep(0.25,x$k+1), 0.4)
+    if (prediction) boxsize <- c(boxsize, 0.2)
+  }
+  if (shrinkage && missing(legend))
+    legend  <- c("quoted estimate", "shrinkage estimate")
+  # specify data for plotting:
+  if (shrinkage) { # (show shrinkage intervals)
+    mean.arg  <- cbind(ma.dat[,1], ma.shrink[,1])
+    lower.arg <- cbind(ma.dat[,2], ma.shrink[,2])
+    upper.arg <- cbind(ma.dat[,3], ma.shrink[,3])
+  } else {         # (no shrinkage intervals)
+    mean.arg  <- ma.dat[,1]
+    lower.arg <- ma.dat[,2]
+    upper.arg <- ma.dat[,3]
+  }
+  fp <- NULL
+  if (plot)
+    fp <- forestplot::forestplot(labeltext  = labeltext,
+                                 mean       = mean.arg,
+                                 lower      = lower.arg,
+                                 upper      = upper.arg,
+                                 is.summary = c(TRUE, rep(FALSE, x$k), TRUE, TRUE),
+                                 hrzl_lines = horizl,
+                                 fn.ci_norm = fn.ci_norm,
+                                 fn.ci_sum  = fn.ci_sum,
+                                 col        = col,
+                                 boxsize    = boxsize,
+                                 legend     = legend, ...)
+  invisible(list("data"       = ma.dat[-1,],
+                 "shrinkage"  = ma.shrink[2:(x$k+1),],
+                 "labeltext"  = labeltext,
+                 "forestplot" = fp))
 }

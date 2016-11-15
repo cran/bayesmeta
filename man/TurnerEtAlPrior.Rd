@@ -109,10 +109,9 @@ TurnerEtAlPrior(outcome=c("all-cause mortality", "obstetric outcomes",
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
 \seealso{
-  \code{\link[stats]{dlnorm}, \link{RhodesEtAlPrior}}.
+  \code{\link[stats]{dlnorm}}, \code{\link{RhodesEtAlPrior}}.
 }
 \examples{
-\dontrun{
 # load example data:
 data("CrinsEtAl2014")
 
@@ -122,6 +121,7 @@ print(TP)
 # a prior 95 percent interval for tau:
 TP$qprior(c(0.025,0.975))
 
+\dontrun{
 # compute effect sizes from data:
 if (require("metafor")) {
   crins.es <- escalc(measure="OR",

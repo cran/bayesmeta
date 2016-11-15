@@ -55,13 +55,13 @@
   \emph{Indian Pediatrics}, \bold{34}(5):389-397, 1997.
 }
 \examples{
-\dontrun{
 # load data:
 data("RoweEtAl2000")
 
 # show data:
 print(RoweEtAl2000)
 
+\dontrun{
 # compute effect sizes
 # (log-ORs, adult studies only):
 if (require("metafor")) {
@@ -82,6 +82,8 @@ ma.adults <- bayesmeta(es.adults,
 # show posterior distribution of effect (log-OR):
 plot(ma.adults, which=3, prior=TRUE)
 abline(v=0, lty="dotted")
+
+forestplot(ma.adults)
 }
 }
 \keyword{datasets}

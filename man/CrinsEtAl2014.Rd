@@ -25,10 +25,11 @@
     \bold{control.total}      \tab \code{numeric}   \tab number of cases in control group \cr
   }
 }
-\details{
-  A systematic literature search resulted in six controlled studies
-  reporting acute rejection (AR) and steroid-resistant rejection
-  (SRR) rates in pediatric liver transplant recipients.
+\details{A systematic literature review investigated the evidence on
+  the effect of Interleukin-2 receptor antagonists (IL-2RA) and resulted
+  in six controlled studies reporting acute rejection (AR) and
+  steroid-resistant rejection (SRR) rates in pediatric liver transplant
+  recipients.
 }
 \source{N.D. Crins, C. Roever, A.D. Goralczyk, T. Friede.
   \href{http://dx.doi.org/10.1111/petr.12362}{Interleukin-2 receptor
@@ -75,8 +76,8 @@
   \code{\link{GoralczykEtAl2011}}.
 }
 \examples{
-\dontrun{
 data("CrinsEtAl2014")
+\dontrun{
 # compute effect sizes (log odds ratios) from count data:
 if (require("metafor")) {
   crins.es <- escalc(measure="OR",
@@ -88,7 +89,10 @@ print(crins.es)
 
 # analyze using weakly informative half-Cauchy prior for heterogeneity:
 crins.ma <- bayesmeta(crins.es, tau.prior=function(t){dhalfcauchy(t,scale=1)})
+
+# show results:
 print(crins.ma)
+forestplot(crins.ma)
 plot(crins.ma)
 
 # show heterogeneity posterior along with prior:

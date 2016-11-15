@@ -58,7 +58,6 @@
   studies}. \emph{Statistics in Medicine}, \bold{26}(9):1964-1981,
   2007.}
 \examples{
-\dontrun{
 data("SidikJonkman2007")
 # add log-odds-ratios and corresponding standard errors:
 sj <- SidikJonkman2007
@@ -67,6 +66,7 @@ sj <- cbind(sj, "log.or"=log(sj[,"lihr.events"])-log(sj[,"lihr.cases"]-sj[,"lihr
             "log.or.se"=sqrt(1/sj[,"lihr.events"] + 1/(sj[,"lihr.cases"]-sj[,"lihr.events"])
                              + 1/sj[,"oihr.events"] + 1/(sj[,"oihr.cases"]-sj[,"oihr.events"])))
 
+\dontrun{
 # analysis using weakly informative Cauchy prior
 # (may take a few seconds to compute!):
 ma <- bayesmeta(y=sj[,"log.or"], sigma=sj[,"log.or.se"], label=sj[,"id.sj"],
@@ -87,6 +87,21 @@ sj.estimates <- sqrt(c("MM"  = 0.429,   # method of moments estimator
                        "MV"  = 0.818,   # model error variance estimator
                        "MVvc"= 0.747))  # a variation of the MV estimator
 abline(v=sj.estimates, col="red", lty="dashed")
+
+# generate forest plot:
+fp <- forestplot(ma, exponentiate=TRUE, plot=FALSE)
+# add extra columns for ID and year:
+labtext <- fp$labeltext
+labtext[1,1] <- "ID 2"
+labtext[31:32,1] <- ""
+labtext <- cbind(c("ID 1", SidikJonkman2007[,"id"], "mean","prediction"),
+                 labtext[,1],
+                 c("year", as.character(SidikJonkman2007[,"year"]), "", ""),
+                 labtext[,-1])
+# plot:
+forestplot(ma, labeltext=labtext, exponentiate=TRUE, 
+           xlog=TRUE, xlab="odds ratio", xticks=c(0.1,1,10))
+
 }
 }
 \keyword{datasets}

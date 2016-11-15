@@ -49,9 +49,9 @@
   few studies}. \emph{BMC Medical Research Methodology}, 15:99, 2015.
 }
 \examples{
-\dontrun{
 data("HinksEtAl2010")
 
+\dontrun{
 # perform meta analysis based on weakly informative half-normal prior:
 bma01 <- bayesmeta(y=HinksEtAl2010$log.or,
                    sigma=HinksEtAl2010$log.or.se,
@@ -85,10 +85,9 @@ round(rbind("half-normal(1.0)" = bma01$summary[,"mu"],
             "half-normal(0.5)" = bma02$summary[,"mu"]), 5)
 
 # show forest plot:
-forest(bma02)
-# show the "shrunk" estimate of the Hinks (2006) study in comparison:
-points(bma02$theta["median","Hinks (2006)"], -3.2, pch=22, col="red")
-lines(bma02$theta[c("95% lower","95% upper"),"Hinks (2006)"], rep(-3.2,2), col="red")
+forestplot(bma02)
+# show shrinkage estimates:
+bma02$theta
 }
 }
 \keyword{datasets}

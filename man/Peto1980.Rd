@@ -32,8 +32,9 @@
   \emph{The Lancet}, \bold{315}(8179):1172-1173, 1980.
 }
 \examples{
-\dontrun{
 data("Peto1980")
+\dontrun{
+# compute effect sizes (log odds ratios):
 if (require("metafor")) {
   peto.es <- escalc(measure="OR",
                     ai=treat.events,   n1i=treat.cases,
@@ -60,6 +61,7 @@ print(rbind("uniform"    =peto.ma01$summary[,"mu"],
             "half-normal"=peto.ma02$summary[,"mu"]))
 
 summary(peto.ma02)
+forestplot(peto.ma02)
 plot(peto.ma02)
 }
 }

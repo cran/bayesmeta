@@ -1,5 +1,8 @@
+import("forestplot")
+
 export(bayesmeta, bayesmeta.default, bayesmeta.escalc,
-       print.bayesmeta, summary.bayesmeta, plot.bayesmeta, forest.bayesmeta,
+       print.bayesmeta, summary.bayesmeta, plot.bayesmeta,
+       forestplot.bayesmeta,
        dlomax, dhalfnormal, dhalft, dhalfcauchy, dinvchisq, drayleigh,
        TurnerEtAlParameters, TurnerEtAlPrior,
        RhodesEtAlParameters, RhodesEtAlPrior)
@@ -9,11 +12,17 @@ S3method(bayesmeta, escalc)
 S3method(print, bayesmeta)
 S3method(summary, bayesmeta)
 S3method(plot, bayesmeta)
+S3method(forestplot, bayesmeta)
 
-importFrom("grDevices", "grey")
-importFrom("graphics", "abline", "axis", "box", "contour", "image",
-           "lines", "matlines", "mtext", "par", "plot", "points",
-           "polygon")
-importFrom("stats", "dlnorm", "dnorm", "dt", "integrate", "optim",
-           "optimize", "plnorm", "pnorm", "pt", "qchisq", "qlnorm",
-           "qnorm", "qt", "rnorm", "runif", "uniroot")
+importFrom("grDevices",
+           "grey")
+importFrom("graphics",
+           "abline", "axis", "box", "contour", "image", "lines",
+           "matlines", "mtext", "par", "plot", "points", "polygon")
+importFrom("stats",
+           "dlnorm", "dnorm", "dt", "integrate", "optim", "optimize",
+           "plnorm", "pnorm", "pt", "qchisq", "qlnorm", "qnorm", "qt",
+           "rnorm", "runif", "uniroot")
+importFrom("forestplot",
+           "forestplot", "fpDrawPointCI", "fpDrawSummaryCI","fpDrawBarCI",
+           "fpColors")

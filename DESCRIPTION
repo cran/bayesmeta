@@ -1,19 +1,20 @@
 Package: bayesmeta
 Type: Package
 Title: Bayesian Random-Effects Meta-Analysis
-Version: 1.2
-Date: 2016-07-03
+Version: 1.3
+Date: 2016-11-15
 Authors@R: c(person("Christian", "Roever", role=c("aut","cre"), 
                     email="christian.roever@med.uni-goettingen.de"),
              person("Tim", "Friede", role="ctb",
                     email="tim.friede@med.uni-goettingen.de"))
 Author: Christian Roever [aut, cre], Tim Friede [ctb]
 Maintainer: Christian Roever <christian.roever@med.uni-goettingen.de>
+Depends: forestplot (>= 1.6)
 Suggests: metafor, compute.es, knitr, rmarkdown
 Description: A collection of functions allowing to derive the posterior distribution of the two parameters in a random-effects meta-analysis, and providing functionality to evaluate joint and marginal posterior probability distributions, predictive distributions, shrinkage effects, etc.
 License: GPL (>= 2)
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2016-07-03 11:14:25 UTC; christian
+Packaged: 2016-11-15 08:40:37 UTC; christian
 Repository: CRAN
-Date/Publication: 2016-07-03 22:04:12
+Date/Publication: 2016-11-15 12:08:25

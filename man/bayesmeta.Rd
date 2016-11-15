@@ -64,7 +64,8 @@
     the parameters specifying the desired accuracy for approximation of
     the \eqn{\mu} posterior(s), and with that determining the number of
     \eqn{\tau} support points being used internally. Smaller values
-    imply greater accuracy and greater computational burden.
+    imply greater accuracy and greater computational burden (Roever and
+    Friede, 2016).
 }
   \item{rel.tol.integrate}{
     the \code{rel.tol} argument to be internally used for numerical
@@ -121,33 +122,35 @@
   parameters (Roever and Friede, 2016).
 
   What constitutes a sensible prior for both \eqn{\mu} and \eqn{\tau}
-  depends (as usual) very much on the context.  One might argue that an
-  uninformative prior for \eqn{\tau} may be uniform or monotonically
-  decreasing in \eqn{\tau}. Another option is to use the \emph{Jeffreys
-  prior} (see the \code{tau.prior} argument above). The Jeffreys prior
-  implemented here is the variant also described by Tibshirani (1989)
-  that results from fixing the location parameter (\eqn{\mu}) and
-  considering the Fisher information element corresponding to the
-  heterogeneity \eqn{\tau} only. This prior also constitutes the
-  \emph{Berger/Bernardo reference prior} for the present problem (Bodnar
-  et al., 2016).  The \emph{uniform shrinkage} and \emph{DuMouchel}
-  priors are described in Spiegelhalter et al. (2004, Sec. 5.7.3).
+  depends (as usual) very much on the context.
   Potential candidates for informative (or weakly informative)
-  heterogeneity priors may include the \emph{exponential}, \emph{Lomax},
-  \emph{half-normal}, \emph{half-Student-\eqn{t}} or \emph{half-Cauchy}
-  distributions; we recommend the use of heavy-tailed prior
-  distributions if in case of prior/data conflict the prior is supposed
-  to be discounted (O'Hagan and Pericchi, 2012).  A sensible informative
-  prior might also be a \emph{log-normal} or a \emph{scaled inverse
-  \eqn{\chi^2}} distribution. The procedure is also able to handle
-  improper priors (and does so by default), but of course the usual care
-  must be taken here, as the resulting posterior \emph{may} or \emph{may
-  not} be a proper probability distribution.
+  heterogeneity (\eqn{\tau}) priors may include the \emph{half-normal},
+  \emph{half-Student-\eqn{t}},  \emph{half-Cauchy}, \emph{exponential},
+  or \emph{Lomax} distributions; we recommend the use of heavy-tailed
+  prior distributions if in case of prior/data conflict the prior is
+  supposed to be discounted (O'Hagan and Pericchi, 2012).  A sensible
+  informative prior might also be a \emph{log-normal} or a \emph{scaled
+  inverse \eqn{\chi^2}} distribution. 
+  One might argue that an uninformative prior for \eqn{\tau} may be
+  uniform or monotonically decreasing in \eqn{\tau}. Another option is
+  to use the \emph{Jeffreys prior} (see the \code{tau.prior} argument
+  above). The Jeffreys prior implemented here is the variant also
+  described by Tibshirani (1989) that results from fixing the location
+  parameter (\eqn{\mu}) and considering the Fisher information element
+  corresponding to the heterogeneity \eqn{\tau} only. This prior also
+  constitutes the \emph{Berger/Bernardo reference prior} for the present
+  problem (Bodnar et al., 2016).  The \emph{uniform shrinkage} and
+  \emph{DuMouchel} priors are described in Spiegelhalter et al. (2004,
+  Sec. 5.7.3). 
+  The procedure is able to handle improper priors (and does so by
+  default), but of course the usual care must be taken here, as the
+  resulting posterior \emph{may} or \emph{may not} be a proper
+  probability distribution.
   
   Note that a wide range of different types of endpoints may be treated
   on a continuous scale after an appropriate transformation; for
   example, count data may be handled by considering corresponding
-  logarithmic odds ratios. A many such transformations are implemented
+  logarithmic odds ratios. Many such transformations are implemented
   in the \pkg{metafor} package's \code{\link[metafor]{escalc}} function
   and may be directly used as an input to the \code{bayesmeta()}
   function; see also the example below.  Alternatively, the
@@ -156,16 +159,84 @@
 
   The \code{bayesmeta()} function eventually generates some basic
   summary statistics, but most importantly it provides an object
-  containing a range of functions allowing to evaluate posterior
+  containing a range of \code{function}s allowing to evaluate posterior
   distributions; this includes joint and marginal posteriors, prior and
   likelihood, predictive distributions, densities, cumulative
   distributions and quantile functions. For more details see also the
-  documentation and examples below. Use of the \code{individual=TRUE}
-  argument allows to also access posteriors of study-specific effects
-  (\eqn{\theta_i}{theta[i]}), facilitating a
+  documentation and examples below.
+  Use of the \code{individual} argument allows to access posteriors
+  of study-specific (\emph{shrinkage-}) effects
+  (\eqn{\theta_i}{theta[i]}).
+  The \code{predict} argument may be used to access the predictive
+  distribution of a future study's effect
+  (\eqn{\theta_{k+1}}{theta[k+1]}), facilitating a
   \emph{meta-analytic-predictive (MAP)} approach (Neuenschwander et al.,
   2010).
+
+  \subsection{Prior specification details}{
+    When specifying the \code{tau.prior} argument as a \code{character} string
+    (and not as a prior density \code{function}), then the actual
+    prior probability density functions corresponding to the possible
+    choices of the \code{tau.prior} argument are given by:
+    \itemize{
+      \item \code{"uniform"} - the (improper) uniform prior in \eqn{\tau}:
+        \deqn{p(\tau) \;\propto\; 1}{p(tau) = 1}
+      \item \code{"Jeffreys"} - \emph{Tibshirani's noninformative prior},
+        a variation of the \emph{Jeffreys prior}, which here also constitutes
+        the \emph{Berger/Bernardo reference prior} for \eqn{\tau}:
+        \deqn{p(\tau) \;\propto\;
+        \sqrt{\sum_{i=1}^k\Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^2}}{p(tau) = sqrt(sum((tau/(sigma[i]^2+tau^2))^2))}
+        (This is also an improper prior whose density does not integrate
+  to 1).
+      \item \code{"shrinkage"} - the (proper) \emph{uniform shrinkage} prior:
+        \deqn{p(\tau) \;=\; \frac{2 s_0^2 \tau}{(s_0^2+\tau^2)^2}}{p(tau)=(2*s0^2*tau) / (s0^2+tau^2)^2}
+        where \eqn{s_0^2=\frac{k}{\sum_{i=1}^k \sigma_i^{-2}}}{s0^2 = k/sum(sigma[i]^(-2))} is the harmonic
+        mean of the squared standard errors \eqn{\sigma_i^2}{sigma[i]^2}.
+      \item \code{"DuMouchel"} - the (proper) \emph{DuMouchel} prior:
+        \deqn{p(\tau) \;=\; \frac{s_0}{(s_0+\tau)^2}}{p(tau) = s0 / (s0+tau)^2}
+        where \eqn{s_0=\sqrt{s_0^2}}{s0=sqrt(s0^2)} and \eqn{s_0^2}{s0^2} again is the harmonic mean of the standard errors (as above).
+      \item \code{"BergerDeely"} - the (improper) \emph{Berger/Deely} prior:
+        \deqn{p(\tau) \;\propto\; \prod_{i=1}^k \Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^{1/k}}{p(tau) = prod((tau / (sigma[i]^2+tau^2))^(1/k))}
+        This is a variation of the above \emph{Jeffreys} prior, and both are equal in
+        case all standard errors (\eqn{\sigma_i}{sigma[i]}) are the same.
+      \item \code{"I2"} - the (proper) uniform prior in \eqn{I^2}:
+        \deqn{p(\tau) \;=\; \frac{2 \hat{\sigma}^2 \tau}{(\hat{\sigma}^2 + \tau^2)^2}}{p(tau)=(2*sigmaHat^2*tau) /(sigmaHat^2+tau^2)^2}
+        where \eqn{\hat{\sigma}^2 = \frac{(k-1)\; \sum_{i=1}^k\sigma_i^{-2}}{\bigl(\sum_{i=1}^k\sigma_i^{-2}\bigr)^2 - \sum_{i=1}^k\sigma_i^{-4}}}{sigmaHat^2 = (k-1)*sum(1/sigma[i]^2) / (sum(1/sigma[i]^2)^2 - sum(1/sigma[i]^4))}.
+        This prior is similar to the uniform shrinkage prior, except for
+        the use of \eqn{\hat{\sigma}^2}{sigmaHat^2} instead of \eqn{s_0^2}{s0^2}.
+    }
+  }
+
+  \subsection{Bayes factors}{
+    Bayes factors (Kass and Raftery, 1995) for the two hypotheses of
+    \eqn{\tau=0} and \eqn{\mu=0} are provided in the \code{$bayesfactor}
+    element; \emph{low} or \emph{high} values here constitute evidence
+    \emph{against} or \emph{in favour of} the hypotheses,
+    respectively. Bayes factors are based on marginal likelihoods and
+    can only be computed if the priors for heterogeneity and effect are
+    proper. Bayes factors for other hypotheses can be computed using the
+    marginal likelihood (as provided through the \code{$marginal}
+    element) and the \code{$likelihood()} function. Bayes factors must
+    be interpreted with very much caution, as they are susceptible to
+    \emph{Lindley's paradox} (Lindley, 1957), which especially implies
+    that variations of the prior specifications that have only minuscule
+    effects on the posterior distribution may have a substantial impact
+    on Bayes factors (via the marginal likelihood).
+  }
   
+  \subsection{Numerical accuracy}{
+    Accuracy of the numerical results is determined by four parameters,
+    namely, the accuracy of numerical integration as specified through the
+    \code{rel.tol.integrate} and \code{abs.tol.integrate} arguments (which
+    are internally passed on to the \code{\link[stats]{integrate}}
+    function), and the accuracy of the grid approximation used for
+    integrating out the heterogeneity as specified through the
+    \code{delta} and \code{epsilon} arguments (Roever and Friede,
+    2016). As these may also heavily impact on the computation time, be
+    careful when changing these from their default values. You can monitor
+    the effect of different settings by checking the number and range of
+    support points returned in the \code{$support} element.
+  }  
 }
 \value{
   A list of class \code{bayesmeta} containing the following elements:
@@ -181,6 +252,9 @@
     parameters, \code{tau} and/or \code{mu}, returning either the joint or
     marginal prior probability density, depending on which parameter(s)
     is/are provided.} 
+  \item{tau.prior.proper}{a \code{logical} flag indicating whether the
+    heterogeneity prior appears to be proper (which is judged based on
+    an attempted numerical integration of the density function).} 
   \item{likelihood}{a \code{function(tau=NA, mu=NA, log=FALSE)} of two
     parameters, \code{tau} and/or \code{mu}, returning either the joint or
     marginal likelihood, depending on which parameter(s) is/are provided.} 
@@ -211,15 +285,18 @@
     individual effects' (\eqn{\theta_i}{theta[i]}) posterior
     distributions. May be an integer number (\code{1,...,k}) giving the
     index, or a character string giving the label.}
-  \item{rposterior}{a \code{function(n=1, predict=FALSE, individual=FALSE)} generating
-    \code{n} independent random draws from the (2-dimensional) posterior
-    distribution. Works via inversion method, so it is rather slow. Using
-    the argument \code{predict=TRUE} yields the posterior predictive
-    distribution for \eqn{\theta}. Using the \code{individual}
-    argument, you can request individual effects'
-    (\eqn{\theta_i}{theta[i]}) posterior distributions. May be an integer
-    number (\code{1,...,k}) giving the index, or a character string giving
-    the label.}
+  \item{rposterior}{a \code{function(n=1, predict=FALSE, individual=FALSE, tau.sample=TRUE)}
+    generating \code{n} independent random draws from the
+    (2-dimensional) posterior distribution. Using the argument
+    \code{predict=TRUE} yields the posterior predictive distribution for
+    \eqn{\theta}. Using the \code{individual} argument, you can request
+    individual effects' (\eqn{\theta_i}{theta[i]}) posterior
+    distributions. May be an integer number (\code{1,...,k}) giving the
+    index, or a character string giving the label. In general, this via
+    the inversion method, so it is rather slow. However, if one is not
+    interested in sampling the heterogeneity parameter (\eqn{\tau}),
+    using \sQuote{\code{tau.sample=FALSE}} will speed up the function
+    substantially.} 
   \item{post.interval}{a \code{function(tau.level=NA, mu.level=NA, theta.level=mu.level, method=c("shortest","central","evidentiary"), predict=FALSE, individual=FALSE)}
     returning a credibility interval, depending on which of the two
     parameters is provided (either \code{tau.level} or
@@ -261,6 +338,10 @@
   \item{marginal.likelihood}{the marginal likelihood of the data (this 
     number is only computed if proper effect and heterogeneity priors 
     are specified).}
+  \item{bayesfactor}{Bayes factors for the two hypotheses of
+    \eqn{\tau=0} and \eqn{\mu=0}. These depend on the marginal
+    likelihood and hence can only be computed if proper effect and
+    heterogeneity priors are specified.}
   \item{support}{a \code{matrix} giving the \eqn{\tau} support points used
     internally in the grid approximation, along with their associated
     weights, conditional mean and standard deviation of \eqn{\mu},
@@ -276,18 +357,6 @@
   \item{init.time}{the computation time (in seconds) used to generate
     the \code{bayesmeta} object.}
   }
-\note{
-  Accuracy of the numerical results is determined by four variables,
-  namely, the accuracy of numerical integration as specified through the
-  \code{rel.tol.integrate} and \code{abs.tol.integrate} arguments, and
-  the accuracy of the grid approximation used for integrating out the
-  heterogeneity as specified through the \code{delta} and \code{epsilon}
-  arguments (Roever and Friede, 2016). As these may also heavily impact
-  on the computation time, be careful when changing these from their
-  default values. You can monitor the effect of different settings by
-  checking the number and range of support points returned in the
-  \code{$support} element.
-}
 \references{
   C. Roever et al. Bayesian random-effects meta-analysis. (in
   preparation), 2016.
@@ -322,6 +391,15 @@
   L.V. Hedges, I. Olkin. \emph{Statistical methods for meta-analysis}.
   Academic Press, San Diego, 1985
 
+  A.E. Kass, R.E. Raftery.
+  \href{http://dx.doi.org/10.2307/2291091}{Bayes factors}.
+  \emph{Journal of the American Statistical Association},
+  \bold{90}(430):773-795, 1995.
+
+  D.V. Lindley.
+  \href{http://dx.doi.org/10.1093/biomet/44.1-2.187}{A statistical paradox}.
+  \emph{Biometrika}, \bold{44}(1/2):187-192, 1957.
+  
   B. Neuenschwander, G. Capkun-Niggli, M. Branson, D.J. Spiegelhalter.
   \href{http://dx.doi.org/10.1177/1740774509356002}{Summarizing
   historical information on controls in clinical
@@ -352,7 +430,9 @@
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
 \seealso{
-  \code{\link{plot.bayesmeta}}, \code{\link[metafor]{escalc}}, \code{\link[compute.es:compute.es-package]{compute.es}}.
+  \code{\link{forestplot.bayesmeta}}, \code{\link{plot.bayesmeta}},
+  \code{\link[metafor]{escalc}},
+  \code{\link[compute.es:compute.es-package]{compute.es}}.
 }
 \examples{
 ########################################
@@ -378,6 +458,7 @@ print(ma01)
 summary(ma01)
 
 # show some plots:
+forestplot(ma01)
 plot(ma01)
 
 # compare resulting marginal densities;
@@ -418,7 +499,7 @@ sj <- cbind(sj, "log.or"=log(sj[,"lihr.events"])-log(sj[,"lihr.cases"]-sj[,"lihr
                                  + 1/sj[,"oihr.events"] + 1/(sj[,"oihr.cases"]-sj[,"oihr.events"])))
 
 \dontrun{
-# analysis using improper uniform prior
+# analysis using weakly informative half-normal prior
 # (may take a few seconds to compute!):
 ma03a <- bayesmeta(y=sj[,"log.or"], sigma=sj[,"log.or.se"],
                    label=sj[,"id.sj"],
@@ -438,8 +519,8 @@ ma03b <- bayesmeta(es, tau.prior=function(t){dhalfnormal(t,scale=1)})
 print(ma03a$summary)
 print(ma03b$summary)
 # compare to metafor's (frequentist) random-effects meta-analysis:
-rma03a <- rma.uni(yi, vi, data=es)
-rma03b <- rma.uni(yi, vi, data=es, method="EB", knha=TRUE)
+rma03a <- rma.uni(es)
+rma03b <- rma.uni(es, method="EB", knha=TRUE)
 # compare mu estimates (estimate and confidence interval):
 plot(ma03b, which=3)
 abline(v=c(rma03a$b, rma03a$ci.lb, rma03a$ci.ub), col="red", lty=c(1,2,2))
@@ -507,7 +588,8 @@ par(mfrow=c(1,2))
   plot(ma04, which=1, main="Cochran 1954 example")
   matplot(tau, cm.indiv[,"mean",], type="l", lty="solid", col=1:ma04$k,
           xlim=c(0,max(tau)*1.2), xlab=expression("heterogeneity "*tau),
-          ylab=expression("conditional posterior mean E["*mu[i]*"|"*list(tau, y, sigma)*"]"))
+          ylab=expression("(conditional) shrinkage estimate E["*
+                           theta[i]*"|"*list(tau, y, sigma)*"]"))
   text(rep(max(tau)*1.01, ma04$k), cm.indiv[length(tau),"mean",],
        ma04$label, col=1:ma04$k, adj=c(0,0.5))
   lines(tau, cm.overall[,"mean"], lty="dashed", lwd=2)

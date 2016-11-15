@@ -30,6 +30,9 @@ schools.example.1 <- bayesmeta(y     = Rubin1981[,"effect"],
 ## ------------------------------------------------------------------------
 print(schools.example.1)
 
+## ---- fig.width=6.0, fig.height=3.5--------------------------------------
+forestplot(schools.example.1)
+
 ## ---- eval=FALSE---------------------------------------------------------
 #  plot(schools.example.1, prior=TRUE)
 
@@ -76,4 +79,7 @@ schools.example.1$post.interval(mu.level=0.95)
 schools.example.1$post.interval(tau.level=0.95)
 schools.example.1$post.interval(tau.level=0.95, method="central")
 schools.example.1$qposterior(tau.p=c(0.025, 0.975))
+
+## ------------------------------------------------------------------------
+schools.example.1$theta[,c("A","G","H")]
 

@@ -25,10 +25,11 @@
     \bold{control.total}      \tab \code{numeric}   \tab number of cases in control group \cr
   }
 }
-\details{
-  A systematic literature search resulted in 19 controlled studies
-  reporting acute rejection (AR) and steroid-resistant rejection
-  (SRR) rates in adult liver transplant recipients.
+\details{A systematic literature review investigated the evidence on the
+  effect of Interleukin-2 receptor antagonists (IL-2RA) and resulted in
+  19 controlled studies reporting acute rejection (AR) and
+  steroid-resistant rejection (SRR) rates in adult liver transplant
+  recipients.
 }
 \source{A.D. Goralczyk, N. Hauke, N. Bari, T.Y. Tsui, T. Lorf, A. Obed.
   \href{http://dx.doi.org/10.1002/hep.24385}{Interleukin-2 receptor
@@ -40,8 +41,8 @@
   \code{\link{CrinsEtAl2014}}.
 }
 \examples{
-\dontrun{
 data("GoralczykEtAl2011")
+\dontrun{
 # compute effect sizes (log odds ratios) from count data:
 if (require("metafor")) {
   goralczyk.es <- escalc(measure="OR",
@@ -58,7 +59,7 @@ goralczyk.ma <- bayesmeta(goralczyk.es, tau.prior=function(t){dhalfcauchy(t,scal
 print(goralczyk.ma)
 
 # show forest plot:
-forest(goralczyk.ma)
+forestplot(goralczyk.ma)
 }
 }
 \keyword{datasets}

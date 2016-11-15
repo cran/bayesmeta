@@ -15,8 +15,8 @@
   \tabular{ll}{
     Package: \tab bayesmeta\cr
     Type:    \tab Package\cr
-    Version: \tab 1.2\cr
-    Date:    \tab 2016-07-03\cr
+    Version: \tab 1.3\cr
+    Date:    \tab 2016-11-15\cr
     License: \tab GPL (>=2)
   }
   The main functionality is provided by the \code{\link{bayesmeta}()}
@@ -27,6 +27,9 @@
 }
 \author{
 Christian Roever <christian.roever@med.uni-goettingen.de>
+}
+\seealso{
+  \code{\link{forestplot.bayesmeta}}, \code{\link{plot.bayesmeta}}.
 }
 \references{
   Roever, C. et al. Bayesian random-effects meta-analysis.
@@ -46,9 +49,15 @@ bma <- bayesmeta(y=SnedecorCochran[,"mean"],
                  label=SnedecorCochran[,"no"])
 
 # show some summary statistics:
-print(bma)
+bma
 
-# show some plots:
+# show a bit more details:
+summary(bma)
+
+# show a forest plot:
+forestplot(bma)
+
+# show some more plots:
 plot(bma)
 }
 }
