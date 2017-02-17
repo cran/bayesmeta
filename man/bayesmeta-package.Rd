@@ -15,8 +15,8 @@
   \tabular{ll}{
     Package: \tab bayesmeta\cr
     Type:    \tab Package\cr
-    Version: \tab 1.3\cr
-    Date:    \tab 2016-11-15\cr
+    Version: \tab 1.4\cr
+    Date:    \tab 2017-02-17\cr
     License: \tab GPL (>=2)
   }
   The main functionality is provided by the \code{\link{bayesmeta}()}
@@ -33,7 +33,7 @@ Christian Roever <christian.roever@med.uni-goettingen.de>
 }
 \references{
   Roever, C. et al. Bayesian random-effects meta-analysis.
-  (in preparation), 2016.
+  (in preparation), 2017.
 }
 \keyword{ models }
 \keyword{ package }

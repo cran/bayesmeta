@@ -25,7 +25,7 @@
 }
 \source{
   B.H. Rowe, J. Bretzlaff, C. Bourdon, S. Blitz, C.A. Camargo.
-  \href{http://dx.doi.org/10.1002/14651858.CD001490}{Magnesium 
+  \href{http://doi.org/10.1002/14651858.CD001490}{Magnesium 
   sulfate for treating exacerbations of acute asthma 
   in the emergency department}.
   \emph{Cochrane Database of Systematic Reviews}, 
@@ -33,18 +33,18 @@
 }
 \references{
   E.M. Skobeloff, W. H. Spivey, R.M. McNamara, L. Greenspon.
-  \href{http://dx.doi.org/10.1001/jama.1989.03430090072036}{Intravenous
+  \href{http://doi.org/10.1001/jama.1989.03430090072036}{Intravenous
   magnesium sulfate for the treatment of acute asthma in the emergency
   department}. \emph{JAMA}, \bold{262}(9):1210-1213, 1989.
 
   H. Bloch, R. Silverman, N. Mancherje, S. Grant, L. Jagminas,
   S.M. Scharf.
-  \href{http://dx.doi.org/10.1378/chest.107.6.1576}{Intravenous
+  \href{http://doi.org/10.1378/chest.107.6.1576}{Intravenous
   magnesium sulfate as an adjunct in the treatment of acute asthma}.
   \emph{Chest}, \bold{107}(6):1576-1581, 1995.
 
   L. Ciarallo, A.H. Sauer, M.W. Shannon.
-  \href{http://dx.doi.org/10.1016/S0022-3476(96)70023-9}{Intravenous
+  \href{http://doi.org/10.1016/S0022-3476(96)70023-9}{Intravenous
   magnesium therapy for moderate to severe pediatric asthma: Results
   of a randomized, placebo-controlled trial}
   \emph{The Journal of Pediatrics}, \bold{129}(6):809-814, 1996.

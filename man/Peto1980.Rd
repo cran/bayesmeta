@@ -22,12 +22,12 @@
     or a control drug is recorded.}
 }
 \source{S.E. Brockwell, I.R. Gordon.
-  \href{http://dx.doi.org/10.1002/sim.650}{A comparison of statistical
+  \href{http://doi.org/10.1002/sim.650}{A comparison of statistical
     methods for meta-analysis}.
   \emph{Statistics in Medicine}, \bold{20}(6):825-840, 2001.
 }
 \references{R. Peto.
-  \href{http://dx.doi.org/10.1016/S0140-6736(80)91626-8}{Aspirin after
+  \href{http://doi.org/10.1016/S0140-6736(80)91626-8}{Aspirin after
     myocardial infarction}. 
   \emph{The Lancet}, \bold{315}(8179):1172-1173, 1980.
 }

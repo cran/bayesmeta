@@ -81,13 +81,22 @@ RhodesEtAlPrior(outcome=c(NA,"obstetric outcome",
   \bold{Note} that the location and scale parameters refer to the
   logarithmic (\emph{squared}) heterogeneity parameter \eqn{\tau^2},
   which is modelled using a Student-\eqn{t} distribution with 5 degrees
-  of freedom.
+  of freedom. When you want to use the prior specifications for
+  \eqn{\tau}, the square root, as the parameter (as is necessary when
+  using the \code{bayesmeta()} function), you need to correct for the
+  square root transformation. Taking the square root is equivalent to
+  dividing by two on the log-scale, so the square root
+  will still be log-Student-t distributed, but with halved location and
+  scale parameters. The relevant transformations are already taken care
+  of when using the resulting \code{$dprior()}, \code{$pprior()} and
+  \code{$qprior()} functions; see also the example below.
   
 }
 \value{
   a list with elements
   \item{parameters}{the location and scale parameters (corresponding to the
-    logarithmic, \emph{squared} heterogeneity parameter \eqn{\tau^2}).}
+    logarithmic \emph{squared} heterogeneity parameter \eqn{\tau^2} as
+    well as \eqn{\tau}).}
   \item{outcome.type}{the corresponding type of outcome.}
   \item{comparison.type}{the corresponding type of comparison.}
   \item{medical.area}{the medical context.}
@@ -100,7 +109,7 @@ RhodesEtAlPrior(outcome=c(NA,"obstetric outcome",
 }
 \references{
   K.M. Rhodes, R.M. Turner, J.P.T. Higgins.
-  \href{http://dx.doi.org/10.1016/j.jclinepi.2014.08.012}{Predictive
+  \href{http://doi.org/10.1016/j.jclinepi.2014.08.012}{Predictive
     distributions were developed for the extent of heterogeneity in
     meta-analyses of continuous outcome data}. \emph{Journal of Clinical
     Epidemiology}, \bold{68}(1):52-60, 2015.

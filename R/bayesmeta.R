@@ -29,10 +29,13 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                               mu.prior.mean=mu.prior[1],
                               mu.prior.sd  =mu.prior[2],
                               delta=0.01, epsilon=0.0001,
-                              rel.tol.integrate=2*max(c(50*.Machine$double.eps, 0.5e-28)),
-                              abs.tol.integrate=rel.tol.integrate,...)
+                              rel.tol.integrate=2^16*.Machine$double.eps,
+                              abs.tol.integrate=rel.tol.integrate, ...)
 {
   ptm <- proc.time()
+  y      <- as.vector(y)
+  sigma  <- as.vector(sigma)
+  labels <- as.vector(labels)
   # some preliminary sanity checks:
   stopifnot(is.vector(y), is.vector(sigma),
             all(is.finite(y)), all(is.finite(sigma)),
@@ -57,29 +60,32 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   tau.prior.proper <- NA
   if (is.character(tau.prior)) {
     tau.prior <- match.arg(tolower(tau.prior),
-                           c("uniform","jeffreys","shrinkage","dumouchel","bergerdeely","i2"))
+                           c("uniform","jeffreys","shrinkage","dumouchel","bergerdeely","i2","sqrt"))
     tau.prior <- c("uniform"="uniform", "jeffreys"="Jeffreys",
                    "shrinkage"="shrinkage", "dumouchel"="DuMouchel",
-                   "bergerdeely"="BergerDeely", "i2"="I2")[tau.prior]
-    stopifnot(is.element(tau.prior, c("uniform", "Jeffreys", "shrinkage", "DuMouchel", "BergerDeely", "I2")))
-    if (tau.prior=="uniform") {  # uniform prior on tau:
+                   "bergerdeely"="BergerDeely", "i2"="I2", "sqrt"="sqrt")[tau.prior]
+    stopifnot(is.element(tau.prior, c("uniform", "Jeffreys", "shrinkage", "DuMouchel", "BergerDeely", "I2", "sqrt")))
+    if (tau.prior=="uniform") {             # uniform prior on tau:
       pdens <- function(t){d<-rep(1,length(t)); d[t<0]<-0; return(d)}
       attr(pdens, "bayesmeta.label") <- "uniform(min=0, max=Inf)"
-    } else if (tau.prior=="Jeffreys") {  # Jeffreys prior:
+    } else if (tau.prior=="Jeffreys") {     # Jeffreys prior:
       pdens <- function(t){return(apply(matrix(t,ncol=1),1,function(x){return(sqrt(sum((x/(sigma^2+x^2))^2)))}))}
       attr(pdens, "bayesmeta.label") <- "Jeffreys prior"
     } else if (tau.prior=="BergerDeely") {  # Berger/Deely prior:
       pdens <- function(t){return(apply(matrix(t,ncol=1),1,
                                         function(x){return(exp(log(x)-sum(log(sigma^2+x^2))/k))}))}
       attr(pdens, "bayesmeta.label") <- "Berger/Deely prior"
-    } else if (tau.prior=="I2") {  # uniform on I^2:
+    } else if (tau.prior=="I2") {           # uniform on I^2:
       pdens <- function(t){return(apply(matrix(t,ncol=1),1,
                                         function(x){return(2 * exp(log(sigma2hat)+log(x) - 2*log(sigma2hat+x^2)))}))}
       attr(pdens, "bayesmeta.label") <- "uniform prior on I-squared"
+    } else if (tau.prior=="sqrt") {         # sqrt-prior:
+      pdens <- function(t){d <- rep(0,length(t)); d[t>=0] <- t[t>=0]^(-0.5); return(d)}
+      attr(pdens, "bayesmeta.label") <- "uniform prior on sqrt(tau)"
     } else {
       # harmonic mean of squared standard errors:
       s02 <- k/sum(1/sigma^2)
-      if (tau.prior=="shrinkage") {  # "uniform shrinkage" prior:
+      if (tau.prior=="shrinkage") {         # "uniform shrinkage" prior:
         pdens <- function(t){return(apply(matrix(t,ncol=1),1,function(x){return(2*x*s02/(s02+x^2)^2)}))}
         attr(pdens, "bayesmeta.label") <- "uniform shrinkage prior"
       } else if (tau.prior=="DuMouchel") {  # DuMouchel prior:
@@ -88,7 +94,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
         attr(pdens, "bayesmeta.label") <- "DuMouchel prior"
       } else warning("could not make sense of 'tau.prior' argument")
     }
-    if (is.element(tau.prior, c("uniform", "Jeffreys", "BergerDeely")))
+    if (is.element(tau.prior, c("uniform", "Jeffreys", "BergerDeely", "sqrt")))
       tau.prior.proper <- FALSE
     tau.prior <- pdens
     rm("pdens")
@@ -264,7 +270,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
         }
         logpost <- function(taumu)
         {
-          return(dprior(taumu[1], taumu[2], log=TRUE) + loglikeli(taumu))
+          return(dprior(taumu[1], taumu[2], log=TRUE) + loglikeli(taumu) - log(integral))
         }
         result <- apply(cbind(tau,mu), 1, logpost)
         result[tau<0] <- -Inf
@@ -276,7 +282,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
 
   # compute marginal posterior density's normalizing constant:
   integral <- 1
-  integral <- integrate(dposterior, lower=0, upper=Inf,
+  integral <- integrate(function(x){dposterior(tau=x)}, lower=0, upper=Inf,
                         rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)$value
   if ((!is.finite(integral)) || (integral <= 0))
     warning("failed integrating marginal posterior (tau)")
@@ -358,7 +364,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       upper <- 1
       if (any((tau.p<1) & (tau.p>0))) {
         maxp <- max(tau.p[tau.p<1])
-        while (pposterior(upper) < maxp) upper <- upper * 2
+        while (pposterior(tau=upper) < maxp) upper <- upper * 2
       }
       qfun <- function(p)
       {
@@ -1215,22 +1221,84 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
 dlomax <- function(x, scale=1, shape=1, log=FALSE)
 # probability density function for Lomax distribution
 {
-  stopifnot(shape>0, scale>0)
+  stopifnot(length(shape)==1, length(scale)==1,
+            all(shape>0), all(scale>0))
   result <- rep(-Inf, length(x))
   result[x>=0] <- log(shape)-log(scale)-(shape+1)*log(1+x[x>=0]/scale)
   if (!log) result <- exp(result)
   return(result)
 }
 
+plomax <- function(q, scale=1, shape=1)
+# cumulative probability distribution function (CDF) of a Lomax distribution
+{
+  stopifnot(length(shape)==1, length(scale)==1,
+            all(shape>0), all(scale>0))
+  result <- rep(NA, length(q))
+  result[q<=0] <- 0
+  result[q>0] <- 1-(1+q[q>0]/scale)^(-shape)
+  return(result)
+}
+
+qlomax <- function(p, scale=1, shape=1)
+# quantile function (inverse CDF) of a Lomax distribution
+{
+  stopifnot(length(shape)==1, length(scale)==1,
+            all(shape>0), all(scale>0))
+  result <- rep(NA, length(p))
+  result[p==1] <- Inf
+  result[p==0] <- 0
+  proper <- (is.finite(p) & (p>0) & (p<1))
+  result[proper] <- ((1-p[proper])^(-1/shape) - 1) * scale
+  return(result)
+}
+
+rlomax <- function(n, scale=1, shape=1)
+# random number generation for a Lomax distribution
+# (based on inversion method)
+{
+  stopifnot(length(shape)==1, length(scale)==1,
+            all(shape>0), all(scale>0))
+  u <- runif(n)
+  result <- qlomax(u, scale=scale, shape=shape)
+  return(result)
+}
+
 
 dhalfnormal <- function(x, scale=1, log=FALSE)
-# probability density function for half-normal distribution
+# probability density function of a half-normal distribution
 {
   stopifnot(scale>0)
   result <- rep(-Inf, length(x))
   result[x>=0] <- log(2) + dnorm(x[x>=0], mean=0, sd=scale, log=TRUE)
   if (!log) result <- exp(result)
   return(result)  
+}
+
+phalfnormal <- function(q, scale=1)
+# cumulative distribution function (CDF) of a half-normal distribution
+{
+  stopifnot(scale>0)
+  result <- rep(0, length(q))
+  result[q>0] <- 2.0 * (pnorm(q[q>0], mean=0, sd=scale) - 0.5)
+  return(result)  
+}
+
+qhalfnormal <- function(p, scale=1)
+# quantile function (inverse CDF) of a half-normal distribution
+{
+  stopifnot(scale>0)
+  result <- rep(NA, length(p))
+  proper <- (is.finite(p) & (p>=0) & (p<=1))
+  result[proper] <- qnorm(p[proper]/2.0 + 0.5, mean=0, sd=scale)
+  return(result)  
+}
+
+rhalfnormal <- function(n, scale=1)
+# random number generation for half-normal distribution
+{
+  stopifnot(scale>0)
+  return(abs(rnorm(n=n, mean=0, sd=scale)))  
 }
 
 
@@ -1244,38 +1312,106 @@ dhalft <- function(x, scale=1, df, log=FALSE)
   return(result)  
 }
 
-
-dhalfcauchy <- function(x, scale=1, log=FALSE)
-# probability density function for half-Cauchy distribution
+phalft <- function(q, scale=1, df)
+# cumulative distribution function (CDF) of a half-Student-t distribution
 {
-  stopifnot(scale>0)
-  return(dhalft(x, scale=scale, df=1, log=log))
+  stopifnot(scale>0, df>0)
+  result <- rep(0, length(q))
+  result[q>0] <- 2.0 * (pt(q[q>0]/scale, df=df) - 0.5)
+  return(result)  
+}
+
+qhalft <- function(p, scale=1, df)
+# quantile function (inverse CDF) of a half-Student-t distribution
+{
+  stopifnot(scale>0, df>0)
+  result <- rep(NA, length(p))
+  proper <- (is.finite(p) & (p>=0) & (p<=1))
+  result[proper] <- qt(p[proper]/2.0 + 0.5, df=df) * scale
+  return(result)  
+}
+
+rhalft <- function(n, scale=1, df)
+# random number generation for half-Student-t distribution
+{
+  stopifnot(scale>0, df>0)
+  return(abs(rt(n=n, df=df))*scale)  
 }
 
 
-dinvchisq <- function(x, scale=1, df=1, log=FALSE)
-# probability density function for scaled inverse chi-squared distribution
+dhalfcauchy <- function(x, scale=1, log=FALSE)
+# probability density function of a half-Cauchy distribution
 {
-  halfdf <- df/2
+  stopifnot(scale>0)
   result <- rep(-Inf, length(x))
-  if (df>0)
-    result[x>=0] <- halfdf*log(halfdf) - lgamma(halfdf) + halfdf*log(scale) - (halfdf+1)*log(x[x>=0]) - ((df*scale) / (2*x[x>=0]))
-  else if(df==0)    # Jeffreys prior
-    result[x>=0] <- -log(x[x>=0])
-  else result[x>=0] <- 0 # uniform prior
+  result[x>=0] <- log(2) + dcauchy(x[x>=0], location=0, scale=scale, log=TRUE)
   if (!log) result <- exp(result)
-  return(result)
+  return(result)  
+}
+
+phalfcauchy <- function(q, scale=1)
+# cumulative distribution function (CDF) of a half-Cauchy distribution
+{
+  stopifnot(scale>0)
+  result <- rep(0, length(q))
+  result[q>0] <- 2.0 * (pcauchy(q[q>0], location=0, scale=scale) - 0.5)
+  return(result)  
+}
+
+qhalfcauchy <- function(p, scale=1)
+# quantile function (inverse CDF) of a half-Cauchy distribution
+{
+  stopifnot(scale>0)
+  result <- rep(NA, length(p))
+  proper <- (is.finite(p) & (p>=0) & (p<=1))
+  result[proper] <- qcauchy(p[proper]/2.0 + 0.5, location=0, scale=scale)
+  return(result)  
+}
+
+rhalfcauchy <- function(n, scale=1)
+# random number generation for half-Cauchy distribution
+{
+  stopifnot(scale>0)
+  return(abs(rcauchy(n=n, location=0, scale=scale)))
 }
 
 
 drayleigh <- function(x, scale=1, log=FALSE)
-# probability density function for Rayleigh distribution
+# probability density function of the Rayleigh distribution
 {
+  stopifnot(scale>0)
   result <- rep(-Inf, length(x))
   result[x>0] <- log(x[x>0])-2*log(scale)-0.5*(x[x>0]/scale)^2
   if (!log) result <- exp(result)
   return(result)
 }
+
+prayleigh <- function(q, scale=1)
+# cumulative distribution function (CDF) of the Rayleigh distribution
+{
+  stopifnot(scale>0)
+  result <- rep(0,length(q))
+  result[q>0] <- 1-exp(-0.5*(q[q>0]/scale)^2)
+  return(result)
+}
+
+qrayleigh <- function(p, scale=1)
+# quantile function (inverse CDF) of the Rayleigh distribution
+{
+  stopifnot(scale>0)
+  proper <- (is.finite(p) & (p>=0) & (p<=1))
+  result <- rep(NA, length(p))
+  result[proper] <- scale * sqrt(-2*log(1-p[proper]))
+  return(result)
+}
+
+rrayleigh <- function(n, scale=1)
+# random number generation for the Rayleigh distribution
+{
+  stopifnot(scale>0)
+  return(sqrt(rexp(n, rate=1/(2*scale^2))))
+}
+
 
 
 # Turner & al. prior data:
@@ -1369,26 +1505,25 @@ TurnerEtAlPrior <- function(outcome=c("all-cause mortality",
   # figure out current comparison scenario:
   comparisontype <- ctypes[cmatrix[comparator1, comparator2]]
   # assemble function output:
-  mu    <- TurnerEtAlParameters[outcome, comparisontype, "mu"]
-  sigma <- TurnerEtAlParameters[outcome, comparisontype, "sigma"]
-  dprior <- function(tau, log=FALSE)
-  {
-    result <- rep(-Inf, length(tau))
-    proper <- is.finite(tau)
-    proper[proper] <- (tau[proper]>0)
-    result[proper] <- log(2) + log(tau[proper]) + dlnorm(tau[proper]^2, meanlog=mu, sdlog=sigma, log=TRUE)
-    if (!log) result <- exp(result)
-    return(result)
-  }
-  attr(dprior, "bayesmeta.label") <- paste("sqr-log-normal(mu=",sprintf("%1.2f",mu),", sigma=",sprintf("%1.2f",sigma),")",sep="")
-  result <- list("parameters"      = TurnerEtAlParameters[outcome, comparisontype, ],
+  param <- matrix(NA, nrow=2, ncol=2,
+                  dimnames=list(c("tau^2","tau"),
+                                "log-normal"=c("mu","sigma")))
+  param["tau^2","mu"]    <- TurnerEtAlParameters[outcome, comparisontype, "mu"]
+  param["tau^2","sigma"] <- TurnerEtAlParameters[outcome, comparisontype, "sigma"]
+  param["tau","mu"]      <- param["tau^2","mu"] / 2
+  param["tau","sigma"]   <- param["tau^2","sigma"] / 2
+  result <- list("parameters"      = param,
                  "outcome.type"    = outcome,
                  "comparison.type" = comparisontype,
-                 "dprior"          = dprior,
-                 "pprior"          = function(tau) {return(plnorm(tau^2, meanlog=mu, sdlog=sigma))},
-                 "qprior"          = function(p) {return(sqrt(qlnorm(p, meanlog=mu, sdlog=sigma)))})
+                 "dprior"          = function(tau, log=FALSE) {return(dlnorm(tau, meanlog=param["tau","mu"],
+                                                                                  sdlog=param["tau","sigma"], log=log))},
+                 "pprior"          = function(tau) {return(plnorm(tau, meanlog=param["tau","mu"], sdlog=param["tau","sigma"]))},
+                 "qprior"          = function(p)   {return(qlnorm(p,   meanlog=param["tau","mu"], sdlog=param["tau","sigma"]))})
+  attr(result$dprior, "bayesmeta.label") <- paste("log-normal(mu=",sprintf("%1.3f",param["tau","mu"]),
+                                                  ", sigma=",sprintf("%1.3f",param["tau","sigma"]),")",sep="")
   return(result)
 }
+
 
 
 # Rhodes & al. prior data:
@@ -1489,8 +1624,8 @@ RhodesEtAlPrior <- function(outcome=c(NA,
 #
 {
   # match the provided arguments:
-  outcome     <- match.arg(outcome)
   if (!is.na(outcome)) { # settings from Tables 3, A.3.1 or A.3.2
+    outcome     <- match.arg(outcome)
     comparator1 <- match.arg(comparator1)
     comparator2 <- match.arg(comparator2)
     area        <- match.arg(area)
@@ -1511,23 +1646,24 @@ RhodesEtAlPrior <- function(outcome=c(NA,
     location <- -3.44
     scale <- 2.59
   }
-  dlt5 <- function(x, location=0, scale=1)
-  # log-density of log-t distribution with 5 d.f.
+  param <- matrix(NA, nrow=2, ncol=2,
+                  dimnames=list(c("tau^2","tau"),
+                                "log-t(5)"=c("location","scale")))
+  param["tau^2","location"] <- location
+  param["tau^2","scale"]    <- scale
+  param["tau","location"]   <- location / 2
+  param["tau","scale"]      <- scale / 2
+  rm(list=c("location","scale"))
+  dlt5 <- function(x, location=0, scale=1, log=FALSE)
+  # density of log-t distribution with 5 d.f.
   {
     stopifnot(is.finite(location), is.finite(scale), scale>0)
-    return(dt((log(x)-location)/scale, df=5, log=TRUE) - log(scale) - log(x))
+    logdensity <- rep(-Inf, length(x))
+    proper <- (is.finite(x) & (x>0))
+    logdensity[proper] <- dt((log(x[proper])-location)/scale, df=5, log=TRUE) - log(scale) - log(x[proper])
+    if (log) return(logdensity)
+    else     return(exp(logdensity))
   }
-  dprior <- function(tau, log=FALSE)
-  {
-    result <- rep(-Inf, length(tau))
-    proper <- is.finite(tau)
-    proper[proper] <- (tau[proper]>0)
-    #result[proper] <- log(2) + log(tau[proper]) + dlnorm(tau[proper]^2, meanlog=mu, sdlog=sigma, log=TRUE)
-    result[proper] <- log(2) + log(tau[proper]) + dlt5(tau[proper]^2, location=location, scale=scale)
-    if (!log) result <- exp(result)
-    return(result)
-  }
-  attr(dprior, "bayesmeta.label") <- paste("log-Student-t(location=",sprintf("%1.2f",location),", scale=",sprintf("%1.2f",scale),", d.f.=5)",sep="")
   plt5 <- function(x, location=0, scale=1)
   # cumulative distribution function (CDF) of log-t distribution with 5 d.f.
   {
@@ -1540,14 +1676,16 @@ RhodesEtAlPrior <- function(outcome=c(NA,
     stopifnot(is.finite(location), is.finite(scale), scale>0)
     return(exp((qt(p, df=5)*scale)+location))
   }
-  #result <- list("parameters"      = RhodesEtAlParameters[outcome, comparisontype, , area],
-  result <- list("parameters"      = c("location"=location, "scale"=scale),
+  result <- list("parameters"      = param,
                  "outcome.type"    = outcome,
                  "comparison.type" = comparisontype,
                  "medical.area"    = area,
-                 "dprior"          = dprior,
-                 "pprior"          = function(tau) {return(plt5(tau^2, location=location, scale=scale))},
-                 "qprior"          = function(p) {return(sqrt(qlt5(p, location=location, scale=scale)))})
+                 "dprior"          = function(tau, log=FALSE) {return(dlt5(tau, location=param["tau","location"],
+                                                                                scale=param["tau","scale"], log=log))},
+                 "pprior"          = function(tau) {return(plt5(tau, location=param["tau","location"], scale=param["tau","scale"]))},
+                 "qprior"          = function(p)   {return(qlt5(p, location=param["tau","location"], scale=param["tau","scale"]))})
+  attr(result$dprior, "bayesmeta.label") <- paste("log-Student-t(location=",sprintf("%1.3f",param["tau","location"]),
+                                                  ", scale=",sprintf("%1.3f",param["tau","scale"]),", d.f.=5)",sep="")
   return(result)
 }
 
@@ -1730,4 +1868,107 @@ forestplot.bayesmeta <- function(x, labeltext,
                  "shrinkage"  = ma.shrink[2:(x$k+1),],
                  "labeltext"  = labeltext,
                  "forestplot" = fp))
+}
+
+
+normalmixture <- function(density,
+                          cdf = Vectorize(function(x){integrate(density,0,x)$value}),
+                          mu = 0,
+                          delta = 0.01, epsilon = 0.001)
+# derive normal mixture where mean (mu) is given (and fixed)
+# and the standard deviation (sigma) follows a distribution
+# given through "density" or "cdf" argument.
+# Mixture approximation is done using the 'DIRECT' algorithm
+# described in http://arxiv.org/abs/1602.04060
+{
+  # some basic sanity checks:
+  stopifnot((!missing(cdf) || !missing(density)),
+            is.function(cdf), delta>0, epsilon>0)
+  if (missing(cdf) && !missing(density)) {
+    stopifnot(is.function(density))
+    # check for properness of mixing distribution:
+    density.integral <- integrate(density, lower=0, upper=Inf)
+    stopifnot(density.integral$message == "OK",
+              (abs(density.integral$value - 1.0) <= density.integral$abs.error))
+  }
+
+  nextsigma <- function(sigma=1, delta=0.01)
+  # analytical solution for next larger sigma value
+  # for which KL-divergence w.r.t. current sigma is = delta
+  {
+     return(sigma * sqrt(1 + delta^2 + sqrt(delta^2 + 2*delta)))
+  }
+
+  # determine (minimally required) grid range:
+  s <- 1
+  while (cdf(s) <= epsilon/2) s <- s*2
+  ur <- uniroot(function(x){cdf(x)-epsilon/2}, lower=0, upper=s)
+  lower <- ur$root
+  while (cdf(s) <= 1-epsilon/2) s <- s*2
+  ur <- uniroot(function(x){cdf(x)-(1-epsilon/2)}, lower=lower, upper=s)
+  upper <- ur$root
+
+  # now fill grid:
+  grid <- matrix(c(0, NA, lower, NA),
+                 nrow=1,
+                 dimnames=list(NULL, c("lower","upper","reference","prob")))
+  s <- lower
+  i <- 1
+  while (s < upper) {
+    i <- i+1
+    grid <- rbind(grid, NA)
+    s <- nextsigma(s, delta=delta)
+    grid[i-1,"upper"] <- grid[i,"lower"] <- s
+    s <- nextsigma(s, delta=delta)
+    grid[i,"reference"] <- s
+  }
+  grid[i, "upper"] <- Inf
+
+  grid[,"prob"] <- diff(c(0, cdf(grid[,"upper"])))
+  grid[,"prob"] <- grid[,"prob"] / sum(grid[,"prob"])
+
+  # probability density of mixture:
+  dens <- function(x)
+  {
+    return(apply(matrix(x,ncol=1), 1,
+                 function(y){sum(grid[,"prob"]*dnorm(y, mean=mu, sd=grid[,"reference"]))}))
+  }
+
+  # cumulative distribution function (CDF) of mixture:
+  cumul <- function(x)
+  {
+    return(apply(matrix(x,ncol=1), 1,
+                 function(y){sum(grid[,"prob"]*pnorm(y, mean=mu, sd=grid[,"reference"]))}))
+  }
+
+  # quantile function (inverse CDF) of mixture:
+  quantile <- function(p)
+  {
+    quant <- function(pp)
+    {
+      mini <- mu-1
+      while (cumul(mini) > pp) mini <- mu - 2*(mu-mini)
+      maxi <- mu+1
+      while (cumul(maxi) < pp) maxi <- mu + 2*(maxi-mu)
+      ur <- uniroot(function(x){return(cumul(x)-pp)}, lower=mini, upper=maxi)
+      return(ur$root)      
+    }
+    proper <- ((p>0) & (p<1))
+    result <- rep(NA,length(p))
+    if (any(proper)) result[proper] <- apply(matrix(p[proper],ncol=1), 1, quant)
+    return(result)
+  }  
+  
+  result <- list("delta"          = delta,
+                 "epsilon"        = epsilon,
+                 "mu"             = mu,
+                 "bins"           = i,
+                 "support"        = grid,
+                 "density"        = dens,      # resulting probability density function
+                 "cdf"            = cumul,     # resulting cumulative distribution function (CDF)
+                 "quantile"       = quantile,  # resulting quantile function (inverse CDF)
+                 "mixing.density" = NULL,
+                 "mixing.cdf"     = cdf)  
+  if (!missing(density)) result$mixing.density <- density
+  return(result)
 }

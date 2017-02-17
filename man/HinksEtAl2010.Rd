@@ -26,25 +26,25 @@
 }
 \source{
   A. Hinks et al.
-  \href{http://dx.doi.org/10.1038/gene.2010.25}{Association of the CCR5
+  \href{http://doi.org/10.1038/gene.2010.25}{Association of the CCR5
     gene with juvenile idiopathic arthritis}. \emph{Genes and Immunity},
   \bold{11}(7):584-589, 2010. 
 }
 \references{
   S. Prahalad et al.
-  \href{http://dx.doi.org/10.1038/sj.gene.6364317}{Association of two
+  \href{http://doi.org/10.1038/sj.gene.6364317}{Association of two
     functional polymorphisms in the CCR5 gene with juvenile rheumatoid
     arthritis}
   \emph{Genes and Immunity}, \bold{7}:468-475, 2006.
 
   E. Lindner et al.
-  \href{http://dx.doi.org/10.1186/1471-2350-8-33}{Lack of association
+  \href{http://doi.org/10.1186/1471-2350-8-33}{Lack of association
   between the chemokine receptor 5 polymorphism CCR5delta32 in
   rheumatoid arthritis and juvenile idiopathic arthritis}.
   \emph{BMC Medical Genetics}, \bold{8}:33, 2007.
 
   C. Roever, G. Knapp, T. Friede.
-  \href{http://dx.doi.org/10.1186/s12874-015-0091-1}{Hartung-Knapp-Sidik-Jonkman
+  \href{http://doi.org/10.1186/s12874-015-0091-1}{Hartung-Knapp-Sidik-Jonkman
   approach and its modification for random-effects meta-analysis with
   few studies}. \emph{BMC Medical Research Methodology}, 15:99, 2015.
 }
@@ -53,16 +53,16 @@ data("HinksEtAl2010")
 
 \dontrun{
 # perform meta analysis based on weakly informative half-normal prior:
-bma01 <- bayesmeta(y=HinksEtAl2010$log.or,
-                   sigma=HinksEtAl2010$log.or.se,
-                   lab=HinksEtAl2010$study,
-                   tau.prior=function(t){dhalfnormal(t,scale=1.0)})
+bma01 <- bayesmeta(y      = HinksEtAl2010$log.or,
+                   sigma  = HinksEtAl2010$log.or.se,
+                   labels = HinksEtAl2010$study,
+                   tau.prior = function(t){dhalfnormal(t,scale=1.0)})
 
 # perform meta analysis based on slightly more informative half-normal prior:
-bma02 <- bayesmeta(y=HinksEtAl2010$log.or,
-                   sigma=HinksEtAl2010$log.or.se,
-                   lab=HinksEtAl2010$study,
-                   tau.prior=function(t){dhalfnormal(t,scale=0.5)})
+bma02 <- bayesmeta(y      = HinksEtAl2010$log.or,
+                   sigma  = HinksEtAl2010$log.or.se,
+                   labels = HinksEtAl2010$study,
+                   tau.prior = function(t){dhalfnormal(t,scale=0.5)})
 
 # show heterogeneity posteriors:
 plot(bma01, which=4, prior=TRUE)

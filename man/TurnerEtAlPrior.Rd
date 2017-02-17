@@ -75,20 +75,19 @@ TurnerEtAlPrior(outcome=c("all-cause mortality", "obstetric outcomes",
   (\emph{squared}) heterogeneity parameter \eqn{\tau^2}. When you want
   to use the prior specifications for \eqn{\tau}, the square root,
   as the parameter (as is necessary when using the \code{bayesmeta()}
-  function), you need to apply corrections for the square root
-  transformation. For example, a prior for \eqn{\tau^2} with probability
-  density function \eqn{f(x)} corresponds to a prior with density
-  \eqn{2\tau f(\tau^2)}{2*tau*f(tau^2)} for \eqn{\tau}. The relevant
+  function), you need to correct for the square root
+  transformation. Taking the square root is equivalent to dividing by
+  two on the log-scale, so the square root's distribution will still be
+  log-normal, but with halved mean and standard deviation. The relevant
   transformations are already taken care of when using the resulting
   \code{$dprior()}, \code{$pprior()} and \code{$qprior()} functions; see
   also the example below.
-  
 }
 \value{
   a list with elements
   \item{parameters}{the log-normal parameters (\eqn{\mu} and
     \eqn{\sigma}, corresponding to the \emph{squared} heterogeneity
-    parameter \eqn{\tau^2}).}
+    parameter \eqn{\tau^2} as well as \eqn{\tau}).}
   \item{outcome.type}{the corresponding type of outcome.}
   \item{comparison.type}{the corresponding type of comparison.}
   \item{dprior}{a \code{function(tau)} returning the prior
@@ -100,7 +99,7 @@ TurnerEtAlPrior(outcome=c("all-cause mortality", "obstetric outcomes",
 }
 \references{
   R.M. Turner, D. Jackson, Y. Wei, S.G. Thompson,
-  J.P.T. Higgins. \href{http://dx.doi.org/10.1002/sim.6381}{Predictive
+  J.P.T. Higgins. \href{http://doi.org/10.1002/sim.6381}{Predictive
     distributions for between-study heterogeneity and simple methods for
   their application in Bayesian meta-analysis}. \emph{Statistics in
   Medicine}, \bold{34}(6):984-998, 2015. 

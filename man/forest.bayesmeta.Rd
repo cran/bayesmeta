@@ -40,7 +40,7 @@
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
 \references{R.D. Riley, J.P. Higgins and J.J. Deeks.
-  \href{http://dx.doi.org/10.1136/bmj.d549}{Interpretation of random
+  \href{http://doi.org/10.1136/bmj.d549}{Interpretation of random
     effects meta-analyses}. \emph{BMJ}, \bold{342}:d549, 2011.
 } 
 \seealso{

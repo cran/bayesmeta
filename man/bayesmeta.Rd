@@ -21,7 +21,7 @@
           mu.prior = c("mean"=NA,"sd"=NA),
           mu.prior.mean = mu.prior[1], mu.prior.sd = mu.prior[2],
           delta = 0.01, epsilon = 0.0001,
-          rel.tol.integrate = 2*max(c(50*.Machine$double.eps, 0.5e-28)),
+          rel.tol.integrate = 2^16*.Machine$double.eps,
           abs.tol.integrate = rel.tol.integrate, ...)
   \method{bayesmeta}{escalc}(y, labels = NULL, ...)
 }
@@ -42,11 +42,12 @@
     priors}; possible choices for the latter case are: 
     \itemize{
       \item \code{"uniform"}: a uniform prior in \eqn{\tau}
+      \item \code{"sqrt"}: a uniform prior in \eqn{\sqrt{\tau}}{sqrt(tau)}.
       \item \code{"Jeffreys"}: the Jeffreys prior for \eqn{\tau}
-      \item \code{"shrinkage"}: the \sQuote{uniform shrinkage} prior
-      \item \code{"DuMouchel"}: the DuMouchel prior
       \item \code{"BergerDeely"}: the prior due to Berger and Deely (1988)
-      \item \code{"I2"}: a uniform prior on the \sQuote{relative heterogeneity} \eqn{I^2}.
+      \item \code{"DuMouchel"}: the DuMouchel prior
+      \item \code{"shrinkage"}: the \sQuote{uniform shrinkage} prior
+      \item \code{"I2"}: a uniform prior on the \sQuote{relative heterogeneity} \eqn{I^2}
     }
     The default is \code{"uniform"} (which should be used with caution;
     see remarks below).
@@ -67,15 +68,10 @@
     imply greater accuracy and greater computational burden (Roever and
     Friede, 2016).
 }
-  \item{rel.tol.integrate}{
-    the \code{rel.tol} argument to be internally used for numerical
-    integration in the \code{\link{integrate}()} function (see also the
-    help there).
-}
-  \item{abs.tol.integrate}{
-    the \code{abs.tol} argument to be internally used for numerical
-    integration in the \code{\link{integrate}()} function (see also the
-    help there).
+  \item{rel.tol.integrate, abs.tol.integrate}{
+    the \code{rel.tol} and \code{abs.tol} arguments that are passed to
+    the \code{\link{integrate}()} function for internal numerical integration
+    (see also the help there).
 }
   \item{...}{
     other \code{bayesmeta} arguments.
@@ -181,6 +177,8 @@
     \itemize{
       \item \code{"uniform"} - the (improper) uniform prior in \eqn{\tau}:
         \deqn{p(\tau) \;\propto\; 1}{p(tau) = 1}
+      \item \code{"sqrt"} - the (improper) uniform prior in \eqn{\sqrt{\tau}}{sqrt(tau)}:
+        \deqn{p(\tau) \;\propto\; \tau^{-1/2} \;=\; \frac{1}{\sqrt{\tau}}}{p(tau) = tau^(-1/2) = 1/sqrt(tau)}
       \item \code{"Jeffreys"} - \emph{Tibshirani's noninformative prior},
         a variation of the \emph{Jeffreys prior}, which here also constitutes
         the \emph{Berger/Bernardo reference prior} for \eqn{\tau}:
@@ -188,17 +186,17 @@
         \sqrt{\sum_{i=1}^k\Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^2}}{p(tau) = sqrt(sum((tau/(sigma[i]^2+tau^2))^2))}
         (This is also an improper prior whose density does not integrate
   to 1).
-      \item \code{"shrinkage"} - the (proper) \emph{uniform shrinkage} prior:
-        \deqn{p(\tau) \;=\; \frac{2 s_0^2 \tau}{(s_0^2+\tau^2)^2}}{p(tau)=(2*s0^2*tau) / (s0^2+tau^2)^2}
-        where \eqn{s_0^2=\frac{k}{\sum_{i=1}^k \sigma_i^{-2}}}{s0^2 = k/sum(sigma[i]^(-2))} is the harmonic
-        mean of the squared standard errors \eqn{\sigma_i^2}{sigma[i]^2}.
-      \item \code{"DuMouchel"} - the (proper) \emph{DuMouchel} prior:
-        \deqn{p(\tau) \;=\; \frac{s_0}{(s_0+\tau)^2}}{p(tau) = s0 / (s0+tau)^2}
-        where \eqn{s_0=\sqrt{s_0^2}}{s0=sqrt(s0^2)} and \eqn{s_0^2}{s0^2} again is the harmonic mean of the standard errors (as above).
       \item \code{"BergerDeely"} - the (improper) \emph{Berger/Deely} prior:
         \deqn{p(\tau) \;\propto\; \prod_{i=1}^k \Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^{1/k}}{p(tau) = prod((tau / (sigma[i]^2+tau^2))^(1/k))}
         This is a variation of the above \emph{Jeffreys} prior, and both are equal in
         case all standard errors (\eqn{\sigma_i}{sigma[i]}) are the same.
+      \item \code{"DuMouchel"} - the (proper) \emph{DuMouchel} prior:
+        \deqn{p(\tau) \;=\; \frac{s_0}{(s_0+\tau)^2}}{p(tau) = s0 / (s0+tau)^2}
+        where \eqn{s_0=\sqrt{s_0^2}}{s0=sqrt(s0^2)} and \eqn{s_0^2}{s0^2} again is the harmonic mean of the standard errors (as above).
+      \item \code{"shrinkage"} - the (proper) \emph{uniform shrinkage} prior:
+        \deqn{p(\tau) \;=\; \frac{2 s_0^2 \tau}{(s_0^2+\tau^2)^2}}{p(tau)=(2*s0^2*tau) / (s0^2+tau^2)^2}
+        where \eqn{s_0^2=\frac{k}{\sum_{i=1}^k \sigma_i^{-2}}}{s0^2 = k/sum(sigma[i]^(-2))} is the harmonic
+        mean of the squared standard errors \eqn{\sigma_i^2}{sigma[i]^2}.
       \item \code{"I2"} - the (proper) uniform prior in \eqn{I^2}:
         \deqn{p(\tau) \;=\; \frac{2 \hat{\sigma}^2 \tau}{(\hat{\sigma}^2 + \tau^2)^2}}{p(tau)=(2*sigmaHat^2*tau) /(sigmaHat^2+tau^2)^2}
         where \eqn{\hat{\sigma}^2 = \frac{(k-1)\; \sum_{i=1}^k\sigma_i^{-2}}{\bigl(\sum_{i=1}^k\sigma_i^{-2}\bigr)^2 - \sum_{i=1}^k\sigma_i^{-4}}}{sigmaHat^2 = (k-1)*sum(1/sigma[i]^2) / (sum(1/sigma[i]^2)^2 - sum(1/sigma[i]^4))}.
@@ -359,23 +357,22 @@
   }
 \references{
   C. Roever et al. Bayesian random-effects meta-analysis. (in
-  preparation), 2016.
+  preparation), 2017.
 
   C. Roever, T. Friede.
-  Discrete approximation of a mixture distribution via restricted
-  divergence. 
-  \emph{\href{http://arxiv.org/abs/1602.04060}{arXiv preprint
-      1602.04060}},
-  2016.
+  \href{http://doi.org/10.1080/10618600.2016.1276840}{Discrete
+  approximation of a mixture distribution via restricted divergence}.
+  \emph{Journal of Computational and Graphical Statistics},
+  \bold{26}(1):217-222, 2017.
 
   J.O. Berger, J. Deely.
-  \href{http://dx.doi.org/10.1080/01621459.1988.10478606}{A Bayesian
+  \href{http://doi.org/10.1080/01621459.1988.10478606}{A Bayesian
   approach to ranking and selection of related means with alternatives
   to analysis-of-variance methodology}. \emph{Journal of the American
   Statistical Association}, \bold{83}(402):364-373, 1988. 
 
   O. Bodnar, A. Link, C. Elster.
-  \href{http://dx.doi.org/10.1214/14-BA933}{Objective Bayesian inference
+  \href{http://doi.org/10.1214/14-BA933}{Objective Bayesian inference
   for a generalized marginal random effects model}. \emph{Bayesian
   Analysis}, \bold{11}(1):25-45, 2016.
 
@@ -392,25 +389,25 @@
   Academic Press, San Diego, 1985
 
   A.E. Kass, R.E. Raftery.
-  \href{http://dx.doi.org/10.2307/2291091}{Bayes factors}.
+  \href{http://doi.org/10.2307/2291091}{Bayes factors}.
   \emph{Journal of the American Statistical Association},
   \bold{90}(430):773-795, 1995.
 
   D.V. Lindley.
-  \href{http://dx.doi.org/10.1093/biomet/44.1-2.187}{A statistical paradox}.
+  \href{http://doi.org/10.1093/biomet/44.1-2.187}{A statistical paradox}.
   \emph{Biometrika}, \bold{44}(1/2):187-192, 1957.
   
   B. Neuenschwander, G. Capkun-Niggli, M. Branson, D.J. Spiegelhalter.
-  \href{http://dx.doi.org/10.1177/1740774509356002}{Summarizing
+  \href{http://doi.org/10.1177/1740774509356002}{Summarizing
   historical information on controls in clinical
   trials}. \emph{Trials}. \bold{7}(1):5-18, 2010.
 
   A. O'Hagan, L. Pericchi.
-  \href{http://dx.doi.org/10.1214/11-BJPS164}{Bayesian heavy-tailed
+  \href{http://doi.org/10.1214/11-BJPS164}{Bayesian heavy-tailed
   models and conflict resolution: A review}. \emph{Brazilian Journal of
   Probability and Statistics}. \bold{26}(4):372-401, 2012.
 
-  S. Shalloway. \href{http://dx.doi.org/10.1214/14-BA883}{The
+  S. Shalloway. \href{http://doi.org/10.1214/14-BA883}{The
   evidentiary credible region}. \emph{Bayesian Analysis},
   \bold{9}(4):909-922, 2014. 
 
@@ -418,7 +415,7 @@
   to clinical trials and health-care evaluation}. Wiley & Sons, 2004.
   
   R. Tibshirani.
-  \href{http://dx.doi.org/10.1093/biomet/76.3.604}{Noninformative priors
+  \href{http://doi.org/10.1093/biomet/76.3.604}{Noninformative priors
   for one parameter of many}. \emph{Biometrika}, \bold{76}(3):604-608,
   1989.
 

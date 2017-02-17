@@ -12,7 +12,7 @@
 
 <meta name="author" content="Christian Röver" />
 
-<meta name="date" content="2016-11-15" />
+<meta name="date" content="2017-02-17" />
 
 <title>An introduction to meta-analysis using the bayesmeta package</title>
 
@@ -52,7 +52,7 @@ code > span.er { color: #ff0000; font-weight: bold; }
 
 <h1 class="title toc-ignore">An introduction to meta-analysis using the bayesmeta package</h1>
 <h4 class="author"><em>Christian Röver</em></h4>
-<h4 class="date"><em>2016-11-15</em></h4>
+<h4 class="date"><em>2017-02-17</em></h4>
 
 
 
@@ -238,11 +238,11 @@ schools.example<span class="fl">.1</span> &lt;-<span class="st"> </span><span cl
 <span class="kw">print</span>(schools.example<span class="fl">.2</span>$summary)
 ##                 tau        mu      theta
 ## mode       0.000000  8.007138   7.927789
-## median     5.227735  8.055863   8.008132
-## mean       6.585992  8.092137   8.092137
-## sd         5.685974  5.246683  10.148130
+## median     5.227514  8.055863   8.008132
+## mean       6.586227  8.092137   8.092137
+## sd         5.686075  5.246683  10.148130
 ## 95% lower  0.000000 -2.176161 -12.511951
-## 95% upper 17.265778 18.406325  29.014629</code></pre>
+## 95% upper 17.262343 18.406325  29.014629</code></pre>
 <p>The <code>$summary</code> element of the <code>bayesmeta()</code> result contains the estimates that were already shown above; the additional “theta” column refers to the predictive distribution (for a “<span class="math">\(k+1\)</span>th” estimate, an additional “9th school” in this example). The differing prior specifications lead to very similar conclusions in this case, but, as usual, the (improper) uniform priors have to be used with caution.</p>
 </div>
 <div id="more-detailed-analysis" class="section level3">

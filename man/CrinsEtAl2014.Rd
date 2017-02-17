@@ -32,7 +32,7 @@
   recipients.
 }
 \source{N.D. Crins, C. Roever, A.D. Goralczyk, T. Friede.
-  \href{http://dx.doi.org/10.1111/petr.12362}{Interleukin-2 receptor
+  \href{http://doi.org/10.1111/petr.12362}{Interleukin-2 receptor
   antagonists for pediatric liver transplant recipients:
   A systematic review and meta-analysis of controlled studies}.
   \emph{Pediatric Transplantation}, \bold{18}(8):839-850, 2014.
@@ -42,33 +42,33 @@
   \emph{Transplantation}, \bold{75}(12):2040-2043, 2003.
   
   N.E.M. Gibelli et al.
-  \href{http://dx.doi.org/10.1016/j.transproceed.2004.04.070}{Basiliximab-chimeric
+  \href{http://doi.org/10.1016/j.transproceed.2004.04.070}{Basiliximab-chimeric
     anti-IL2-R monoclonal antibody in pediatric liver transplantation:
     comparative study}.
   \emph{Transplantation Proceedings}, \bold{36}(4):956-957, 2004.
 
   S. Schuller et al.
-  \href{http://dx.doi.org/10.1016/j.transproceed.2005.01.023}{Daclizumab 
+  \href{http://doi.org/10.1016/j.transproceed.2005.01.023}{Daclizumab 
     induction therapy associated with tacrolimus-MMF has better outcome
   compared with tacrolimus-MMF alone in pediatric living donor liver
   transplantation}.
   \emph{Transplantation Proceedings}, \bold{37}(2):1151-1152, 2005.
 
   R. Ganschow et al.
-  \href{http://dx.doi.org/10.1111/j.1399-3046.2005.00371.x}{Long-term
+  \href{http://doi.org/10.1111/j.1399-3046.2005.00371.x}{Long-term
   results of basiliximab induction immunosuppression in pediatric liver
   transplant recipients}.
   \emph{Pediatric Transplantation}, \bold{9}(6):741-745, 2005.
 
   M. Spada et al.
-  \href{http://dx.doi.org/10.1111/j.1600-6143.2006.01406.x}{Randomized
+  \href{http://doi.org/10.1111/j.1600-6143.2006.01406.x}{Randomized
   trial of basiliximab induction versus steroid therapy in pediatric
   liver allograft recipients under tacrolimus
   immunosuppression}.
   \emph{American Journal of Transplantation}, \bold{6}(8):1913-1921, 2006.
 
   J.M. Gras et al.
-  \href{http://dx.doi.org/10.1002/lt.21397}{Steroid-free,
+  \href{http://doi.org/10.1002/lt.21397}{Steroid-free,
   tacrolimus-basiliximab immunosuppression in pediatric liver
   transplantation: Clinical and pharmacoeconomic study in 50 children}.
   \emph{Liver Transplantation}, \bold{14}(4):469-477, 2008.}
