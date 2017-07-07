@@ -20,6 +20,7 @@
           tau.prior = "uniform",
           mu.prior = c("mean"=NA,"sd"=NA),
           mu.prior.mean = mu.prior[1], mu.prior.sd = mu.prior[2],
+          interval.type = c("shortest", "central"),
           delta = 0.01, epsilon = 0.0001,
           rel.tol.integrate = 2^16*.Machine$double.eps,
           abs.tol.integrate = rel.tol.integrate, ...)
@@ -61,12 +62,17 @@
     alternative parameters to specify the prior distribution for the
     effect \eqn{\mu} (see above).
 }
+  \item{interval.type}{
+    the type of (credibility, prediction, shrinkage) interval to be
+    returned by default; either \code{"shortest"} for shortest
+    intervals, or \code{"central"} for central, equal-tailed intervals.
+}
   \item{delta, epsilon}{
     the parameters specifying the desired accuracy for approximation of
     the \eqn{\mu} posterior(s), and with that determining the number of
     \eqn{\tau} support points being used internally. Smaller values
     imply greater accuracy and greater computational burden (Roever and
-    Friede, 2016).
+    Friede, 2017).
 }
   \item{rel.tol.integrate, abs.tol.integrate}{
     the \code{rel.tol} and \code{abs.tol} arguments that are passed to
@@ -82,7 +88,7 @@
   \deqn{y_i|\mu,\sigma_i,\tau \;\sim\; \mathrm{Normal}(\mu, \, \sigma_i^2 + \tau^2)}{y[i] | mu, sigma[i], tau  ~  Normal(mu, sigma[i]^2 + tau^2)}
   where the data (\eqn{y}, \eqn{\sigma}) enter as \eqn{y_i}{y[i]}, the
   \eqn{i}-th estimate, that is associated with standard error
-  \eqn{\sigma_i}{sigma[i]}. The model includes two unknown parameters,
+  \eqn{\sigma_i}{sigma[i]}, and \eqn{i=1,...,k}. The model includes two unknown parameters,
   namely the (mean) effect \eqn{\mu}, and the heterogeneity
   \eqn{\tau}. Alternatively, the model may also be formulated via an
   intermediate step as
@@ -115,7 +121,7 @@
   posterior may be approached numerically as well. Accuracy of the
   computations is determined by the \code{delta} (maximum divergence
   \eqn{\delta}) and \code{epsilon} (tail probability \eqn{\epsilon})
-  parameters (Roever and Friede, 2016).
+  parameters (Roever and Friede, 2017).
 
   What constitutes a sensible prior for both \eqn{\mu} and \eqn{\tau}
   depends (as usual) very much on the context.
@@ -205,6 +211,23 @@
     }
   }
 
+  \subsection{Credibility intervals}{
+    Credibility intervals (as well as prediction and shrinkage intervals)
+    may be determined in different ways. By default, \emph{shortest}
+    intervals are returned, which for unimodal posteriors (the usual
+    case) is equivalent to the \emph{highest posterior density region}
+    (Gelman et al., 1997, Sec. 2.3).
+    Alternatively, central (equal-tailed) intervals may also be derived.
+    The default behaviour may be controlled via the \code{interval.type}
+    argument, or also by using the \code{method} argument with each
+    individual call of the \code{$post.interval()} function (see below).
+    A third option, although not available for prediction or shrinkage
+    intervals, and hence not as an overall default choice, but only for
+    the \code{$post.interval()} function, is to
+    determine the \emph{evidentiary} credibility interval, which has the
+    advantage of being parameterization invariant (Shalloway, 2014).
+  }
+  
   \subsection{Bayes factors}{
     Bayes factors (Kass and Raftery, 1995) for the two hypotheses of
     \eqn{\tau=0} and \eqn{\mu=0} are provided in the \code{$bayesfactor}
@@ -219,7 +242,9 @@
     \emph{Lindley's paradox} (Lindley, 1957), which especially implies
     that variations of the prior specifications that have only minuscule
     effects on the posterior distribution may have a substantial impact
-    on Bayes factors (via the marginal likelihood).
+    on Bayes factors (via the marginal likelihood). For more details on
+    the problems and challenges related to Bayes factors see also
+    Gelman et al. (1997, Sec. 7.4).
   }
   
   \subsection{Numerical accuracy}{
@@ -230,7 +255,7 @@
     function), and the accuracy of the grid approximation used for
     integrating out the heterogeneity as specified through the
     \code{delta} and \code{epsilon} arguments (Roever and Friede,
-    2016). As these may also heavily impact on the computation time, be
+    2017). As these may also heavily impact on the computation time, be
     careful when changing these from their default values. You can monitor
     the effect of different settings by checking the number and range of
     support points returned in the \code{$support} element.
@@ -326,6 +351,8 @@
     and a (shortest) 95\% credibility intervals,
     of the marginal posterior distributions of \eqn{\tau} and \eqn{\mu},
     and of the posterior predictive distribution of \eqn{\theta}.}
+  \item{interval.type}{the \code{interval.type} input argument
+    specifying the type of interval to be returned by default.}
   \item{ML}{a \code{matrix} giving joint and marginal maximum-likelihood
     estimates of \eqn{(\tau,\mu)}.}
   \item{MAP}{a \code{matrix} giving joint and marginal

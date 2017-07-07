@@ -9,11 +9,11 @@
 \usage{data("SidikJonkman2007")}
 \format{The data frame contains the following columns:
   \tabular{lll}{
-    \bold{id}          \tab \code{character} \tab identifier used in
-    original publication by Memon et al. (2003) \cr
-    \bold{id.sj}       \tab \code{numeric}   \tab identifier used by
-    Sidik and Jonkman (2007) \cr
-    \bold{year}        \tab \code{numeric}   \tab publication year \cr
+    \bold{id}          \tab \code{character} \tab identifier used in 
+    original publication by Memon et al. (2003)\cr
+    \bold{id.sj}       \tab \code{numeric}   \tab identifier used by 
+    Sidik and Jonkman (2007)\cr
+    \bold{year}        \tab \code{numeric}   \tab publication year\cr
     \bold{lihr.events} \tab \code{numeric}   \tab number of events under LIHR\cr
     \bold{lihr.cases}  \tab \code{numeric}   \tab number of cases under LIHR\cr
     \bold{oihr.events} \tab \code{numeric}   \tab number of events under OIHR\cr

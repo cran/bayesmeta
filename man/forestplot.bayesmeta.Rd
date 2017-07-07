@@ -65,8 +65,10 @@
     meta-analyses}. \emph{Systematic Reviews}, \bold{1}(34), 2012.
   
   R.D. Riley, J.P. Higgins and J.J. Deeks.
-  \href{http://doi.org/10.1136/bmj.d549}{Interpretation of random
-    effects meta-analyses}. \emph{BMJ}, \bold{342}:d549, 2011.
+%  \href{http://doi.org/10.1136/bmj.d549}{Interpretation of random
+%    effects meta-analyses}.
+  Interpretation of random effects meta-analyses.
+  \emph{BMJ}, \bold{342}:d549, 2011.
 } 
 \seealso{
   \code{\link{bayesmeta}},
@@ -133,9 +135,11 @@ print(labtext)      # after
 forestplot(crins.ma, labeltext=labtext, expo=TRUE, xlog=TRUE)
 
 # see also the "forestplot" help for more arguments that you may change,
-# e.g. the "clip", "xticks", "xlab" and "title" arguments:
+# e.g. the "clip", "xticks", "xlab" and "title" arguments,
+# or the "txt_gp" argument for label sizes etc.:
 forestplot(crins.ma, clip=c(-4,1), xticks=(-3):0,
-           xlab="log-OR", title="pediatric transplantation example")
+           xlab="log-OR", title="pediatric transplantation example",
+           txt_gp = fpTxtGp(ticks = gpar(cex=1), xlab = gpar(cex=1)))
 }
 }
 \keyword{ hplot }

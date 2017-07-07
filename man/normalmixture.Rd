@@ -30,7 +30,7 @@
     the mixing distribution, and with that determining the number of
     \eqn{\sigma} support points being used internally. Smaller values
     imply greater accuracy and greater computational burden (Roever and
-    Friede, 2016).
+    Friede, 2017).
   }
 }
 \details{
@@ -38,7 +38,7 @@
   \deqn{X|\mu,\sigma \;\sim\; \mathrm{Normal}(\mu,\sigma^2)}{X|mu,sigma  ~  Normal(mu, sigma^2)}
   has a fixed mean \eqn{\mu}, but a random standard deviation
   \deqn{\sigma|\phi \;\sim\; \mathrm{G}(\phi)}{sigma|phi  ~  G(phi)}
-  following some probability distribution \eqn{\mathrm{G}(\phi)},
+  following some probability distribution \eqn{\mathrm{G}(\phi)}{G(phi)},
   then the \emph{marginal distribution} of \eqn{X},
   \deqn{X|\mu,\phi}{X|mu,phi}
   is a \emph{mixture distribution} (Lindsay, 1995; Seidel, 2010).
@@ -49,7 +49,7 @@
   distribution function and quantile function to some pre-set accuracy
   by a \emph{discrete} mixture of normal distributions based on a finite
   number of \eqn{\sigma} values using the \sQuote{DIRECT} algorithm
-  (Roever and Friede, 2016).
+  (Roever and Friede, 2017).
 
   Either the \dQuote{\code{density}} or \dQuote{\code{cdf}} argument
   needs to be supplied. If only \dQuote{\code{density}} is given, then
@@ -70,7 +70,7 @@
   heterogeneity prior, it is often useful to inspect the implications of
   certain settings in terms of the corresponding \emph{prior predictive
   distribution} of
-  \deqn{\theta_i|\mu,\phi}{theta[i]|mu,phi,}
+  \deqn{\theta_i|\mu,\phi}{theta[i]|mu,phi}
   indicating the \emph{a priori} implied variation between studies due
   to heterogeneity alone based on a certain prior setup (Spiegelhalter
   et al., 2004, Sec. 5.7.3). Some examples using different heterogeneity

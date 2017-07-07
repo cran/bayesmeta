@@ -1,5 +1,3 @@
-import("forestplot")
-
 export(bayesmeta, bayesmeta.default, bayesmeta.escalc,
        print.bayesmeta, summary.bayesmeta, plot.bayesmeta,
        forestplot.bayesmeta,
@@ -7,6 +5,7 @@ export(bayesmeta, bayesmeta.default, bayesmeta.escalc,
        dhalfnormal, phalfnormal, qhalfnormal, rhalfnormal,
        dhalft, phalft, qhalft, rhalft,
        dhalfcauchy, phalfcauchy, qhalfcauchy, rhalfcauchy,
+       dhalflogistic, phalflogistic, qhalflogistic, rhalflogistic,
        drayleigh, prayleigh, qrayleigh, rrayleigh,
        TurnerEtAlParameters, TurnerEtAlPrior,
        RhodesEtAlParameters, RhodesEtAlPrior,
@@ -25,10 +24,10 @@ importFrom("graphics",
            "abline", "axis", "box", "contour", "image", "lines",
            "matlines", "mtext", "par", "plot", "points", "polygon")
 importFrom("stats",
-           "dcauchy", "dlnorm", "dnorm", "dt", "integrate", "optim",
-           "optimize", "pcauchy", "plnorm", "pnorm", "pt", "qcauchy",
-           "qchisq", "qlnorm", "qnorm", "qt", "rcauchy", "rexp",
-           "rnorm", "rt", "runif", "uniroot")
+           "dcauchy", "dlnorm", "dlogis", "dnorm", "dt", "integrate", "optim",
+           "optimize", "pcauchy", "plnorm", "plogis", "pnorm", "pt", "qcauchy",
+           "qchisq", "qlnorm", "qlogis", "qnorm", "qt", "rcauchy", "rexp",
+           "rlogis", "rnorm", "rt", "runif", "uniroot")
 importFrom("forestplot",
            "forestplot", "fpDrawPointCI", "fpDrawSummaryCI","fpDrawBarCI",
            "fpColors")

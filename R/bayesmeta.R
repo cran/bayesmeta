@@ -28,6 +28,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                               mu.prior=c("mean"=NA,"sd"=NA),
                               mu.prior.mean=mu.prior[1],
                               mu.prior.sd  =mu.prior[2],
+                              interval.type = c("shortest", "central"),
                               delta=0.01, epsilon=0.0001,
                               rel.tol.integrate=2^16*.Machine$double.eps,
                               abs.tol.integrate=rel.tol.integrate, ...)
@@ -47,13 +48,15 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
             ((is.na(mu.prior.mean) & is.na(mu.prior.sd))
              || (is.finite(mu.prior.mean) & is.finite(mu.prior.sd))),
             (is.function(tau.prior) | (is.character(tau.prior) && (length(tau.prior)==1))))
+  interval.type <- match.arg(interval.type)
+  stopifnot(length(interval.type)==1, is.element(interval.type, c("shortest","central")))
   
   k <- length(y)
   if (is.null(labels))
     labels <- as.character(1:k)  
   sigma2hat <- (k-1)*sum(1/sigma^2) / (sum(1/sigma^2)^2 - sum(1/sigma^4)) # Higgins/Thompson (2002), eqn. (9)
 
-  maxratio <- max(sigma)/min(sigma)
+  maxratio <- max(sigma) / min(sigma)
   if (maxratio > 1000)
     warning(paste0("Ratio of largest over smallest standard error (sigma) is ", sprintf("%.0f",maxratio), ". Extreme values may lead to computational problems."))
 
@@ -100,6 +103,8 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     rm("pdens")
   }
 
+  tau.prior.integral <- 1.0  # heterogeneity prior's normalizing constant
+
   dprior <- function(tau=NA, mu=NA, log=FALSE)
   # prior density (marginal or joint)
   {
@@ -112,29 +117,29 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     else if (all(is.na(mu))) { # marginal density for tau:
       if (log) {
         if (is.element("log", names(formals(tau.prior))))
-          result <- apply(matrix(tau,ncol=1), 1, tau.prior, log=TRUE)
+          result <- apply(matrix(tau,ncol=1), 1, tau.prior, log=TRUE) - log(tau.prior.integral)
         else
-          result <- log(apply(matrix(tau,ncol=1), 1, tau.prior))
+          result <- log(apply(matrix(tau,ncol=1), 1, tau.prior)) - log(tau.prior.integral)
       }
-      else result <- apply(matrix(tau,ncol=1), 1, tau.prior)
+      else result <- apply(matrix(tau,ncol=1), 1, tau.prior) / tau.prior.integral
     }
     else if (is.finite(mu.prior.mean) & !all(is.na(mu))) {  # joint density:
       if (is.element("log", names(formals(tau.prior))))
-        result <- (apply(matrix(tau,ncol=1), 1, tau.prior, log=TRUE)
+        result <- (apply(matrix(tau,ncol=1), 1, tau.prior, log=TRUE) - log(tau.prior.integral)
                    + dnorm(mu, mean=mu.prior.mean, sd=mu.prior.sd, log=TRUE))
       else
-        result <- (log(apply(matrix(tau,ncol=1), 1, tau.prior))
+        result <- (log(apply(matrix(tau,ncol=1), 1, tau.prior)) - log(tau.prior.integral)
                    + dnorm(mu, mean=mu.prior.mean, sd=mu.prior.sd, log=TRUE))
       if (!log) result <- exp(result)
     }
     else {  # joint density (uniform on mu):
       if (log) {
         if (is.element("log", names(formals(tau.prior))))
-          result <- apply(matrix(tau,ncol=1), 1, tau.prior, log=TRUE)
+          result <- apply(matrix(tau,ncol=1), 1, tau.prior, log=TRUE) - log(tau.prior.integral)
         else
-          result <- log(apply(matrix(tau,ncol=1), 1, tau.prior))
+          result <- log(apply(matrix(tau,ncol=1), 1, tau.prior)) - log(tau.prior.integral)
       }
-      else result <- apply(matrix(tau,ncol=1), 1, tau.prior)
+      else result <- apply(matrix(tau,ncol=1), 1, tau.prior) / tau.prior.integral
     }
     return(result)
   }
@@ -147,7 +152,10 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                            lower=0, upper=Inf,
                            rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate,
                            stop.on.error=FALSE)
-    tau.prior.proper <- ((prior.int$message == "OK") && (abs(prior.int$value - 1.0) <= prior.int$abs.error))
+    tau.prior.proper <- ((prior.int$message == "OK") && (prior.int$value > 0))
+    # if integral is substantially different from 1.0, apply correction:
+    if (tau.prior.proper && (abs(prior.int$value - 1.0) > prior.int$abs.error))
+      tau.prior.integral <- prior.int$value 
     rm("prior.int")
   }
   
@@ -159,7 +167,6 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       return()
     }
     else if (all(is.na(tau))) { # return marginal likelihood (numerical):
-      #warning("marginalization over 'tau' not implemented")
       loglikeli <- function(taumu)
       {
         t2s2 <- taumu[1]^2 + sigma^2
@@ -281,7 +288,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   }
 
   # compute marginal posterior density's normalizing constant:
-  integral <- 1
+  integral <- 1.0
   integral <- integrate(function(x){dposterior(tau=x)}, lower=0, upper=Inf,
                         rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)$value
   if ((!is.finite(integral)) || (integral <= 0))
@@ -452,16 +459,16 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   }
 
   post.interval <- function(tau.level=NA, mu.level=NA, theta.level=mu.level,
-                            method=c("shortest","central","evidentiary"),
+                            method=interval.type,
                             predict=FALSE, individual=FALSE)
-  # determine credibility interval for tau
+  # determine credibility/prediction/shrinkage interval (tau, mu or theta)
   {
     if (is.na(mu.level)) mu.level <- theta.level
     stopifnot((is.finite(tau.level) & ((tau.level>0) & (tau.level<1)))
               | (is.finite(mu.level) & ((mu.level>0) & (mu.level<1))))
     stopifnot(length(individual)==1)
-    method <- match.arg(method)
-    if (all(is.na(mu.level))) {  # CI for heterogeneity tau:
+    method <- match.arg(method, c("shortest","central","evidentiary"))
+    if (all(is.na(mu.level))) {      # CI for heterogeneity tau:
       if (predict) warning("'predict' argument ignored!")
       if (! (is.logical(individual) && (!individual))) warning("'individual' argument ignored!")
       if (method=="central")         # central interval
@@ -480,12 +487,12 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
         else
           result <- c(opti, qposterior(tau=tau.level+pposterior(tau=opti)))
       }
-      else {                         # evidentiary interval
+      else {                         # evidentiary interval (tau)
         expectedLogLikeli <- function(left)
         {
           pleft <- pposterior(tau=left)
           right <- qposterior(tau=tau.level+pleft)
-          expect <- integrate(function(x){return(likelihood(tau=x,log=TRUE))},
+          expect <- integrate(function(x){return(likelihood(tau=x,log=TRUE)*dposterior(tau=x))},
                               lower=left, upper=right,
                               rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)
           return(expect$value)
@@ -493,11 +500,10 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
         opti <- optimize(expectedLogLikeli, maximum=TRUE,
                          lower=0, upper=qposterior(tau=1-tau.level))$maximum
         # catch marginal minimum:
-        if (expectedLogLikeli(0) < expectedLogLikeli(opti))
+        if (expectedLogLikeli(0) > expectedLogLikeli(opti))
           result <- c(0, qposterior(tau=tau.level))
         else
-          result <- c(opti, qposterior(tau=tau.level+pposterior(tau=opti)))
-          
+          result <- c(opti, qposterior(tau=tau.level+pposterior(tau=opti)))          
       }
     }
     else if (all(is.na(tau.level))) {  # CI for effect mu:
@@ -515,15 +521,35 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                          upper=qposterior(mu=1-mu.level, predict=predict, individual=individual))$minimum
         result <- c(opti, qposterior(mu=mu.level+pposterior(mu=opti, predict=predict, individual=individual), predict=predict, individual=individual))
       }
-      else {                           # evidentiary interval (not yet implemented)
-        warning("sorry, evidentiary credible intervals so far only implemented for heterogeneity parameter tau.")
-        result <- c(NA,NA)
+      else {                           # evidentiary interval (mu)
+        if (predict) {
+          warning("evidentiary prediction intervals are not implemented!")
+          result <- c(NA,NA)
+        }
+        else if ((length(individual)>1) || (!is.logical(individual)) || individual) {
+          warning("evidentiary shrinkage intervals are not implemented!")
+          result <- c(NA,NA)
+        } else {
+          expectedLogLikeli <- function(left)
+          {
+            pleft <- pposterior(mu=left)
+            right <- qposterior(mu=mu.level+pleft)
+            expect <- integrate(function(x){return(likelihood(mu=x)*dposterior(mu=x))},
+                                lower=left, upper=right,
+                                rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)
+            return(expect$value)
+          }
+          opti <- optimize(expectedLogLikeli, maximum=TRUE,
+                           lower=qposterior(mu=(1-mu.level)/100), upper=qposterior(mu=1-mu.level))$maximum
+          result <- c(opti, qposterior(mu=mu.level+pposterior(mu=opti)))
+        }
       }
     }
     else {
       warning("need to supply EITHER tau.level OR mu.level, not both.")
       result <- c(NA,NA)
     }
+    attr(result, "interval.type") <- method
     return(result)
   }
   
@@ -605,6 +631,12 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   }
 
   discretize <- function(delta=0.01, epsilon=0.0001, alldivs=TRUE)
+  # discretize parameter space in order to approximate marginal (mixture) distribution
+  # via a finite number of mixture components; see also:
+  #   C. Roever, T. Friede.
+  #   Discrete approximation of a mixture distribution via restricted divergence.
+  #   Journal of Computational and Graphical Statistics, 26(1): 217-222, 2017.
+  #   http://doi.org/10.1080/10618600.2016.1276840
   {
     symKL <- function(mean1, sd1, mean2, sd2)
     # (general) symmetrized KL-divergence
@@ -726,7 +758,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   }
   sumstats[c("mean","sd"),"tau"] <- c(expectation, sqrt(variance))
   sumstats["median","tau"] <- qposterior(0.5)
-  sumstats[c("95% lower", "95% upper"),"tau"] <- post.interval(tau=0.95, method=ifelse(accelerate,"central","shortest"))
+  sumstats[c("95% lower", "95% upper"),"tau"] <- post.interval(tau=0.95, method=ifelse(accelerate, "central", interval.type))
   if (!accelerate) {
     maxi <- optimize(function(x){return(dposterior(tau=x))},
                      lower=0, upper=qposterior(tau=0.9), maximum=TRUE)
@@ -742,7 +774,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     sumstats["mean","mu"] <- sum(support[,"mean"] * support[,"weight"])
     sumstats["sd","mu"] <- sqrt(sum(((support[,"mean"]-sumstats["mean","mu"])^2 + support[,"sd"]^2) * support[,"weight"]))
     sumstats["median","mu"] <- qposterior(mu=0.5)
-    sumstats[c("95% lower", "95% upper"),"mu"] <- post.interval(mu=0.95)
+    sumstats[c("95% lower", "95% upper"),"mu"] <- post.interval(mu=0.95, method=ifelse(accelerate, "central", interval.type))
     if (!accelerate) {
       maxi <- optimize(function(x){return(dposterior(mu=x))},
                        lower=qposterior(mu=0.1), upper=qposterior(mu=0.9), maximum=TRUE)
@@ -771,20 +803,64 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                         "marginal"=c("tau"=sumstats["mode","tau"],
                                      "mu"=sumstats["mode","mu"]))
   if (!accelerate) {
+    # search for joint ML:
     opti <- optim(sumstats["median",c("tau","mu")],
                   function(x){return(-likelihood(tau=x[1], mu=x[2], log=TRUE))})
-    ml.estimate["joint",] <- opti$par
+    # possibly catch optimum at (tau=0) parameter space margin:
+    upper <- opti$par[2] + 1
+    while (likelihood(tau=0, mu=upper+1, log=TRUE) > likelihood(tau=0, mu=upper, log=TRUE))
+      upper <- upper + 1
+    lower <- opti$par[2] - 1
+    while (likelihood(tau=0, mu=lower-1, log=TRUE) > likelihood(tau=0, mu=lower, log=TRUE))
+      lower <- lower - 1
+    maxi <- optimize(function(x){return(likelihood(tau=0, mu=x, log=TRUE))},
+                     lower=lower, upper=upper, maximum=TRUE)
+    if (likelihood(tau=opti$par[1], mu=opti$par[2], log=TRUE) > maxi$objective)
+      ml.estimate["joint",] <- opti$par
+    else
+      ml.estimate["joint",] <- c(0, maxi$maximum)
+    
+    # marginal ML (mu):
+    upper <- ml.estimate["joint","mu"] + 1
+    while (likelihood(mu=upper+1) > likelihood(mu=upper))
+      upper <- upper + 1
+    lower <- ml.estimate["joint","mu"] - 1
+    while (likelihood(mu=lower-1) > likelihood(mu=lower))
+      lower <- lower - 1
+    maxi <- optimize(function(x){return(likelihood(mu=x))},
+                     lower=lower, upper=upper, maximum=TRUE)
+    ml.estimate["marginal","mu"] <- maxi$maximum
+    
+    # marginal ML (tau):
+    upper <- ifelse(ml.estimate["joint","tau"] > 0, 2*ml.estimate["joint","tau"], 1.0)
+    while (likelihood(tau=2*upper) > likelihood(tau=upper))
+      upper <- upper * 2
     maxi <- optimize(function(x){return(likelihood(tau=x))},
-                     lower=0, upper=qposterior(tau=0.99), maximum=TRUE)
-    if ((maxi$maximum <= 2 * .Machine$double.eps^0.25)
-        && (likelihood(0) > maxi$objective)) maxi <- list("maximum"=0)
-    ml.estimate["marginal","tau"] <- maxi$maximum
-    ml.estimate["marginal","mu"]  <- NA
+                     lower=0, upper=upper, maximum=TRUE)
+    if (likelihood(tau=0) > maxi$objective)
+      ml.estimate["marginal","tau"] <- 0.0
+    else
+      ml.estimate["marginal","tau"] <- maxi$maximum
+    
     # compute joint maximum-a-posteriori (MAP) estimate:
     opti <- optim(sumstats["median",c("tau","mu")],
                   function(x){return(-dposterior(tau=x[1], mu=x[2], log=TRUE))})
-    map.estimate["joint",] <- opti$par
-    rm(list=c("opti","maxi"))
+    # possibly catch optimum at (tau=0) parameter space margin:
+    upper <- sumstats["95% upper", "mu"]
+    while (dposterior(mu=upper+1, tau=0) > dposterior(mu=upper, tau=0))
+      upper <- upper + 1
+    lower <- sumstats["95% lower", "mu"]
+    while (dposterior(mu=lower-1, tau=0) > dposterior(mu=lower, tau=0))
+      lower <- lower - 1
+    maxi <- optimize(function(x){return(dposterior(mu=x, tau=0))},
+                     lower=lower, upper=upper, maximum=TRUE)
+    if (dposterior(tau=opti$par[1], mu=opti$par[2]) > maxi$objective)
+      map.estimate["joint",] <- opti$par
+    else
+      map.estimate["joint",] <- c(0, maxi$maximum)
+
+    # clean up:
+    rm(list=c("opti","maxi","lower","upper"))
   }
   
   # compute "shrinkage" estimates of theta[i]:
@@ -854,6 +930,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                  "cond.moment"         = conditionalmoment,
                  "I2"                  = ISquared,
                  "summary"             = sumstats,
+                 "interval.type"       = interval.type,
                  "ML"                  = ml.estimate,
                  "MAP"                 = map.estimate,
                  "theta"               = shrink,
@@ -929,6 +1006,10 @@ print.bayesmeta <- function(x,...)
               "MAP marginal"=x$MAP["marginal",]))
   cat("\nmarginal posterior summary:\n")
   print(x$summary[,c("tau","mu")])
+  if (x$interval.type=="shortest")
+    cat("\n(quoted intervals are shortest credibility intervals.)\n")
+  else
+    cat("\n(quoted intervals are central, equal-tailed credibility intervals.)\n")      
   invisible(x)
 }
 
@@ -963,6 +1044,10 @@ summary.bayesmeta <- function(object,...)
               "MAP marginal"=object$MAP["marginal",]))
   cat("\nmarginal posterior summary:\n")
   print(object$summary)
+  if (object$interval.type=="shortest")
+    cat("\n(quoted intervals are shortest credibility intervals.)\n")
+  else
+    cat("\n(quoted intervals are central, equal-tailed credibility intervals.)\n")      
   if (any(is.finite(object$bayesfactor))) {
     cat("\nBayes factors:\n")
     print(object$bayesfactor)
@@ -973,14 +1058,32 @@ summary.bayesmeta <- function(object,...)
 
 
 plot.bayesmeta <- function(x, main=deparse(substitute(x)),
-                           which=1:4, prior=FALSE, violin=FALSE,...)
+                           which=1:4, prior=FALSE,
+                           mulim=c(NA,NA), taulim=c(NA,NA),
+                           violin=FALSE,...)
 # generate forest plot and joint and marginal density plots.
 {
   q975 <- qnorm(0.975)
-  maxtau <- x$qposterior(tau=0.995)*1.1
-  murange <- x$qposterior(mu=c(0.005,0.995))
-  murange <- murange + c(-1,1)*diff(murange)*0.05
+  stopifnot(length(mulim)==2, length(taulim)<=2)
 
+  if (all(is.finite(taulim))) {
+    if ((length(taulim)==2) && (taulim[1]>=0) && (taulim[2]>taulim[1]))
+      taurange <- taulim
+    else if ((length(taulim)==1) && (taulim>0))
+      taurange <- c(0, taulim)
+    else
+      taurange <- c(0, x$qposterior(tau=0.995)*1.1)
+  } else {
+    taurange <- c(0, x$qposterior(tau=0.995)*1.1)
+  }
+
+  if (all(is.finite(mulim)) && (mulim[1] < mulim[2])) {
+    murange <- mulim
+  } else {
+    murange <- x$qposterior(mu=c(0.005,0.995))
+    murange <- murange + c(-1,1)*diff(murange)*0.05
+  }
+  
   forestPlot <- function(x, main="", violin=violin)
   {
     # determine x-axis range:
@@ -1094,7 +1197,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
   jointdensity <- function(x, main="")
   {
     # range of tau values:
-    tau <- seq(0,maxtau,le=50)
+    tau <- seq(taurange[1], taurange[2],le=50)
     # range of mu values:
     mu <- seq(murange[1], murange[2], le=50)
     # grid of tau/mu value combinations:
@@ -1110,7 +1213,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
           breaks=seq(0,exp(map.value),length=129),
           xlab="", ylab="", main=main, sub="(joint posterior density)", cex.sub=0.8)
     # add the blue lines for conditional mean & 95% confidence bounds:
-    tau2 <- seq(0,maxtau,le=200)
+    tau2 <- seq(taurange[1], taurange[2],le=200)
     cm <- x$cond.moment(tau=tau2)
     lines(tau2, cm[,"mean"], col="blue")  
     lines(tau2, cm[,"mean"]-q975*cm[,"sd"], col="blue", lty="dashed")  
@@ -1170,11 +1273,12 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
   taumarginal <- function(x, main="", priorline=prior)
   {
     # range of tau values:
-    tau <- seq(0, maxtau*1.1, le=200)
+    tau <- seq(max(c(0,taurange[1]-0.1*diff(taurange))),
+                   taurange[2]+0.1*diff(taurange), le=200)
     # corresponding posterior density:
     dens <- x$dposterior(tau=tau)
     # empty plot:
-    plot(c(0,maxtau), c(0,max(dens,na.rm=TRUE)),
+    plot(c(taurange[1],taurange[2]), c(0,max(dens[is.finite(dens)],na.rm=TRUE)),         
          type="n", axes=FALSE, xlab="", ylab="", main=main)
     # light grey shaded contour for density across whole range:
     polygon(c(0,tau,max(tau)), c(0,dens,0), border=NA, col=grey(0.90))
@@ -1373,6 +1477,43 @@ rhalfcauchy <- function(n, scale=1)
 {
   stopifnot(scale>0)
   return(abs(rcauchy(n=n, location=0, scale=scale)))
+}
+
+
+dhalflogistic <- function(x, scale=1, log=FALSE)
+# probability density function of a half-logistic distribution
+{
+  stopifnot(scale>0)
+  result <- rep(-Inf, length(x))
+  result[x>=0] <- log(2) + dlogis(x[x>=0], location=0, scale=scale, log=TRUE)
+  if (!log) result <- exp(result)
+  return(result)  
+}
+
+phalflogistic <- function(q, scale=1)
+# cumulative distribution function (CDF) of a half-logistic distribution
+{
+  stopifnot(scale>0)
+  result <- rep(0, length(q))
+  result[q>0] <- 2.0 * (plogis(q[q>0], location=0, scale=scale) - 0.5)
+  return(result)  
+}
+
+qhalflogistic <- function(p, scale=1)
+# quantile function (inverse CDF) of a half-logistic distribution
+{
+  stopifnot(scale>0)
+  result <- rep(NA, length(p))
+  proper <- (is.finite(p) & (p>=0) & (p<=1))
+  result[proper] <- qlogis(p[proper]/2.0 + 0.5, location=0, scale=scale)
+  return(result)  
+}
+
+rhalflogistic <- function(n, scale=1)
+# random number generation for half-logistic distribution
+{
+  stopifnot(scale>0)
+  return(abs(rlogis(n=n, location=0, scale=scale)))
 }
 
 
@@ -1624,7 +1765,7 @@ RhodesEtAlPrior <- function(outcome=c(NA,
 #
 {
   # match the provided arguments:
-  if (!is.na(outcome)) { # settings from Tables 3, A.3.1 or A.3.2
+  if (all(!is.na(outcome))) { # settings from Tables 3, A.3.1 or A.3.2
     outcome     <- match.arg(outcome)
     comparator1 <- match.arg(comparator1)
     comparator2 <- match.arg(comparator2)

@@ -9,7 +9,8 @@
 }
 \usage{
   \method{plot}{bayesmeta}(x, main=deparse(substitute(x)),
-     which=1:4, prior=FALSE, violin=FALSE, ...) 
+     which=1:4, prior=FALSE, mulim=c(NA,NA), taulim=c(NA,NA),
+     violin=FALSE, ...) 
 }
 \arguments{
   \item{x}{
@@ -24,6 +25,10 @@
   \item{prior}{
     an indicator whether to also draw the prior density in marginal
     posterior density plots.
+  }
+  \item{mulim, taulim}{
+    (optional) ranges of effect (mu) and heterogeneity (tau) values
+    to be used for plotting.
   }
   \item{violin}{
     an indicator whether to draw the forest plot as a \dQuote{violin plot}.
@@ -94,8 +99,10 @@
     meta-analyses}. \emph{Systematic Reviews}, \bold{1}(34), 2012.
 
   R.D. Riley, J.P. Higgins and J.J. Deeks.
-  \href{http://doi.org/10.1136/bmj.d549}{Interpretation of random
-    effects meta-analyses}. \emph{BMJ}, \bold{342}:d549, 2011.
+%  \href{http://doi.org/10.1136/bmj.d549}{Interpretation of random
+%    effects meta-analyses}.
+  Interpretation of random effects meta-analyses.
+  \emph{BMJ}, \bold{342}:d549, 2011.
 }
 \seealso{
   \code{\link{bayesmeta}}, \code{\link{forestplot.bayesmeta}}

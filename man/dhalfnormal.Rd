@@ -49,8 +49,8 @@
   if \eqn{X\sim\mathrm{Normal}(0,\sigma^2)}{X ~ Normal(0,sigma)}, then
   \eqn{|X|\sim\mathrm{halfNormal}(\mathrm{scale}\!=\!\sigma)}{|X| ~ halfNormal(scale=sigma)}.
   Its mean is \eqn{\sigma
-  \sqrt{2/\pi}}{sigma*sqrt(2*pi)}, and its variance is \eqn{\sigma^2
-  (1-2/\pi)}{sigma^2*(1-2*pi)}. 
+  \sqrt{2/\pi}}{sigma*sqrt(2/pi)}, and its variance is \eqn{\sigma^2
+  (1-2/\pi)}{sigma^2*(1-2/pi)}. 
   Analogously, the \bold{half-t distribution} is a truncated Student-t
   distribution with \code{df} degrees-of-freedom,
   and the \bold{half-Cauchy distribution} is again a special case of the
@@ -77,6 +77,15 @@
 \references{
   A. Gelman. Prior distributions for variance parameters in hierarchical
   models. \emph{Bayesian Analysis}, \bold{1}(3):515-534, 2006.
+
+  F. C. Leone, L. S. Nelson, R. B. Nottingham.
+  \href{http://doi.org/10.2307/1266560}{The folded normal
+  distribution}. \emph{Technometrics}, \bold{3}(4):543-550, 1961. 
+
+  S. Psarakis, J. Panaretos.
+  \href{http://doi.org/10.1080/03610929008830342}{The folded t
+  distribution}. \emph{Communications in Statistics - Theory and
+  Methods}, \bold{19}(7):2717-2734, 1990.
 }
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}

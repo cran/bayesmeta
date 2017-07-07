@@ -40,8 +40,10 @@
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
 \references{R.D. Riley, J.P. Higgins and J.J. Deeks.
-  \href{http://doi.org/10.1136/bmj.d549}{Interpretation of random
-    effects meta-analyses}. \emph{BMJ}, \bold{342}:d549, 2011.
+%  \href{http://doi.org/10.1136/bmj.d549}{Interpretation of random
+%    effects meta-analyses}.
+  Interpretation of random effects meta-analyses.
+  \emph{BMJ}, \bold{342}:d549, 2011.
 } 
 \seealso{
   \code{\link{bayesmeta}}, \code{\link[metafor]{forest.default}},
