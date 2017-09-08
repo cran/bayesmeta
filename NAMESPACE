@@ -9,7 +9,7 @@ export(bayesmeta, bayesmeta.default, bayesmeta.escalc,
        drayleigh, prayleigh, qrayleigh, rrayleigh,
        TurnerEtAlParameters, TurnerEtAlPrior,
        RhodesEtAlParameters, RhodesEtAlPrior,
-       normalmixture)
+       normalmixture, pppvalue)
 
 S3method(bayesmeta, default)
 S3method(bayesmeta, escalc)
@@ -31,3 +31,6 @@ importFrom("stats",
 importFrom("forestplot",
            "forestplot", "fpDrawPointCI", "fpDrawSummaryCI","fpDrawBarCI",
            "fpColors")
+importFrom("parallel",
+           "detectCores", "makeCluster", "clusterEvalQ","parSapply",
+           "stopCluster")

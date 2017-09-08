@@ -39,9 +39,11 @@
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
-\references{R.D. Riley, J.P. Higgins and J.J. Deeks.
-%  \href{http://doi.org/10.1136/bmj.d549}{Interpretation of random
-%    effects meta-analyses}.
+\references{C. Lewis and M. Clarke.
+  Forest plots: trying to see the wood and the trees.
+  \emph{BMJ}, \bold{322}:1479, 2001.
+
+  R.D. Riley, J.P. Higgins and J.J. Deeks.
   Interpretation of random effects meta-analyses.
   \emph{BMJ}, \bold{342}:d549, 2011.
 } 
@@ -58,7 +60,7 @@ es.crins <- escalc(measure="OR",
                    ai=exp.AR.events,  n1i=exp.total,
                    ci=cont.AR.events, n2i=cont.total,
                    slab=publication, data=CrinsEtAl2014)
-tp.crins <- TurnerEtAlPrior("surgical", "pharma", "pharma")
+tp.crins <- TurnerEtAlPrior("surgical", "pharma", "placebo / control")
 ma.crins <- bayesmeta(es.crins, tau.prior=tp.crins$dprior)
 
 forest(ma.crins, xlab="log odds ratio")

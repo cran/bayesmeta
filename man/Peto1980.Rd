@@ -48,8 +48,8 @@ peto.ma01 <- bayesmeta(peto.es)
 peto.ma02 <- bayesmeta(peto.es, tau.prior=function(t){dhalfnormal(t, scale=1)})
  
 par(mfrow=c(2,1))
-  plot(peto.ma01, which=4, prior=TRUE, main="uniform prior")
-  plot(peto.ma02, which=4, prior=TRUE, main="half-normal prior")
+  plot(peto.ma01, which=4, prior=TRUE, taulim=c(0,1), main="uniform prior")
+  plot(peto.ma02, which=4, prior=TRUE, taulim=c(0,1), main="half-normal prior")
 par(mfrow=c(1,1))
 
 # compare heterogeneity (tau) estimates:

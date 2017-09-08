@@ -1,6 +1,6 @@
 #
 #    bayesmeta, an R package for Bayesian random-effects meta-analysis.
-#    Copyright (C) 2015  Christian Roever
+#    Copyright (C) 2017  Christian Roever
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -31,7 +31,8 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                               interval.type = c("shortest", "central"),
                               delta=0.01, epsilon=0.0001,
                               rel.tol.integrate=2^16*.Machine$double.eps,
-                              abs.tol.integrate=rel.tol.integrate, ...)
+                              abs.tol.integrate=rel.tol.integrate,
+                              tol.uniroot=rel.tol.integrate,...)
 {
   ptm <- proc.time()
   y      <- as.vector(y)
@@ -40,7 +41,8 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   # some preliminary sanity checks:
   stopifnot(is.vector(y), is.vector(sigma),
             all(is.finite(y)), all(is.finite(sigma)),
-            all(sigma>0), length(sigma)==length(y),
+            length(sigma)==length(y),
+            all(sigma>=0), sum(sigma==0)<=1,
             length(mu.prior)==2,
             length(mu.prior.mean)==1, length(mu.prior.sd)==1,
             is.na(mu.prior.mean) || is.finite(mu.prior.mean),
@@ -50,6 +52,9 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
             (is.function(tau.prior) | (is.character(tau.prior) && (length(tau.prior)==1))))
   interval.type <- match.arg(interval.type)
   stopifnot(length(interval.type)==1, is.element(interval.type, c("shortest","central")))
+
+  zerosigma <- (sigma == 0.0)
+  #if (any(zerosigma)) warning("one of the supplied 'sigma' elements is zero!")
   
   k <- length(y)
   if (is.null(labels))
@@ -57,17 +62,17 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   sigma2hat <- (k-1)*sum(1/sigma^2) / (sum(1/sigma^2)^2 - sum(1/sigma^4)) # Higgins/Thompson (2002), eqn. (9)
 
   maxratio <- max(sigma) / min(sigma)
-  if (maxratio > 1000)
+  if ((!any(zerosigma)) && (maxratio > 1000))
     warning(paste0("Ratio of largest over smallest standard error (sigma) is ", sprintf("%.0f",maxratio), ". Extreme values may lead to computational problems."))
 
   tau.prior.proper <- NA
   if (is.character(tau.prior)) {
     tau.prior <- match.arg(tolower(tau.prior),
-                           c("uniform","jeffreys","shrinkage","dumouchel","bergerdeely","i2","sqrt"))
+                           c("uniform","jeffreys","shrinkage","dumouchel","bergerdeely","conventional","i2","sqrt"))
     tau.prior <- c("uniform"="uniform", "jeffreys"="Jeffreys",
                    "shrinkage"="shrinkage", "dumouchel"="DuMouchel",
-                   "bergerdeely"="BergerDeely", "i2"="I2", "sqrt"="sqrt")[tau.prior]
-    stopifnot(is.element(tau.prior, c("uniform", "Jeffreys", "shrinkage", "DuMouchel", "BergerDeely", "I2", "sqrt")))
+                   "bergerdeely"="BergerDeely", "conventional"="conventional", "i2"="I2", "sqrt"="sqrt")[tau.prior]
+    stopifnot(is.element(tau.prior, c("uniform", "Jeffreys", "shrinkage", "DuMouchel", "BergerDeely", "conventional", "I2", "sqrt")))
     if (tau.prior=="uniform") {             # uniform prior on tau:
       pdens <- function(t){d<-rep(1,length(t)); d[t<0]<-0; return(d)}
       attr(pdens, "bayesmeta.label") <- "uniform(min=0, max=Inf)"
@@ -78,6 +83,10 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       pdens <- function(t){return(apply(matrix(t,ncol=1),1,
                                         function(x){return(exp(log(x)-sum(log(sigma^2+x^2))/k))}))}
       attr(pdens, "bayesmeta.label") <- "Berger/Deely prior"
+    } else if (tau.prior=="conventional") { # conventional prior:
+      pdens <- function(t){return(apply(matrix(t,ncol=1),1,
+                                        function(x){return(exp(log(x)-(3/(2*k))*sum(log(sigma^2+x^2))))}))}
+      attr(pdens, "bayesmeta.label") <- "conventional prior"
     } else if (tau.prior=="I2") {           # uniform on I^2:
       pdens <- function(t){return(apply(matrix(t,ncol=1),1,
                                         function(x){return(2 * exp(log(sigma2hat)+log(x) - 2*log(sigma2hat+x^2)))}))}
@@ -193,7 +202,11 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
           yTerm   <- c(mu.prior.mean, y)
           varTerm <- c(mu.prior.sd^2, t^2 + sigma^2)
         }
-        conditionalmean <- sum(yTerm/varTerm) / sum(1/varTerm)
+        if ((t==0) & any(zerosigma)) {
+          conditionalmean <- y[zerosigma]
+        } else {
+          conditionalmean <- sum(yTerm/varTerm) / sum(1/varTerm)
+        }
         return(-0.5*((length(yTerm)-1) * log(2*pi)
                      + sum(log(varTerm))
                      + sum((yTerm-conditionalmean)^2 / varTerm)
@@ -224,7 +237,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     if (! (is.logical(individual) && (!individual))) {
       indiv.logi <- TRUE
       if (is.numeric(individual))   indiv.which <- which(is.element(1:k, individual))
-      if (is.character(individual)) indiv.which <- which(is.element(labels, individual))
+      if (is.character(individual)) indiv.which <- which(is.element(labels, match.arg(individual,labels)))
       if (length(indiv.which)==0) warning("cannot make sense of 'individual' argument: empty subset.")
     }
     else indiv.logi <- FALSE
@@ -302,7 +315,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     if (! (is.logical(individual) && (!individual))) {
       indiv.logi <- TRUE
       if (is.numeric(individual))   indiv.which <- which(is.element(1:k, individual))
-      if (is.character(individual)) indiv.which <- which(is.element(labels, individual))
+      if (is.character(individual)) indiv.which <- which(is.element(labels, match.arg(individual,labels)))
       if (length(indiv.which)==0) warning("cannot make sense of 'individual' argument: empty subset.")
     }
     else indiv.logi <- FALSE
@@ -360,7 +373,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     if (! (is.logical(individual) && (!individual))) {
       indiv.logi <- TRUE
       if (is.numeric(individual))   indiv.which <- which(is.element(1:k, individual))
-      if (is.character(individual)) indiv.which <- which(is.element(labels, individual))
+      if (is.character(individual)) indiv.which <- which(is.element(labels, match.arg(individual,labels)))
       if (length(indiv.which)==0) warning("cannot make sense of 'individual' argument: empty subset.")
     }
     else indiv.logi <- FALSE
@@ -381,13 +394,17 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
           if (p==1) quant <- Inf
           else
             quant <- uniroot(function(xx){return(pposterior(tau=xx)-p)},
-                             interval=c(0,upper))$root
+                             interval=c(0,upper), tol=tol.uniroot)$root
         }
         return(quant)
       }
       result <- apply(matrix(tau.p,ncol=1),1,qfun)
     }
     else if (all(is.na(tau.p))) { # compute mu quantile
+      if (indiv.logi && any(zerosigma) && (indiv.which == which(zerosigma))){
+        result <- rep(NA, length(mu.p))
+        result[is.finite(mu.p)] <- y[zerosigma]
+      }
       stopifnot(all(mu.p>=0), all(mu.p<=1))
       if (any((mu.p<1) & (mu.p>0))) {
         minp <- min(c(mu.p[mu.p>0], 1-mu.p[mu.p<1]))
@@ -417,7 +434,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
           if (p==1) quant <- Inf
           else
             quant <- uniroot(function(yy){return(pposterior(mu=yy,predict=predict,individual=individual)-p)},
-                             interval=c(lower,upper))$root
+                             interval=c(lower,upper), tol=tol.uniroot)$root
         }
         return(quant)
       }
@@ -433,18 +450,21 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   rposterior <- function(n=1, predict=FALSE, individual=FALSE, tau.sample=TRUE)
   # posterior random number generation for tau and mu
   {
-    stopifnot(n>0, n==round(n), length(individual)==1)
-    if (tau.sample) {
+    stopifnot(n>0, n==round(n), length(individual)==1,
+              !is.logical(individual) || !individual)
+    if (tau.sample) {  # draw joint, bivariate (tau,mu) pairs:
       samp <- matrix(NA, nrow=n, ncol=2, dimnames=list(NULL,c("tau","mu")))
+      if (is.numeric(individual) | is.character(individual))
+          colnames(samp)[2] <- "theta"
       u <- runif(n=n)
       samp[,"tau"] <- apply(matrix(u,ncol=1), 1, function(x){return(qposterior(tau.p=x))})
       cond.sample <- function(t)
       {
         cm <- conditionalmoment(t, predict=predict, individual=individual)
-        return(rnorm(n=1, mean=cm[,"mean"], sd=cm[,"sd"]))
+        return(rnorm(n=1, mean=cm[1], sd=cm[2]))
       }
-      samp[,"mu"] <- apply(matrix(samp[,"tau"],ncol=1), 1, cond.sample)
-    } else {
+      samp[,2] <- apply(matrix(samp[,"tau"],ncol=1), 1, cond.sample)
+    } else {           # draw marginal, univariate (mu or theta) numbers:
       samp <- rep(NA, n)
       if (!predict & (is.logical(individual) && (!individual)))
         meansd <- support[,c("mean","sd")]
@@ -572,7 +592,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       if (all(is.numeric(individual))) # number(s) provided
         indiv.which <- which(is.element(1:k, individual))
       else if (all(is.character(individual))) # label(s) provided
-        indiv.which <- which(is.element(labels, individual))
+        indiv.which <- which(is.element(labels, match.arg(individual, labels, several.ok=TRUE)))
       else warning("cannot make sense of 'individual' argument: funny format.")
       if (length(indiv.which)==0)
         warning("cannot make sense of 'individual' argument: empty subset.")
@@ -580,19 +600,24 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     if (predict & indiv.logi) warning("need to specify either 'predict' or 'individual' argument, but not both.")
     cm <- function(t)
     {
-      if (is.na(mu.prior.mean)) { # uniform prior
-        yTerm   <- y
-        varTerm <- t^2 + sigma^2
+      if ((t==0) && any(zerosigma)) {
+        conditionalmean <- y[zerosigma]
+        conditionalvar  <- 0.0
+      } else {
+        if (is.na(mu.prior.mean)) { # uniform prior
+          yTerm   <- y
+          varTerm <- t^2 + sigma^2
+        }
+        else {                      # conjugate normal prior
+          yTerm   <- c(mu.prior.mean, y)
+          varTerm <- c(mu.prior.sd^2, t^2 + sigma^2)
+        }
+        conditionalvar  <- 1 / sum(1/varTerm)
+        conditionalmean <- sum(yTerm/varTerm) * conditionalvar
       }
-      else {                      # conjugate normal prior
-        yTerm   <- c(mu.prior.mean, y)
-        varTerm <- c(mu.prior.sd^2, t^2 + sigma^2)
-      }
-      conditionalvar  <- 1 / sum(1/varTerm)
-      conditionalmean <- sum(yTerm/varTerm) * conditionalvar        
       return(c("mean"=conditionalmean,"sd"=sqrt(conditionalvar)))
     }
-    # compute conditional moments of Mu
+    # compute conditional moments of mu
     # (or predictive, if requested):
     if (!indiv.logi) {
       result <- t(apply(matrix(tau,ncol=1),1,cm))
@@ -606,12 +631,17 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       # loop over estimates:
       zero <- (tau==0)
       for (i in 1:length(indiv.which)) {
-        if (any(!zero)) {
-          result[!zero,"mean",i] <- (y[indiv.which[i]]/sigma[indiv.which[i]]^2 + musigma[!zero,"mean"]/tau[!zero]^2) / (1/sigma[indiv.which[i]]^2+1/tau[!zero]^2)
-          result[!zero,"sd",i]   <- sqrt(1 / (1/sigma[indiv.which[i]]^2+1/tau[!zero]^2)
-                                         + (musigma[!zero,"sd"] * (1/tau[!zero]^2) / (1/sigma[indiv.which[i]]^2+1/tau[!zero]^2))^2)
+        if (any(!zero)) { # tau > 0
+          if (sigma[indiv.which[i]] > 0.0) {
+            result[!zero,"mean",i] <- (y[indiv.which[i]]/sigma[indiv.which[i]]^2 + musigma[!zero,"mean"]/tau[!zero]^2) / (1/sigma[indiv.which[i]]^2+1/tau[!zero]^2)
+            result[!zero,"sd",i]   <- sqrt(1 / (1/sigma[indiv.which[i]]^2+1/tau[!zero]^2)
+                                           + (musigma[!zero,"sd"] * (1/tau[!zero]^2) / (1/sigma[indiv.which[i]]^2+1/tau[!zero]^2))^2)
+          } else {
+            result[!zero,"mean",i] <- y[indiv.which[i]]
+            result[!zero,"sd",i]   <- 0.0
+          }
         }
-        if (any(zero)) {
+        if (any(zero)) {  # tau = 0
           result[zero,"mean",i] <- musigma[zero,"mean"]
           result[zero,"sd",i]   <- musigma[zero,"sd"]
         }
@@ -639,7 +669,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   #   http://doi.org/10.1080/10618600.2016.1276840
   {
     symKL <- function(mean1, sd1, mean2, sd2)
-    # (general) symmetrized KL-divergence
+    # (general) symmetrized KL-divergence of two normal distributions
     {
       stopifnot(sd1>0, sd2>0)
       return((mean1-mean2)^2 * 0.5 * (1/sd1^2 + 1/sd2^2) + (sd1^2-sd2^2)^2 / (2*sd1^2*sd2^2))
@@ -656,64 +686,81 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
         # determine array of ALL conditional moments:
         cm <- array(c(conditionalmoment(tau=c(tau1, tau2)),
                       conditionalmoment(tau=c(tau1, tau2), predict=TRUE),
-                      conditionalmoment(tau=c(tau1, tau2), individual=TRUE)),
-                    dim=c(2, 2, k+2))
+                      #conditionalmoment(tau=c(tau1, tau2), individual=TRUE)),
+                      conditionalmoment(tau=c(tau1, tau2), individual=(1:k)[!zerosigma])),
+                    #dim=c(2, 2, k+2))
+                    dim=c(2, 2, sum(!zerosigma)+2))
         # determine individual divergences and their maximum:
-        div <- rep(NA, k+2)
-        for (i in 1:(k+2))
+        #div <- rep(NA, k+2)
+        div <- rep(NA, sum(!zerosigma)+2)
+        #for (i in 1:(k+2))
+        for (i in 1:(sum(!zerosigma)+2))
           div[i] <- symKL(cm[1,1,i], cm[1,2,i], cm[2,1,i], cm[2,2,i])
         div <- max(div)
       }
       return(div)
     }
     # determine range of interest / upper bound on tau:
-    maxtau <- qposterior(tau=1-min(c(epsilon, 1-epsilon)))
+    if (any(zerosigma)) maxtau <- qposterior(tau.p=1-min(c(epsilon/2, 1-epsilon/2)))
+    else                maxtau <- qposterior(tau.p=1-min(c(epsilon, 1-epsilon)))
     # special procedure for 1st bin
-    # (want zero to be first reference point):
-    tau <- 0
+    # (want zero to be first reference point UNLESS one of the sigma[i] is zero):
+    if (any(zerosigma)) tau <- qposterior(tau.p=min(c(epsilon/2, 1-epsilon/2)))
+    else                tau <- 0.0
     # search for upper bin margin:
     upper <- 1
     diverg <- divergence(tau, upper)
-    while (diverg < delta) {
+    while (diverg <= delta) {
       upper <- upper*2
       diverg <- divergence(tau, upper)
     }
     ur <- uniroot(function(t){return(divergence(tau, t)-delta)},
-                  lower=tau, upper=upper)
-    tau <- ur$root
+                  lower=tau, upper=upper,
+                  f.lower=-delta, f.upper=diverg-delta,
+                  tol=tol.uniroot)
     prob1 <- 0.0
-    prob2 <- pposterior(tau=tau)
+    prob2 <- pposterior(tau=ur$root)
     # store result for 1st bin:
-    result <- matrix(c(0, prob2-prob1),
+    result <- matrix(c(tau, prob2-prob1),
                      nrow=1, ncol=2,
                      dimnames=list(NULL,c("tau","weight")))
+    tau <- ur$root
     # determine following bins (2,...):
     bin <- 2
-    while ((tau < maxtau) | (bin<=2)) {  # (at least 2 support points)
+    while ((tau <= maxtau) | (bin<=2)) {  # (at least 2 support points)
       result <- rbind(result, rep(0,2))
       # determine bin's reference point:
       diverg <- divergence(tau, upper)
-      while (diverg < delta) {
+      while (diverg <= delta) {
         upper <- upper*2
         diverg <- divergence(tau, upper)
       }
       ur <- uniroot(function(t){return(divergence(tau, t)-delta)},
-                    lower=tau, upper=upper)
+                    lower=tau, upper=upper,
+                    f.lower=-delta, f.upper=diverg-delta,
+                    tol=tol.uniroot)
       tau <- ur$root
       result[bin,"tau"] <- tau
       # determine bin's upper bound:
       diverg <- divergence(tau, upper)
-      while (diverg < delta) {
+      while (diverg <= delta) {
         upper <- upper*2
         diverg <- divergence(tau, upper)
       }
       ur <- uniroot(function(t){return(divergence(tau, t)-delta)},
-                    lower=tau, upper=upper)
+                    lower=tau, upper=upper,
+                    f.lower=-delta, f.upper=diverg-delta,
+                    tol=tol.uniroot)
       tau <- ur$root
       # determine bin's weight:
       prob1 <- prob2
       prob2 <- pposterior(tau=tau)
       result[bin,"weight"] <- max(c(0.0, prob2-prob1))
+      # sanity check (to catch possible uniroot() failure):
+      if (result[bin,"tau"] <= result[bin-1,"tau"]) {
+        warning("DIRECT grid setup seems to have failed.")
+        tau <- maxtau + 1.0
+      }
       bin <- bin+1
     }
     # re-normalize weights (if necessary):
@@ -760,12 +807,16 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   sumstats["median","tau"] <- qposterior(0.5)
   sumstats[c("95% lower", "95% upper"),"tau"] <- post.interval(tau=0.95, method=ifelse(accelerate, "central", interval.type))
   if (!accelerate) {
-    maxi <- optimize(function(x){return(dposterior(tau=x))},
-                     lower=0, upper=qposterior(tau=0.9), maximum=TRUE)
-    if ((maxi$maximum <= 2 * .Machine$double.eps^0.25)
-        && (dposterior(0) > maxi$objective)) maxi <- list("maximum"=0)
-    sumstats["mode","tau"] <- maxi$maximum
-    rm(list=c("maxi"))
+    if (! is.finite(dposterior(tau=0))) {
+      sumstats["mode","tau"] <- 0
+    } else {
+      maxi <- optimize(function(x){return(dposterior(tau=x))},
+                       lower=0, upper=qposterior(tau=0.9), maximum=TRUE)
+      if ((maxi$maximum <= 2 * .Machine$double.eps^0.25)
+          && (dposterior(0) > maxi$objective)) maxi <- list("maximum"=0)
+      sumstats["mode","tau"] <- maxi$maximum
+      rm(list=c("maxi"))
+    }
   }
   rm(list=c("expectation", "variance"))
   
@@ -807,19 +858,22 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     opti <- optim(sumstats["median",c("tau","mu")],
                   function(x){return(-likelihood(tau=x[1], mu=x[2], log=TRUE))})
     # possibly catch optimum at (tau=0) parameter space margin:
-    upper <- opti$par[2] + 1
-    while (likelihood(tau=0, mu=upper+1, log=TRUE) > likelihood(tau=0, mu=upper, log=TRUE))
-      upper <- upper + 1
-    lower <- opti$par[2] - 1
-    while (likelihood(tau=0, mu=lower-1, log=TRUE) > likelihood(tau=0, mu=lower, log=TRUE))
-      lower <- lower - 1
-    maxi <- optimize(function(x){return(likelihood(tau=0, mu=x, log=TRUE))},
-                     lower=lower, upper=upper, maximum=TRUE)
-    if (likelihood(tau=opti$par[1], mu=opti$par[2], log=TRUE) > maxi$objective)
+    if (any(zerosigma)) {
       ml.estimate["joint",] <- opti$par
-    else
-      ml.estimate["joint",] <- c(0, maxi$maximum)
-    
+    } else {
+      upper <- opti$par[2] + 1
+      while (likelihood(tau=0, mu=upper+1, log=TRUE) > likelihood(tau=0, mu=upper, log=TRUE))
+        upper <- upper + 1
+      lower <- opti$par[2] - 1
+      while (likelihood(tau=0, mu=lower-1, log=TRUE) > likelihood(tau=0, mu=lower, log=TRUE))
+        lower <- lower - 1
+      maxi <- optimize(function(x){return(likelihood(tau=0, mu=x, log=TRUE))},
+                       lower=lower, upper=upper, maximum=TRUE)
+      if (likelihood(tau=opti$par[1], mu=opti$par[2], log=TRUE) > maxi$objective)
+        ml.estimate["joint",] <- opti$par
+      else
+        ml.estimate["joint",] <- c(0, maxi$maximum)
+    }
     # marginal ML (mu):
     upper <- ml.estimate["joint","mu"] + 1
     while (likelihood(mu=upper+1) > likelihood(mu=upper))
@@ -837,7 +891,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       upper <- upper * 2
     maxi <- optimize(function(x){return(likelihood(tau=x))},
                      lower=0, upper=upper, maximum=TRUE)
-    if (likelihood(tau=0) > maxi$objective)
+    if (all(!zerosigma) && (likelihood(tau=0) > maxi$objective))
       ml.estimate["marginal","tau"] <- 0.0
     else
       ml.estimate["marginal","tau"] <- maxi$maximum
@@ -845,24 +899,38 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     # compute joint maximum-a-posteriori (MAP) estimate:
     opti <- optim(sumstats["median",c("tau","mu")],
                   function(x){return(-dposterior(tau=x[1], mu=x[2], log=TRUE))})
+    map.value <- dposterior(tau=opti$par[1], mu=opti$par[2])
+    map.estimate["joint",] <- opti$par
+      
     # possibly catch optimum at (tau=0) parameter space margin:
-    upper <- sumstats["95% upper", "mu"]
-    while (dposterior(mu=upper+1, tau=0) > dposterior(mu=upper, tau=0))
-      upper <- upper + 1
-    lower <- sumstats["95% lower", "mu"]
-    while (dposterior(mu=lower-1, tau=0) > dposterior(mu=lower, tau=0))
-      lower <- lower - 1
-    maxi <- optimize(function(x){return(dposterior(mu=x, tau=0))},
-                     lower=lower, upper=upper, maximum=TRUE)
-    if (dposterior(tau=opti$par[1], mu=opti$par[2]) > maxi$objective)
-      map.estimate["joint",] <- opti$par
-    else
-      map.estimate["joint",] <- c(0, maxi$maximum)
+    if (all(!zerosigma)) {
+      if (is.finite(tau.prior(0))) {
+        upper <- sumstats["95% upper", "mu"]
+        while (dposterior(mu=upper+1, tau=0) > dposterior(mu=upper, tau=0))
+          upper <- upper + 1
+        lower <- sumstats["95% lower", "mu"]
+        while (dposterior(mu=lower-1, tau=0) > dposterior(mu=lower, tau=0))
+          lower <- lower - 1
+        maxi <- optimize(function(x){return(dposterior(mu=x, tau=0))},
+                         lower=lower, upper=upper, maximum=TRUE)
+        if (maxi$objective > map.value) {
+          map.estimate["joint",] <- c(0, maxi$maximum)
+          map.value <- maxi$objective
+        }
+      } else {
+        map.value <- Inf
+        map.estimate["joint","tau"] <- 0.0
+      }
+    }
+      
+    # possibly catch diverging posterior density
+    if (! is.finite(map.value)) {
+      map.estimate["joint","mu"] <- conditionalmoment(tau=map.estimate["joint","tau"])[1,"mean"]
+    }
 
     # clean up:
-    rm(list=c("opti","maxi","lower","upper"))
+    rm(list=c("opti","maxi","lower","upper","map.value"))
   }
-  
   # compute "shrinkage" estimates of theta[i]:
   shrink <- matrix(NA, nrow=8, ncol=k,
                    dimnames=list(c("y","sigma","mode", "median", "mean","sd", "95% lower", "95% upper"),
@@ -871,23 +939,33 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   shrink["sigma",] <- sigma
   if (all(is.finite(support)) & (!accelerate)) {
     for (i in 1:k) {
-      musigma <- conditionalmoment(support[,"tau"], individual=i)
-      shrink["mean",i] <- sum(musigma[,"mean"] * support[,"weight"])
-      shrink["sd",i]   <- sqrt(sum(((musigma[,"mean"]-shrink["mean",i])^2 + musigma[,"sd"]^2) * support[,"weight"]))
-      shrink["median",i] <- qposterior(mu=0.5, individual=i)
-      shrink[c("95% lower", "95% upper"),i] <- post.interval(mu=0.95, individual=i)
-      maxi <- optimize(function(x){return(dposterior(mu=x, individual=i))},
-                       lower=qposterior(mu=0.1), upper=qposterior(mu=0.9), maximum=TRUE)
-      shrink["mode",i] <- maxi$maximum
+      if (zerosigma[i]) {
+        shrink[c("mean", "median", "mode", "95% lower", "95% upper"), i] <- y[i]
+        shrink["sd", i] <- 0.0
+      } else {
+        musigma <- conditionalmoment(support[,"tau"], individual=i)
+        shrink["mean",i] <- sum(musigma[,"mean"] * support[,"weight"])
+        shrink["sd",i]   <- sqrt(sum(((musigma[,"mean"]-shrink["mean",i])^2 + musigma[,"sd"]^2) * support[,"weight"]))
+        shrink["median",i] <- qposterior(mu=0.5, individual=i)
+        shrink[c("95% lower", "95% upper"),i] <- post.interval(mu=0.95, individual=i)
+        maxi <- optimize(function(x){return(dposterior(mu=x, individual=i))},
+                         lower=qposterior(mu=0.1), upper=qposterior(mu=0.9), maximum=TRUE)
+        shrink["mode",i] <- maxi$maximum
+      }
     }
   }
   
-  # compute marginal likelihood:
-  marglik <- bayesfactor.tau0 <- bayesfactor.mu0 <- NA
+  # compute marginal likelihood & Bayes factors:
+  marglik <- NA_real_
+  bayesfactor <- matrix(NA_real_, nrow=2, ncol=2, dimnames=list(c("actual", "minimum"), c("tau=0","mu=0")))
+  if (tau.prior.proper) {
+    bayesfactor["minimum","mu=0"]  <- likelihood(mu=0) / likelihood(mu=ml.estimate["marginal","mu"])
+  }
   # check for proper effect prior:
   if (is.finite(mu.prior.mean) 
       && is.finite(mu.prior.sd)
       && (mu.prior.sd > 0)) {
+    bayesfactor["minimum","tau=0"] <- likelihood(tau=0) / likelihood(tau=ml.estimate["marginal","tau"])
     # check for proper heterogeneity prior:
     if (tau.prior.proper) {
       marglik.int <- integrate(function(t){return(likelihood(tau=t)*dprior(tau=t))},
@@ -895,8 +973,8 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                                lower=0, upper=Inf)
       if (marglik.int$message == "OK") {
         marglik <- marglik.int$value
-        bayesfactor.tau0 <- likelihood(tau=0) / marglik
-        bayesfactor.mu0  <- likelihood(mu=0) / marglik
+        bayesfactor["actual", "tau=0"] <- likelihood(tau=0) / marglik
+        bayesfactor["actual", "mu=0"]  <- likelihood(mu=0) / marglik
       } else {
         attr(marglik, "NA.reason") <- "failed computing marginal likelihood"
       }
@@ -935,13 +1013,13 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                  "MAP"                 = map.estimate,
                  "theta"               = shrink,
                  "marginal.likelihood" = marglik,
-                 "bayesfactor"         = c("tau=0"=bayesfactor.tau0,
-                                           "mu=0" =bayesfactor.mu0),
+                 "bayesfactor"         = bayesfactor,
                  "support"             = support,
                  "delta"               = delta,
                  "epsilon"             = epsilon,
                  "rel.tol.integrate"   = rel.tol.integrate,
                  "abs.tol.integrate"   = abs.tol.integrate,
+                 "tol.uniroot"         = tol.uniroot,
                  "call"                = match.call(expand.dots=FALSE),
                  "init.time"           = c("seconds"=unname(ptm)))
   class(result) <- "bayesmeta"
@@ -972,9 +1050,11 @@ bayesmeta.escalc <- function(y, labels=NULL, ...)
     if (is.element("slab", names(attributes(y[,var.names[1]]))))
       labels <- as.character(attr(y[,var.names[1]], "slab"))
   }
-  return(bayesmeta.default(y=as.vector(y[,var.names[1]]),
-                           sigma=sqrt(as.vector(y[,var.names[2]])),
-                           labels=labels, ...))
+  result <- bayesmeta.default(y=as.vector(y[,var.names[1]]),
+                              sigma=sqrt(as.vector(y[,var.names[2]])),
+                              labels=labels, ...)
+  result$call <- match.call(expand.dots=FALSE)
+  return(result)
 }
 
 
@@ -1059,6 +1139,7 @@ summary.bayesmeta <- function(object,...)
 
 plot.bayesmeta <- function(x, main=deparse(substitute(x)),
                            which=1:4, prior=FALSE,
+                           forest.margin=8,
                            mulim=c(NA,NA), taulim=c(NA,NA),
                            violin=FALSE,...)
 # generate forest plot and joint and marginal density plots.
@@ -1084,15 +1165,20 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
     murange <- murange + c(-1,1)*diff(murange)*0.05
   }
   
-  forestPlot <- function(x, main="", violin=violin)
+  forestPlot <- function(x, main="", violin=violin, leftmargin=8)
   {
+    original.margins <- par("mar")
+    plotmargins <- original.margins
+    plotmargins[2] <- leftmargin
     # determine x-axis range:
     xrange <- range(c(x$y-q975*x$sigma, x$y+q975*x$sigma,
                       x$summary[c("95% lower", "95% upper"),c("mu","theta")]))
     # empty plot:
+    par("mar"=plotmargins)
     plot(xrange, c(-2, x$k)+c(-1,1)*0.5,
          type="n", axes=FALSE,
          xlab="", ylab="", main=main)
+    mtext(side=1, line=par("mgp")[1], expression("effect"))
     # add horizontal line dividing data and estimates:
     abline(h=0, col="lightgrey")
     # add vertical "posterior median effect" line:
@@ -1189,8 +1275,9 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
     }
     # add axes & bounding box:
     axis(2, at=x$k:1, labels=x$labels, las=1)
-    axis(2, at= c(-1,-2), labels=c(expression(mu), expression(theta[pred.])), las=1)
+    axis(2, at= c(-1,-2), labels=c(expression("effect "*mu), expression("prediction "*theta[italic(k)+1])), las=1)
     axis(1); box()
+    par("mar"=original.margins)
     invisible()
   }
   
@@ -1207,6 +1294,11 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
                    nrow=length(tau), ncol=length(mu))
     # determine MAP value:
     map.value <- x$dposterior(x$MAP["joint",1], x$MAP["joint",2], log=TRUE)
+    map.Inf <- !is.finite(map.value)
+    if (map.Inf) {
+      map.value <- max(post[is.finite(post)])
+      warning("Non-finite posterior density, no contour lines drawn.", call.=FALSE)
+    }
     # draw greyscale image:
     image(tau, mu, exp(post), axes=FALSE,
           col=grey((seq(1,0,le=128))^2),
@@ -1226,10 +1318,12 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
     points(x$ML["joint",1], x$ML["joint",2], col="magenta", pch=4)
     # draw MAP estimate:
     points(x$MAP["joint",1], x$MAP["joint",2], col="red", pch=3)
-    # add contour lines:
-    contour(tau, mu, post-map.value, add=TRUE, col="red",
-            levels=-0.5*qchisq(p=c(0.5, 0.9, 0.95, 0.99), df=2),
-            labels=paste(c(50, 90, 95, 99),"%",sep=""))
+    if (!map.Inf) {
+      # add contour lines:
+      contour(tau, mu, post-map.value, add=TRUE, col="red",
+              levels=-0.5*qchisq(p=c(0.5, 0.9, 0.95, 0.99), df=2),
+              labels=paste(c(50, 90, 95, 99),"%",sep=""))
+    }
     # add axes, bounding box, labels, ...
     axis(1); axis(2); box()
     mtext(side=1, line=par("mgp")[1], expression("heterogeneity "*tau))
@@ -1278,14 +1372,17 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
     # corresponding posterior density:
     dens <- x$dposterior(tau=tau)
     # empty plot:
-    plot(c(taurange[1],taurange[2]), c(0,max(dens[is.finite(dens)],na.rm=TRUE)),         
+    maxdens <- max(dens[is.finite(dens)],na.rm=TRUE)
+    plot(c(taurange[1],taurange[2]), c(0,maxdens),         
          type="n", axes=FALSE, xlab="", ylab="", main=main)
+    # "fix" diverging density:
+    dens[!is.finite(dens)] <- 10*maxdens
     # light grey shaded contour for density across whole range:
     polygon(c(0,tau,max(tau)), c(0,dens,0), border=NA, col=grey(0.90))
     # dark grey shaded contour for density within 95% bounds:
     indi <- ((tau>=x$summary["95% lower","tau"]) & (tau<=x$summary["95% upper","tau"]))
     polygon(c(rep(x$summary["95% lower","tau"],2), tau[indi], rep(x$summary["95% upper","tau"],2)),
-            c(0, x$dposterior(tau=x$summary["95% lower","tau"]),
+            c(0, min(c(x$dposterior(tau=x$summary["95% lower","tau"]), 10*maxdens)),
               dens[indi], x$dposterior(tau=x$summary["95% upper","tau"]), 0),
             border=NA, col=grey(0.80))
     # vertical line at posterior median:
@@ -1308,7 +1405,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
             length(which)==length(unique(which)))  
   par.ask <- par("ask")
   for (i in 1:length(which)) {
-    if (which[i]==1) forestPlot(x, main, violin=violin)
+    if (which[i]==1) forestPlot(x, main, violin=violin, leftmargin=forest.margin)
     else if (which[i]==2) jointdensity(x, main)
     else if (which[i]==3) mumarginal(x, main, priorline=prior)
     else if (which[i]==4) taumarginal(x, main, priorline=prior)
@@ -2015,7 +2112,10 @@ forestplot.bayesmeta <- function(x, labeltext,
 normalmixture <- function(density,
                           cdf = Vectorize(function(x){integrate(density,0,x)$value}),
                           mu = 0,
-                          delta = 0.01, epsilon = 0.001)
+                          delta = 0.01, epsilon = 0.0001,
+                          rel.tol.integrate=2^16*.Machine$double.eps,
+                          abs.tol.integrate=rel.tol.integrate,
+                          tol.uniroot=rel.tol.integrate)
 # derive normal mixture where mean (mu) is given (and fixed)
 # and the standard deviation (sigma) follows a distribution
 # given through "density" or "cdf" argument.
@@ -2028,7 +2128,8 @@ normalmixture <- function(density,
   if (missing(cdf) && !missing(density)) {
     stopifnot(is.function(density))
     # check for properness of mixing distribution:
-    density.integral <- integrate(density, lower=0, upper=Inf)
+    density.integral <- integrate(density, lower=0, upper=Inf,
+                                  rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)
     stopifnot(density.integral$message == "OK",
               (abs(density.integral$value - 1.0) <= density.integral$abs.error))
   }
@@ -2043,10 +2144,10 @@ normalmixture <- function(density,
   # determine (minimally required) grid range:
   s <- 1
   while (cdf(s) <= epsilon/2) s <- s*2
-  ur <- uniroot(function(x){cdf(x)-epsilon/2}, lower=0, upper=s)
+  ur <- uniroot(function(x){cdf(x)-epsilon/2}, lower=0, upper=s, tol=tol.uniroot)
   lower <- ur$root
   while (cdf(s) <= 1-epsilon/2) s <- s*2
-  ur <- uniroot(function(x){cdf(x)-(1-epsilon/2)}, lower=lower, upper=s)
+  ur <- uniroot(function(x){cdf(x)-(1-epsilon/2)}, lower=lower, upper=s, tol=tol.uniroot)
   upper <- ur$root
 
   # now fill grid:
@@ -2091,7 +2192,7 @@ normalmixture <- function(density,
       while (cumul(mini) > pp) mini <- mu - 2*(mu-mini)
       maxi <- mu+1
       while (cumul(maxi) < pp) maxi <- mu + 2*(maxi-mu)
-      ur <- uniroot(function(x){return(cumul(x)-pp)}, lower=mini, upper=maxi)
+      ur <- uniroot(function(x){return(cumul(x)-pp)}, lower=mini, upper=maxi, tol=tol.uniroot)
       return(ur$root)      
     }
     proper <- ((p>0) & (p<1))
@@ -2111,5 +2212,491 @@ normalmixture <- function(density,
                  "mixing.density" = NULL,
                  "mixing.cdf"     = cdf)  
   if (!missing(density)) result$mixing.density <- density
+  return(result)
+}
+
+
+pppvalue<- function(x,
+                    parameter = "mu",
+                    value = 0.0,
+                    alternative = c("two.sided", "less", "greater"),
+                    statistic = "median",  # a.k.a. "discrepancy variable"
+                    rejection.region,
+                    n = 10,
+                    prior = FALSE,
+                    quietly = FALSE,
+                    parallel, seed, ...)
+# Posterior predictive p-values
+#    * Gelman & al., Bayesian Data Analysis, 3rd edition, Chapter 6,
+#      Chapman & Hall / CRC, Boca Raton, 2014.
+#    * Meng, X.-L. Posterior predictive p-values.
+#      The Annals of Statistics, 22(3):1142-1160, 1994.
+#      http://doi.org/10.1214/aos/1176325622
+#
+# Parameters:
+#   x                :  a "bayesmeta" object
+#   parameter        :  the parameter to be tested
+#   value            :  the null-hypothesized value
+#   alternative      :  the alternative to be tested against
+#   statistic        :  the figure to be used as "test statistic"
+#   rejection.region :  the test statistic's rejection region. May be
+#                       one of "upper.tail", "lower.tail" or "two.tailed".
+#                       If unspecified, it is set based on the "alternative" parameter
+#   n                :  the number of Monte Carlo samples
+#   prior            :  flag to request _PRIOR_ predictive p-values
+#   quietly          :  flag to indicate command line text output
+#   parallel         :  number of parallel processes to use
+#   ...              :  further arguments passed to "statistic",
+#                       if "statistic" argument is a function
+#
+{
+  # some preliminary sanity checks;
+  # "x" argument:
+  if (!is.element("bayesmeta",class(x)))
+    warning("function applicable to objects of class 'bayesmeta' only.")
+  stopifnot(is.element("bayesmeta",class(x)))
+  # "parameter" argument:
+  stopifnot(length(parameter)==1)
+  if (is.numeric(parameter)){
+    stopifnot(is.element(parameter, 1:x$k))
+    parameter <- x$labels[parameter]
+  }
+  parameter <- match.arg(parameter, c("mu", "tau", x$labels))
+  thetapar <- FALSE
+  if (!is.element(parameter, c("mu","tau"))) {
+    thetapar <- TRUE  # indicates that parameter concerns one of the "theta" (shrinkage) parameters
+    indiv.which <- which(is.element(x$labels, parameter))  # index of concerned "theta" parameter
+  }
+  # "value" argument:
+  stopifnot(length(value)==1, is.finite(value),
+            (parameter != "tau") || (value >= 0.0))
+  # "alternative" argument:
+  alternative <- match.arg(alternative)
+  # "statistic" argument:
+  statfun <- is.function(statistic)
+  statNA <- (!statfun && is.na(statistic))
+  stopifnot(statfun | is.character(statistic) | statNA)
+  if (statNA) {
+    statname <- "statistic"
+  } else if (statfun) {
+    statname <- deparse(substitute(statistic))
+  } else {
+    statistic <- match.arg(tolower(statistic), c("t", "q", "cdf", rownames(x$summary)))
+    if ((parameter=="tau") && (value==0.0)) {
+      if (alternative != "greater")
+        warning(paste0("a combination of 'parameter=\"tau\"' ",
+                       "and 'alternative=\"", alternative, "\"' may not make sense!"))
+      if (statistic == "cdf")
+        warning(paste0("a combination of 'parameter=\"tau\"', ",
+                       "'value=0.0' and 'statistic=\"cdf\"' does not make sense!"))
+    }
+    # try to speed up 'bayesmeta()' computations by omitting unnecessary CI optimizations:
+    inttype <- ifelse(is.element(statistic, c("95% lower", "95% upper")),
+                      x$interval.type, "central")
+    statname <- ifelse(statistic=="q", "Q", statistic)
+  }
+  # "rejection.region" argument:
+  if (!missing(rejection.region)) {
+    rejection.region <- match.arg(rejection.region, c("upper.tail", "lower.tail", "two.tailed"))
+  } else { # decide on rejection region based on hypothesis:
+    if (statNA | (!statfun && is.element(statistic, c("q"))))
+      rejection.region <- "upper.tail"
+    else if (!statfun && is.element(statistic, c("cdf")))
+      rejection.region <- switch(alternative,
+                                 two.sided = "two.tailed",
+                                 less      = "upper.tail",
+                                 greater   = "lower.tail")
+    else
+      rejection.region <- switch(alternative,
+                                 two.sided = "two.tailed",
+                                 less      = "lower.tail",
+                                 greater   = "upper.tail")
+  }
+  stopifnot(is.element(rejection.region, c("upper.tail", "lower.tail", "two.tailed")))
+  # "prior" argument:
+  if (prior && (!x$tau.prior.proper || !all(is.finite(x$mu.prior))))
+    warning("prior predictive p-values require proper priors for effect and heterogeneity!")
+  if (prior && !is.element(parameter, c("mu", "tau")))
+    warning("prior predictive p-values are only available for effect (mu) and heterogeneity (tau) parameters!")
+  stopifnot(!prior || (x$tau.prior.proper && all(is.finite(x$mu.prior))))
+  # determine a sensible number of parallel processes:
+  if (missing(parallel)) {
+    # by default, use "parallel" package if available:
+    if (requireNamespace("parallel")) {
+      # by default, use all but one core:
+      parallel <- max(c(1, parallel::detectCores() - 1))
+      # but don't use more cores than MCMC samples:
+      parallel <- min(c(parallel, n))
+    } else {
+      parallel <- 1
+    }
+  } else { # otherwise check number of cores & processes:
+    stopifnot(parallel >= 1)
+    if (requireNamespace("parallel")) {
+      if (parallel > parallel::detectCores())
+        warning("number of requested parallel processes (", parallel,
+                ") is larger than number of cores (", parallel::detectCores(), ").")
+      if (parallel > n)
+        warning("number of requested parallel processes (", parallel,
+                ") is larger than number of MC samples (", n, ").")
+    } else {
+      warning("failed to load \"parallel\" package.")
+    }
+  }
+  seed.missing <- missing(seed)
+  stopifnot(seed.missing || (seed==round(seed)))
+  ptm <- proc.time()
+  ##################
+  if (prior) {         # ...conditional prior p(tau | mu)
+    ptau <- function(tau)
+    # cumulative distribution function (CDF) of tau prior
+    {
+      stopifnot(length(tau)==1, is.finite(tau), tau>=0)
+      return(integrate(function(t){x$dprior(tau=t)}, lower=0, upper=tau,
+                       rel.tol=x$rel.tol.integrate, abs.tol=x$abs.tol.integrate)$value)
+    }
+    ptau <- Vectorize(ptau)
+    qtau <- function(p.tau)
+    # quantile function (inverse CDF) of tau prior
+    {
+      stopifnot(length(p.tau)==1, is.finite(p.tau), p.tau>=0, p.tau<=1)
+      if (p.tau==0) result <- 0.0
+      else if (p.tau==1) result <- Inf
+      else {
+        upper <- 1.0
+        while (ptau(upper) < p.tau) upper <- 2*upper
+        result <- uniroot(function(t){ptau(tau=t)-p.tau},
+                          lower=0, upper=upper, tol=x$tol.uniroot)$root
+      }
+      return(result)
+    }
+  }
+  if (parameter=="mu") { # define functions to generate draws from conditional (tau|mu):
+    # lookup table for tau conditionals' normalizing constants:
+    normconst <- matrix(nrow=0, ncol=2, dimnames=list(NULL, c("mu","const")))
+    dctau <- function(tau, mu)
+    # conditional density of (tau | mu)
+    {
+      stopifnot(length(tau)==1, is.finite(tau), tau>=0)
+      if ((nrow(normconst)>0) && is.element(mu, normconst[,"mu"])) {
+        const <- normconst[which(normconst[,"mu"]==mu),"const"]
+      } else {
+        const <- integrate(function(t){x$dposterior(tau=t, mu=mu)},
+                           lower=0, upper=Inf,
+                           rel.tol=x$rel.tol.integrate, abs.tol=x$abs.tol.integrate)$value
+        normconst <<- rbind(normconst, c(mu,const)) # (change matrix GLOBALLY)
+      }
+      return(x$dposterior(tau=tau, mu=mu) / const)
+    }
+    dctau <- Vectorize(dctau)
+    pctau <- function(tau, mu)
+    # conditional cumulative distribution function (CDF) of (tau | mu)
+    {
+      stopifnot(length(tau)==1, is.finite(tau), tau>=0)
+      return(integrate(function(t){dctau(tau=t, mu=mu)}, lower=0, upper=tau,
+                       rel.tol=x$rel.tol.integrate, abs.tol=x$abs.tol.integrate)$value)
+    }
+    pctau <- Vectorize(pctau)
+    qctau <- function(p.tau, mu)
+    # conditional quantile function (inverse CDF) of (tau | mu)
+    {
+      stopifnot(length(p.tau)==1, is.finite(p.tau), p.tau>=0, p.tau<=1)
+      if (p.tau==0) result <- 0.0
+      else if (p.tau==1) result <- Inf
+      else {
+        upper <- 1.0
+        while (pctau(upper,mu) < p.tau) upper <- 2*upper
+        result <- uniroot(function(t){pctau(tau=t,mu=mu)-p.tau},
+                          lower=0, upper=upper, tol=x$tol.uniroot)$root
+      }
+      return(result)
+    }
+    rctau <- function(mu)
+    # random number generation for (tau | mu)
+    {
+      return(qctau(p.tau=runif(n=1), mu=mu))
+    }
+  } else if (thetapar) {
+    # compute conditional posterior, conditional on theta[i]==value:
+    condy <- x$y
+    condy[indiv.which] <- value
+    condsigma <- x$sigma
+    condsigma[indiv.which] <- 0.0
+    if (alternative == "two.sided") {
+      condbm <- bayesmeta(y=condy, sigma=condsigma, labels=x$labels,
+                          mu.prior=x$mu.prior,
+                          tau.prior=x$dprior,
+                          interval.type=inttype,
+                          rel.tol.integrate=x$rel.tol.integrate,
+                          abs.tol.integrate=x$abs.tol.integrate,
+                          tol.uniroot=x$tol.uniroot)
+    }
+  }
+  # determine realized "test statistic" value in actual data:
+  if (statNA) {
+    stat.actual <- NA_real_
+  } else if (statfun) {
+    stat.actual <- statistic(x$y, ...)
+  } else {
+    if (statistic == "q") {
+      cochranQ <- function(yi, si)
+      {
+        wi <- 1/si^2
+        yhat <- sum(yi * wi) / sum(wi)
+        Q <- sum(((yi-yhat)/si)^2)
+        return(Q)
+      }
+      stat.actual <- cochranQ(x$y, x$sigma)
+    } else if (statistic=="cdf") {
+      if (parameter=="tau")
+        stat.actual <- x$pposterior(tau=value)
+      else if (parameter=="mu")
+        stat.actual <- x$pposterior(mu=value)
+      else
+        stat.actual <- x$pposterior(theta=value, individual=indiv.which)
+    } else {
+      if (thetapar) {
+        if (statistic == "t")
+          stat.actual <- (x$theta["mean", indiv.which] - value) / x$theta["sd", indiv.which]
+        else
+          stat.actual <- x$theta[statistic, indiv.which]
+      } else {
+        if (statistic == "t")
+          stat.actual <- (x$summary["mean", parameter] - value) / x$summary["sd", parameter]
+        else
+          stat.actual <- x$summary[statistic, parameter]
+      }
+    }
+  }
+  names(stat.actual) <- statname
+  # determine at which (prior/posterior) quantile hypothesized value is situated
+  # (necessary for sampling for single-tailed hypotheses):
+  if (alternative != "two.sided") {
+    if (parameter == "mu") {
+      if (prior) p.mu <- pnorm(q=value, mean=x$mu.prior[1], sd=x$mu.prior[2])  # prior quantile
+      else       p.mu <- x$pposterior(mu=value)                                # posterior quantile
+    } else if (parameter == "tau") {
+      if (prior) p.tau <- ptau(value)              # prior quantile
+      else       p.tau <- x$pposterior(tau=value)  # posterior quantile
+    } else {
+      p.theta <- x$pposterior(theta=value, individual=indiv.which)  # posterior quantile
+    }
+  }
+  
+  # the main function:
+  pppfun <- function(i)
+  {
+    if (! seed.missing) set.seed(seed + i)
+    # generate data:
+    sigma <- x$sigma
+    if (parameter=="mu") {          # Null hypothesis concerns effect mu
+      if (alternative=="two.sided") {   # fix effect mu at hypothesized value:
+        rmu <- value
+      } else if (alternative=="less") { # draw effect mu from H0's domain's conditional:
+        if (prior) rmu <- qnorm(runif(1, p.mu, 1.0), mean=x$mu.prior[1], sd=x$mu.prior[2])  # prior
+        else       rmu <- x$qposterior(mu.p=runif(1, p.mu, 1.0))                            # posterior
+      } else {
+        if (prior) rmu <- qnorm(runif(1, 0.0, p.mu), mean=x$mu.prior[1], sd=x$mu.prior[2])  # prior
+        else       rmu <- x$qposterior(mu.p=runif(1, 0.0, p.mu))                            # posterior
+      }
+      # draw tau from conditional (tau|mu):
+      if (prior) rtau <- qtau(runif(1, 0.0, 1.0))  # prior
+      else       rtau <- rctau(mu=rmu)             # posterior
+      rtheta <- rnorm(n=x$k, mean=rmu,    sd=rtau)
+      y      <- rnorm(n=x$k, mean=rtheta, sd=sigma)
+    } else if (parameter=="tau") {  # Null hypothesis concerns heterogeneity tau
+      if (alternative=="two.sided") {   # fix heterogeneity tau at hypothesized value:
+        rtau <- value
+      } else if (alternative=="less") { # draw effect mu from H0's domain's conditional:
+        if (prior) rtau <- qtau(runif(1, p.tau, 1.0))
+        else       rtau <- x$qposterior(tau.p=runif(1, p.tau, 1.0))
+      } else {
+        if (prior) rtau <- qtau(runif(1, 0.0, p.tau))
+        else       rtau <- x$qposterior(tau.p=runif(1, 0.0, p.tau))
+      }
+      # draw mu from conditional (mu|tau):
+      if (prior) {
+        rmu <- qnorm(runif(1, 0.0, 1.0), mean=x$mu.prior[1], sd=x$mu.prior[2])
+      } else {
+        cm <- x$cond.moment(tau=rtau)
+        rmu <- rnorm(n=1, mean=cm[1,"mean"], sd=cm[1,"sd"])
+      }
+      rtheta <- rnorm(n=x$k, mean=rmu,    sd=rtau)
+      y      <- rnorm(n=x$k, mean=rtheta, sd=sigma)
+    } else {                        # Null hypothesis concerns ith "shrinkage" parameter theta
+      if (alternative=="two.sided"){
+        rtheta.i <- value
+        taumu <- condbm$rposterior(n=1)[1,]
+      } else {
+        if (alternative=="less") {
+          rtheta.i <- x$qposterior(theta.p=runif(1, p.theta, 1.0), indiv=indiv.which)
+        } else {
+          rtheta.i <- x$qposterior(theta.p=runif(1, 0.0, p.theta), indiv=indiv.which)
+        }
+        condy[indiv.which] <- rtheta.i
+        condbm <- bayesmeta(y=condy, sigma=condsigma, labels=x$labels,
+                            mu.prior=x$mu.prior,
+                            tau.prior=x$dprior,
+                            interval.type=inttype,
+                            rel.tol.integrate=x$rel.tol.integrate,
+                            abs.tol.integrate=x$abs.tol.integrate,
+                            tol.uniroot=x$tol.uniroot)
+        taumu <- condbm$rposterior(n=1)[1,]
+      }
+      rtau <- taumu["tau"]
+      rmu <- taumu["mu"]
+      rtheta <- rnorm(n=x$k, mean=rmu, sd=rtau)
+      rtheta[indiv.which] <- rtheta.i
+      y      <- rnorm(n=x$k, mean=rmu, sd=sigma)
+    }
+    # data (y) generated. Now compute statistic:
+    if (statNA) {
+      statval <- NA_real_
+    } else if (statfun) {
+      statval <- statistic(y, ...)
+    } else {
+      if (statistic == "q") {
+        statval <- cochranQ(y, x$sigma)
+      } else {
+        # perform meta-analysis:
+        bm <- bayesmeta(y=y, sigma=x$sigma, labels=x$labels,
+                        mu.prior=x$mu.prior,
+                        tau.prior=x$dprior,
+                        interval.type=inttype,
+                        rel.tol.integrate=x$rel.tol.integrate,
+                        abs.tol.integrate=x$abs.tol.integrate,
+                        tol.uniroot=x$tol.uniroot)
+        if (thetapar) {
+          if (statistic == "t")
+            statval <- (bm$theta["mean", indiv.which] - value) / bm$theta["sd", indiv.which]
+          else if (statistic=="cdf")
+            statval <- bm$pposterior(theta=value, individual=indiv.which)
+          else
+            statval <- bm$theta[statistic, indiv.which]
+        } else {
+          if (statistic == "t")
+            statval <- (bm$summary["mean", parameter] - value) / bm$summary["sd", parameter]
+          else if (statistic=="cdf") {
+            if (parameter=="tau")
+              statval <- bm$pposterior(tau=value)
+            else if (parameter=="mu")
+              statval <- bm$pposterior(mu=value)
+          } else
+            statval <- bm$summary[statistic, parameter]
+        }
+      }
+    }
+    # statistic computed. Return results:
+    result <- unname(c(rtau, rmu, statval, rtheta, y))
+    names(result) <- c("tau", "mu", "statistic",
+                       sprintf("theta[%d]", 1:x$k),
+                       sprintf("y[%d]", 1:x$k))
+    return(result)
+  } # END pppfun()
+    
+  # break calculations down into smaller bits
+  # to allow for progress bar updates (unless suppressed)
+  if (quietly) # (do computations in one go)
+    idxlist <- list(1:n)
+  else {
+    # determine intermediate breakpoints (to update progress bar)
+    # at multiples of 'parallel':
+    stopfrac <- c(0.01, 0.02, 0.05, (1:9)/10)  # (1%, 2%, 5%, 10%, ...)
+    stopint <- unique(ceiling(stopfrac * (n/parallel)))
+    stopint <- c(stopint * parallel, n)
+    stopint <- unique(stopint[stopint <= n])
+    # assemble list of indices to process at each stage:
+    idxlist <- list(1:stopint[1])
+    if (length(stopint) > 1)
+      for (i in 2:length(stopint))
+        idxlist[[i]] <- (max(idxlist[[i-1]])+1):stopint[i]
+  }
+  
+  #  the "hot loop":
+  stat.repli <- NULL
+  if (parallel > 1) { # initialize cluster:
+    clust <- parallel::makeCluster(parallel)
+    #parallel::clusterEvalQ(clust, library("bayesmeta", lib.loc="~/temp/test"))  #  <--  /!\  HACK!
+    parallel::clusterEvalQ(clust, library("bayesmeta"))
+  }
+  if (!quietly) {      # (initialize progress bar etc.)
+    cat(paste0("  Generating n=",n," Monte Carlo samples.\n"))
+    if (n <= 100)
+      cat(paste0("  /!\\  Caution: a sample size of  n >> 100  will usually be appropriate.\n"))
+    cat(paste0("  Sampling progress",
+               ifelse(parallel > 1, paste0(" (using ",parallel," parallel processes)"), ""),
+               ":\n"))
+    pb <- utils::txtProgressBar(style=3)
+    utils::setTxtProgressBar(pb, 0.0)
+  }
+  for (i in 1:length(idxlist)){
+    if (parallel == 1) { # simple "sapply()" call
+      stat.repli <- rbind(stat.repli,
+                          t(sapply(idxlist[[i]], pppfun, simplify=TRUE)))
+    } else {             # parallel computation via "parSapply()":
+      stat.repli <- rbind(stat.repli,
+                          t(parallel::parSapply(clust, idxlist[[i]], pppfun, simplify=TRUE)))
+    }
+    if (!quietly) utils::setTxtProgressBar(pb, max(idxlist[[i]])/n)
+  }
+  if (parallel > 1) { # terminate cluster:
+    parallel::stopCluster(clust)
+  }
+  
+  # how many replicates are in the "tails" beyond the actualized statistic value:
+  tail <- factor(rep("no", nrow(stat.repli)),
+                 levels=c("lower", "no", "upper"), ordered=TRUE)
+  lowertail <- (stat.repli[,"statistic"] <= stat.actual)
+  uppertail <- (stat.repli[,"statistic"] >= stat.actual)
+  if (rejection.region=="lower.tail")
+    tail[lowertail] <- "lower"
+  else if (rejection.region=="upper.tail")
+    tail[uppertail] <- "upper"
+  else {  # note: two-sided version is based on equal-tailed rejection region
+    if (sum(uppertail, na.rm=TRUE) < sum(lowertail, na.rm=TRUE)) {
+      tail[uppertail] <- "upper"
+      tail[rank(stat.repli[,"statistic"], ties.method="min") <= sum(uppertail, na.rm=TRUE)] <- "lower"
+    } else {
+      tail[lowertail] <- "lower"
+      tail[rank(stat.repli[,"statistic"], ties.method="max") > (n-sum(lowertail, na.rm=TRUE))] <- "upper"
+    }
+  }
+  tail[is.na(stat.repli[,"statistic"])] <- NA
+  n.tail <- sum(tail != "no", na.rm=TRUE) + sum(is.na(tail))
+  # corresponding p-value:
+  quant <- ifelse(statNA, NA_real_, n.tail / n)
+  # null hypothesis:
+  nullval <- value
+  names(nullval) <- ifelse(thetapar,
+                           paste0("study effect (",indiv.which,": '",x$labels[indiv.which],"')"),
+                           ifelse(parameter=="mu", "effect (mu)", "heterogeneity (tau)"))
+  replicates <- list("tau"       = stat.repli[,"tau"],
+                     "mu"        = stat.repli[,"mu"],
+                     "theta"     = stat.repli[,(3+(1:x$k))],
+                     "y"         = stat.repli[,(3+x$k+(1:x$k))],
+                     "statistic" = cbind.data.frame(stat.repli[,"statistic"], "tail"=tail))
+  colnames(replicates$theta) <- colnames(replicates$y) <- x$labels
+  colnames(replicates$statistic) <- c(statname, "tail")
+  
+  ptm <- proc.time() - ptm
+  if (!quietly) cat(paste0("\n  (computation time: ",
+                          sprintf("%.1f",ptm[3]), " seconds = ",
+                          sprintf("%.1f",ptm[3]/60), " minutes.)\n"))
+  
+  result <- list("statistic"        = stat.actual,
+                 "parameter"        = c("Monte Carlo replicates"=n),
+                 "p.value"          = quant,
+                 "null.value"       = nullval,
+                 "alternative"      = alternative,
+                 "method"           = paste0("'bayesmeta' ",
+                                             ifelse(prior, "prior", "posterior"), " predictive p-value (",
+                                             ifelse(alternative=="two.sided", "two-sided", "one-sided"), ")"),
+                 "data.name"        = deparse(substitute(x)),
+                 # nonstandard-"htest"-elements:
+                 "call"             = match.call(expand.dots=FALSE),
+                 "rejection.region" = rejection.region,
+                 "replicates"       = replicates,
+                 "computation.time" = c("seconds"=unname(ptm[3])))
+  class(result) <- "htest"
   return(result)
 }

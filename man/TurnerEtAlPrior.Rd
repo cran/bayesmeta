@@ -115,7 +115,7 @@ TurnerEtAlPrior(outcome=c("all-cause mortality", "obstetric outcomes",
 data("CrinsEtAl2014")
 
 # determine corresponding prior parameters:
-TP <- TurnerEtAlPrior("surgical", "pharma", "pharma")
+TP <- TurnerEtAlPrior("surgical", "pharma", "placebo / control")
 print(TP)
 # a prior 95 percent interval for tau:
 TP$qprior(c(0.025,0.975))
@@ -143,8 +143,10 @@ rbind("Turner prior"=crins.ma01$summary[,"mu"], "Cauchy prior"=crins.ma02$summar
 
 # illustrate heterogeneity priors and posteriors:
 par(mfrow=c(2,1))
-  plot(crins.ma01, which=4, prior=TRUE, main="informative log-normal prior")
-  plot(crins.ma02, which=4, prior=TRUE, main="weakly informative Cauchy prior")
+  plot(crins.ma01, which=4, prior=TRUE, taulim=c(0,2),
+       main="informative log-normal prior")
+  plot(crins.ma02, which=4, prior=TRUE, taulim=c(0,2),
+       main="weakly informative half-Cauchy prior")
 par(mfrow=c(1,1))
 
 # compare prior and posterior 95 percent upper limits for tau:

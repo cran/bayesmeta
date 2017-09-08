@@ -11,7 +11,10 @@
 \usage{
   normalmixture(density,
                 cdf = Vectorize(function(x){integrate(density,0,x)$value}),
-                mu = 0, delta = 0.01, epsilon = 0.001)
+                mu = 0, delta = 0.01, epsilon = 0.0001,
+                rel.tol.integrate = 2^16*.Machine$double.eps,
+                abs.tol.integrate = rel.tol.integrate,
+                tol.uniroot = rel.tol.integrate)
 }
 \arguments{
   \item{density}{
@@ -31,6 +34,13 @@
     \eqn{\sigma} support points being used internally. Smaller values
     imply greater accuracy and greater computational burden (Roever and
     Friede, 2017).
+  }
+  \item{rel.tol.integrate, abs.tol.integrate, tol.uniroot}{
+    the \code{rel.tol}, \code{abs.tol} and \code{tol}
+    \sQuote{accuracy} arguments that are passed to
+    the \code{\link{integrate}()} or \code{\link{uniroot}()} functions
+    for internal numerical integration or root finding
+    (see also the help there).
   }
 }
 \details{
@@ -196,7 +206,7 @@ CDF <- function(sigma, df){pchisq(df/sigma^2, df=df, lower.tail=FALSE)}
 k <- 5
 nmT1 <- normalmixture(cdf=function(x){CDF(x, df=k)})
 # in addition also try a more accurate approximation:
-nmT2 <- normalmixture(cdf=function(x){CDF(x, df=k)}, delta=0.001, epsilon=0.0001)
+nmT2 <- normalmixture(cdf=function(x){CDF(x, df=k)}, delta=0.001, epsilon=0.00001)
 # check: how many grid points were required?
 nmT1$bins
 nmT2$bins

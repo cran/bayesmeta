@@ -9,7 +9,8 @@
 }
 \usage{
   \method{plot}{bayesmeta}(x, main=deparse(substitute(x)),
-     which=1:4, prior=FALSE, mulim=c(NA,NA), taulim=c(NA,NA),
+     which=1:4, prior=FALSE, forest.margin=8,
+     mulim=c(NA,NA), taulim=c(NA,NA),
      violin=FALSE, ...) 
 }
 \arguments{
@@ -25,6 +26,10 @@
   \item{prior}{
     an indicator whether to also draw the prior density in marginal
     posterior density plots.
+  }
+  \item{forest.margin}{
+    the width of the margin to the left of the forest plot. This may
+    require some manual tweaking so that the study labels fit properly.
   }
   \item{mulim, taulim}{
     (optional) ranges of effect (mu) and heterogeneity (tau) values
@@ -52,8 +57,11 @@
     \item a plot of the joint posterior density of heterogeneity
       (\eqn{\tau}) and effect (\eqn{\mu}). Red lines trace the
       contours of constant density corresponding to approximate 2D
-      confidence regions (based on a \eqn{\chi^2}-approximation to the
-      logarithmic posterior density) as labelled. Blue lines show the
+      credibility regions (based on a \eqn{\chi^2}-approximation to the
+      logarithmic posterior density) as labelled. The credibility
+      regions are only an approximation based on a
+      \sQuote{well-behaved}, unimodal posterior; contour lines are
+      omitted if the posterior mode is not finite. Blue lines show the
       conditional mean effect \eqn{\mu} as a function of the
       heterogeneity \eqn{\tau} (solid line) along with conditional
       95\% confidence bounds (dashed lines). Green lines indicate

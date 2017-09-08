@@ -65,8 +65,10 @@ bma02 <- bayesmeta(y      = HinksEtAl2010$log.or,
                    tau.prior = function(t){dhalfnormal(t,scale=0.5)})
 
 # show heterogeneity posteriors:
-plot(bma01, which=4, prior=TRUE)
-plot(bma02, which=4, prior=TRUE)
+par(mfrow=c(2,1))
+plot(bma01, which=4, prior=TRUE, taulim=c(0,1))
+plot(bma02, which=4, prior=TRUE, taulim=c(0,1))
+par(mfrow=c(1,1))
 
 # show heterogeneity estimates:
 rbind("half-normal(1.0)"=bma01$summary[,"tau"],

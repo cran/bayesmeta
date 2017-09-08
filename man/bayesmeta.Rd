@@ -23,7 +23,8 @@
           interval.type = c("shortest", "central"),
           delta = 0.01, epsilon = 0.0001,
           rel.tol.integrate = 2^16*.Machine$double.eps,
-          abs.tol.integrate = rel.tol.integrate, ...)
+          abs.tol.integrate = rel.tol.integrate,
+          tol.uniroot = rel.tol.integrate, ...)
   \method{bayesmeta}{escalc}(y, labels = NULL, ...)
 }
 \arguments{
@@ -43,15 +44,17 @@
     priors}; possible choices for the latter case are: 
     \itemize{
       \item \code{"uniform"}: a uniform prior in \eqn{\tau}
-      \item \code{"sqrt"}: a uniform prior in \eqn{\sqrt{\tau}}{sqrt(tau)}.
+      \item \code{"sqrt"}: a uniform prior in \eqn{\sqrt{\tau}}{sqrt(tau)}
       \item \code{"Jeffreys"}: the Jeffreys prior for \eqn{\tau}
       \item \code{"BergerDeely"}: the prior due to Berger and Deely (1988)
+      \item \code{"conventional"}: the conventional prior
       \item \code{"DuMouchel"}: the DuMouchel prior
       \item \code{"shrinkage"}: the \sQuote{uniform shrinkage} prior
       \item \code{"I2"}: a uniform prior on the \sQuote{relative heterogeneity} \eqn{I^2}
     }
     The default is \code{"uniform"} (which should be used with caution;
-    see remarks below).
+    see remarks below). The above priors are described in some more
+    detail below.
 }
   \item{mu.prior}{
     the mean and standard deviation of the normal prior distribution for
@@ -74,9 +77,11 @@
     imply greater accuracy and greater computational burden (Roever and
     Friede, 2017).
 }
-  \item{rel.tol.integrate, abs.tol.integrate}{
-    the \code{rel.tol} and \code{abs.tol} arguments that are passed to
-    the \code{\link{integrate}()} function for internal numerical integration
+  \item{rel.tol.integrate, abs.tol.integrate, tol.uniroot}{
+    the \code{rel.tol}, \code{abs.tol} and \code{tol}
+    \sQuote{accuracy} arguments that are passed to
+    the \code{\link{integrate}()} or \code{\link{uniroot}()} functions
+    for internal numerical integration or root finding
     (see also the help there).
 }
   \item{...}{
@@ -88,7 +93,7 @@
   \deqn{y_i|\mu,\sigma_i,\tau \;\sim\; \mathrm{Normal}(\mu, \, \sigma_i^2 + \tau^2)}{y[i] | mu, sigma[i], tau  ~  Normal(mu, sigma[i]^2 + tau^2)}
   where the data (\eqn{y}, \eqn{\sigma}) enter as \eqn{y_i}{y[i]}, the
   \eqn{i}-th estimate, that is associated with standard error
-  \eqn{\sigma_i}{sigma[i]}, and \eqn{i=1,...,k}. The model includes two unknown parameters,
+  \eqn{\sigma_i > 0}{sigma[i] > 0}, and \eqn{i=1,...,k}. The model includes two unknown parameters,
   namely the (mean) effect \eqn{\mu}, and the heterogeneity
   \eqn{\tau}. Alternatively, the model may also be formulated via an
   intermediate step as
@@ -118,10 +123,11 @@
   then be treated numerically. As the \emph{conditional} posterior
   \eqn{p(\mu|\tau,y)} is a normal distribution, inference on the
   remaining joint (\eqn{p(\mu,\tau|y)}) or marginal (\eqn{p(\mu|y)})
-  posterior may be approached numerically as well. Accuracy of the
-  computations is determined by the \code{delta} (maximum divergence
-  \eqn{\delta}) and \code{epsilon} (tail probability \eqn{\epsilon})
-  parameters (Roever and Friede, 2017).
+  posterior may be approached numerically (using the \acronym{DIRECT}
+  algorithm) as well. Accuracy of the computations is determined by the
+  \code{delta} (maximum divergence \eqn{\delta}) and \code{epsilon}
+  (tail probability \eqn{\epsilon}) parameters (Roever and Friede,
+  2017).
 
   What constitutes a sensible prior for both \eqn{\mu} and \eqn{\tau}
   depends (as usual) very much on the context.
@@ -196,6 +202,10 @@
         \deqn{p(\tau) \;\propto\; \prod_{i=1}^k \Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^{1/k}}{p(tau) = prod((tau / (sigma[i]^2+tau^2))^(1/k))}
         This is a variation of the above \emph{Jeffreys} prior, and both are equal in
         case all standard errors (\eqn{\sigma_i}{sigma[i]}) are the same.
+      \item \code{"conventional"} - the (proper) \emph{conventional prior}:
+        \deqn{p(\tau) \;\propto\; \prod_{i=1}^k \biggl(\frac{\tau}{(\sigma_i^2+\tau^2)^{3/2}}\biggr)^{1/k}}{p(tau) = prod((tau / (sigma[i]^2+tau^2)^(3/2))^(1/k))}
+        This is a proper variation of the above \emph{Berger/Deely} prior 
+        intended especially for testing and model selection purposes.
       \item \code{"DuMouchel"} - the (proper) \emph{DuMouchel} prior:
         \deqn{p(\tau) \;=\; \frac{s_0}{(s_0+\tau)^2}}{p(tau) = s0 / (s0+tau)^2}
         where \eqn{s_0=\sqrt{s_0^2}}{s0=sqrt(s0^2)} and \eqn{s_0^2}{s0^2} again is the harmonic mean of the standard errors (as above).
@@ -209,6 +219,9 @@
         This prior is similar to the uniform shrinkage prior, except for
         the use of \eqn{\hat{\sigma}^2}{sigmaHat^2} instead of \eqn{s_0^2}{s0^2}.
     }
+    For empirically motivated informative heterogeneity priors see also
+    the \code{\link{TurnerEtAlPrior}()} and \code{\link{RhodesEtAlPrior}()}
+    functions.
   }
 
   \subsection{Credibility intervals}{
@@ -245,6 +258,18 @@
     on Bayes factors (via the marginal likelihood). For more details on
     the problems and challenges related to Bayes factors see also
     Gelman et al. (1997, Sec. 7.4).
+
+    Besides the \sQuote{actual} Bayes factors, \emph{minimum Bayes
+    factors} are also provided (Spiegelhalter et al., 2004; Sec. 4.4).
+    The minimum Bayes factor for the hypothesis of \eqn{\mu=0}
+    constitutes the minimum across all possible priors for \eqn{\mu} and
+    hence gives a measure of how much (or how little) evidence
+    \emph{against} the hypothesis is provided by the data \emph{at most}.
+    It is independent of the particular effect prior used in the
+    analysis, but still dependent on the heterogeneity
+    prior. Analogously, the same is true for the heterogeneity's minimum
+    Bayes factor. A minimum Bayes factor can also be computed when only
+    one of the priors is proper.
   }
   
   \subsection{Numerical accuracy}{
@@ -363,10 +388,10 @@
   \item{marginal.likelihood}{the marginal likelihood of the data (this 
     number is only computed if proper effect and heterogeneity priors 
     are specified).}
-  \item{bayesfactor}{Bayes factors for the two hypotheses of
-    \eqn{\tau=0} and \eqn{\mu=0}. These depend on the marginal
-    likelihood and hence can only be computed if proper effect and
-    heterogeneity priors are specified.}
+  \item{bayesfactor}{Bayes factors and minimum Bayes factors for the two
+    hypotheses of \eqn{\tau=0} and \eqn{\mu=0}. These depend on the
+    marginal likelihood and hence can only be computed if proper effect
+    and/or heterogeneity priors are specified; see also remark above.}
   \item{support}{a \code{matrix} giving the \eqn{\tau} support points used
     internally in the grid approximation, along with their associated
     weights, conditional mean and standard deviation of \eqn{\mu},
@@ -374,17 +399,18 @@
     distribution of \eqn{\theta}.}
   \item{delta, epsilon}{the \sQuote{\code{delta}} and \sQuote{\code{epsilon}}
     input parameter determining numerical accuracy.}
-  \item{rel.tol.integrate, abs.tol.integrate}{the input parameters
-    determining the numerical accuracy of the internally used
-    \code{\link{integrate}()} function.}
+  \item{rel.tol.integrate, abs.tol.integrate, tol.uniroot}{the input
+    parameters determining the numerical accuracy of the internally used
+    \code{\link{integrate}()} and \code{\link{uniroot}()} functions.}
   \item{call}{an object of class \code{call} giving the
     function call that generated the \code{bayesmeta} object.}
   \item{init.time}{the computation time (in seconds) used to generate
     the \code{bayesmeta} object.}
   }
 \references{
-  C. Roever et al. Bayesian random-effects meta-analysis. (in
-  preparation), 2017.
+  Roever, C.
+  Bayesian random-effects meta-analysis using the bayesmeta package.
+  (in preparation), 2017.
 
   C. Roever, T. Friede.
   \href{http://doi.org/10.1080/10618600.2016.1276840}{Discrete

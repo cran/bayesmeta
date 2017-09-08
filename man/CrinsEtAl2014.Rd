@@ -38,7 +38,7 @@
   \emph{Pediatric Transplantation}, \bold{18}(8):839-850, 2014.
 }
 \references{T.G. Heffron et al.
-  Pediatric liver transplantation with daclizumab induction.
+  Pediatric liver transplantation with daclizumab induction therapy.
   \emph{Transplantation}, \bold{75}(12):2040-2043, 2003.
   
   N.E.M. Gibelli et al.
@@ -72,9 +72,6 @@
   tacrolimus-basiliximab immunosuppression in pediatric liver
   transplantation: Clinical and pharmacoeconomic study in 50 children}.
   \emph{Liver Transplantation}, \bold{14}(4):469-477, 2008.}
-\seealso{
-  \code{\link{GoralczykEtAl2011}}.
-}
 \examples{
 data("CrinsEtAl2014")
 \dontrun{
