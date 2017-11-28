@@ -34,3 +34,5 @@ importFrom("forestplot",
 importFrom("parallel",
            "detectCores", "makeCluster", "clusterEvalQ","parSapply",
            "stopCluster")
+importFrom("utils",
+           "txtProgressBar", "setTxtProgressBar")

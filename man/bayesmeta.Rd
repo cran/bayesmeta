@@ -66,7 +66,7 @@
     effect \eqn{\mu} (see above).
 }
   \item{interval.type}{
-    the type of (credibility, prediction, shrinkage) interval to be
+    the type of (credible, prediction, shrinkage) interval to be
     returned by default; either \code{"shortest"} for shortest
     intervals, or \code{"central"} for central, equal-tailed intervals.
 }
@@ -224,8 +224,8 @@
     functions.
   }
 
-  \subsection{Credibility intervals}{
-    Credibility intervals (as well as prediction and shrinkage intervals)
+  \subsection{Credible intervals}{
+    Credible intervals (as well as prediction and shrinkage intervals)
     may be determined in different ways. By default, \emph{shortest}
     intervals are returned, which for unimodal posteriors (the usual
     case) is equivalent to the \emph{highest posterior density region}
@@ -237,7 +237,7 @@
     A third option, although not available for prediction or shrinkage
     intervals, and hence not as an overall default choice, but only for
     the \code{$post.interval()} function, is to
-    determine the \emph{evidentiary} credibility interval, which has the
+    determine the \emph{evidentiary} credible interval, which has the
     advantage of being parameterization invariant (Shalloway, 2014).
   }
   
@@ -346,7 +346,7 @@
     using \sQuote{\code{tau.sample=FALSE}} will speed up the function
     substantially.} 
   \item{post.interval}{a \code{function(tau.level=NA, mu.level=NA, theta.level=mu.level, method=c("shortest","central","evidentiary"), predict=FALSE, individual=FALSE)}
-    returning a credibility interval, depending on which of the two
+    returning a credible interval, depending on which of the two
     parameters is provided (either \code{tau.level} or
     \code{mu.level}). The additional parameter \code{method} may be used
     to specify the desired type of interval: \code{method} \code{=}
@@ -373,7 +373,7 @@
     \eqn{I^2} as a function of \eqn{\tau}.}
   \item{summary}{a \code{matrix} listing some summary statistics, namely
     marginal posterior mode, median, mean, standard deviation
-    and a (shortest) 95\% credibility intervals,
+    and a (shortest) 95\% credible intervals,
     of the marginal posterior distributions of \eqn{\tau} and \eqn{\mu},
     and of the posterior predictive distribution of \eqn{\theta}.}
   \item{interval.type}{the \code{interval.type} input argument
@@ -385,6 +385,9 @@
   \item{theta}{a \code{matrix} giving the \sQuote{shrinkage estimates},
     i.e, summary statistics of the trial-specific means
     \eqn{\theta_i}{theta[i]}.} 
+  \item{weights}{a \code{vector} giving the posterior expected
+    \emph{inverse-variance weights} for each study (and for the effect
+    prior mean, if the effect prior was proper).}
   \item{marginal.likelihood}{the marginal likelihood of the data (this 
     number is only computed if proper effect and heterogeneity priors 
     are specified).}
@@ -408,9 +411,11 @@
     the \code{bayesmeta} object.}
   }
 \references{
-  Roever, C.
-  Bayesian random-effects meta-analysis using the bayesmeta package.
-  (in preparation), 2017.
+  C. Roever.
+  Bayesian random-effects meta-analysis using the bayesmeta R package.
+  \emph{\href{http://arxiv.org/abs/1711.08683}{arXiv preprint 1711.08683}}
+  (submitted for publication),
+  2017.
 
   C. Roever, T. Friede.
   \href{http://doi.org/10.1080/10618600.2016.1276840}{Discrete
@@ -534,7 +539,7 @@ ma01$I2(tau=ma01$summary["median","tau"])
 # determine 90 percent upper limits on the heterogeneity tau:
 ma01$qposterior(tau=0.90)
 ma02$qposterior(tau=0.90)
-# determine shortest 90 percent credibility interval for tau:
+# determine shortest 90 percent credible interval for tau:
 ma01$post.interval(tau.level=0.9, method="shortest")}
 
 

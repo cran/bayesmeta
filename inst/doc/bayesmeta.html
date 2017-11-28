@@ -380,6 +380,7 @@ schools.example.1 &lt;- bayesmeta(y     = Rubin1981[,&quot;effect&quot;],
 ## 
 ## tau prior (proper):
 ## function(t){dhalfcauchy(t, scale=25)}
+## &lt;bytecode: 0x7bee1a8&gt;
 ## 
 ## mu prior (proper):
 ## normal(mean=0, sd=50)
@@ -400,7 +401,7 @@ schools.example.1 &lt;- bayesmeta(y     = Rubin1981[,&quot;effect&quot;],
 ## 95% lower  0.000000 -1.824229
 ## 95% upper 15.170271 17.825466
 ## 
-## (quoted intervals are shortest credibility intervals.)
+## (quoted intervals are shortest credible intervals.)
 </code></pre>
 
 <p>First we see the number (and labels) of the provided estimates.
@@ -540,6 +541,7 @@ schools.example.1$qposterior(tau.p=c(0.025, 0.975))
 <h1>References</h1>
 
 <ul>
+<li>C. Röver. Bayesian random-effects meta-analysis using the bayesmeta R package. <em>arXiv preprint 1711.08683</em> (submitted for publication), <a href="http://www.arxiv.org/abs/1711.08683">http://www.arxiv.org/abs/1711.08683</a> , 2017.</li>
 <li>L. V. Hedges, I. Olkin. <em>Statistical methods for meta-analysis</em>. Academic Press, 1985.</li>
 <li>J. Hartung, G. Knapp, B. K. Sinha. <em>Statistical meta-analysis with applications</em>. Wiley, 2008.</li>
 <li>J. P. T. Higgins, S. Green (eds.). Cochrane handbook for systematic reviews of interventions. <a href="http://handbook.cochrane.org/">http://handbook.cochrane.org/</a>, 2011.</li>

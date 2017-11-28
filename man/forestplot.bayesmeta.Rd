@@ -59,7 +59,13 @@
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
-\references{C. Lewis and M. Clarke.
+\references{C. Roever.
+  Bayesian random-effects meta-analysis using the bayesmeta R package.
+  \emph{\href{http://arxiv.org/abs/1711.08683}{arXiv preprint 1711.08683}}
+  (submitted for publication),
+  2017.
+
+  C. Lewis and M. Clarke.
   Forest plots: trying to see the wood and the trees.
   \emph{BMJ}, \bold{322}:1479, 2001.
 

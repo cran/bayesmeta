@@ -985,6 +985,38 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   } else {
     attr(marglik, "NA.reason") <- "improper effect prior"
   }
+
+  # compute posterior mean inverse-variance weights:
+  ivweights <- function(tau, idx)
+  # inverse-variance weights as a function of tau
+  {
+    stopifnot(length(tau)==1, tau>=0)
+    if (is.finite(mu.prior.mean) && is.finite(mu.prior.sd)) {
+      weights <- 1 / c(tau^2 + sigma^2, mu.prior.sd^2)
+      names(weights) <- c(labels, "prior mean")
+    } else {
+      weights <- 1 / (tau^2 + sigma^2)
+      names(weights) <- labels
+    }
+    weights <- weights / sum(weights)
+    return(weights[idx])
+  }
+  ivweights <- Vectorize(ivweights, vectorize.args="tau")
+  
+  # compute posterior means:
+  if (is.finite(mu.prior.mean) && is.finite(mu.prior.sd)) {
+    meanweights <- rep(NA_real_, k+1)
+    names(meanweights) <- c(labels, "prior mean")
+  } else {
+    meanweights <- rep(NA_real_, k)
+    names(meanweights) <- labels
+  }
+  for (i in 1:length(meanweights)) {
+    meanweights[i] <- integrate(function(t){ivweights(tau=t, idx=i) * dposterior(tau=t)},
+                                lower=0, upper=Inf,
+                                rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)$value
+  }
+  
   ptm <- proc.time()[1] - ptm[1]
   
   muprior <- c(mu.prior.mean, mu.prior.sd)
@@ -1012,6 +1044,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                  "ML"                  = ml.estimate,
                  "MAP"                 = map.estimate,
                  "theta"               = shrink,
+                 "weights"             = meanweights,
                  "marginal.likelihood" = marglik,
                  "bayesfactor"         = bayesfactor,
                  "support"             = support,
@@ -1087,9 +1120,9 @@ print.bayesmeta <- function(x,...)
   cat("\nmarginal posterior summary:\n")
   print(x$summary[,c("tau","mu")])
   if (x$interval.type=="shortest")
-    cat("\n(quoted intervals are shortest credibility intervals.)\n")
+    cat("\n(quoted intervals are shortest credible intervals.)\n")
   else
-    cat("\n(quoted intervals are central, equal-tailed credibility intervals.)\n")      
+    cat("\n(quoted intervals are central, equal-tailed credible intervals.)\n")      
   invisible(x)
 }
 
@@ -1125,9 +1158,9 @@ summary.bayesmeta <- function(object,...)
   cat("\nmarginal posterior summary:\n")
   print(object$summary)
   if (object$interval.type=="shortest")
-    cat("\n(quoted intervals are shortest credibility intervals.)\n")
+    cat("\n(quoted intervals are shortest credible intervals.)\n")
   else
-    cat("\n(quoted intervals are central, equal-tailed credibility intervals.)\n")      
+    cat("\n(quoted intervals are central, equal-tailed credible intervals.)\n")      
   if (any(is.finite(object$bayesfactor))) {
     cat("\nBayes factors:\n")
     print(object$bayesfactor)

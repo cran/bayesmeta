@@ -190,6 +190,12 @@
   A. Gelman, J.B. Carlin, H.S. Stern, D.B. Dunson, A. Vehtari,
   D.B. Rubin. \emph{Bayesian data analysis}.
   Chapman & Hall / CRC, Boca Raton, 2014.
+  
+  C. Roever.
+  Bayesian random-effects meta-analysis using the bayesmeta R package.
+  \emph{\href{http://arxiv.org/abs/1711.08683}{arXiv preprint 1711.08683}}
+  (submitted for publication),
+  2017.
 }
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
@@ -268,7 +274,7 @@ print(p)
 #  imply different sampling schemes.
 
 p <- pppvalue(bma, parameter="mu", statistic=NA, value=0,
-              alternative="greater", n=100)
+              alternative="less", n=100)
 
 plot(bma, which=2)
 abline(h=p$null.value)

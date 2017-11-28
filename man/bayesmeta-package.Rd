@@ -9,14 +9,15 @@
   posterior distribution of the two parameters in a random-effects
   meta-analysis, and providing functionality to evaluate joint and
   marginal posterior probability distributions, predictive
-  distributions, shrinkage effects, etc.
+  distributions, shrinkage effects, posterior predictive p-values,
+  etc.
 }
 \details{
   \tabular{ll}{
     Package: \tab bayesmeta\cr
     Type:    \tab Package\cr
-    Version: \tab 1.6\cr
-    Date:    \tab 2017-09-08\cr
+    Version: \tab 2.0\cr
+    Date:    \tab 2017-11-28\cr
     License: \tab GPL (>=2)
   }
   The main functionality is provided by the \code{\link{bayesmeta}()}
@@ -32,9 +33,11 @@ Christian Roever <christian.roever@med.uni-goettingen.de>
   \code{\link{forestplot.bayesmeta}}, \code{\link{plot.bayesmeta}}.
 }
 \references{
-  Roever, C.
-  Bayesian random-effects meta-analysis using the bayesmeta package.
-  (in preparation), 2017.
+  C. Roever.
+  Bayesian random-effects meta-analysis using the bayesmeta R package.
+  \emph{\href{http://arxiv.org/abs/1711.08683}{arXiv preprint 1711.08683}}
+  (submitted for publication),
+  2017.
 }
 \keyword{ models }
 \keyword{ package }
