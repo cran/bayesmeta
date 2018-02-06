@@ -90,14 +90,12 @@ data("CrinsEtAl2014")
 
 \dontrun{
 # compute effect sizes (log odds ratios) from count data
-# (requires "metafor" package to be installed):
+# (using "metafor" package's "escalc()" function):
 require("metafor")
-if (require("metafor")) {
-  crins.es <- escalc(measure="OR",
-                     ai=exp.AR.events,  n1i=exp.total,
-                     ci=cont.AR.events, n2i=cont.total,
-                     slab=publication, data=CrinsEtAl2014)
-} else print("Sorry, 'metafor' package not installed!")
+crins.es <- escalc(measure="OR",
+                   ai=exp.AR.events,  n1i=exp.total,
+                   ci=cont.AR.events, n2i=cont.total,
+                   slab=publication, data=CrinsEtAl2014)
 print(crins.es)
 
 # perform meta analysis:

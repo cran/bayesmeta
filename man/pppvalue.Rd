@@ -205,13 +205,17 @@
 }
 \examples{
 \dontrun{
-# perform a meta analysis:
+# perform a meta analysis;
+# load data:
 data("CrinsEtAl2014")
+# compute effect sizes (log odds ratios) from count data
+# (using "metafor" package's "escalc()" function):
 require("metafor")
 crins.srr <- escalc(measure="OR",
                     ai=exp.SRR.events,  n1i=exp.total,
                     ci=cont.SRR.events, n2i=cont.total,
                     slab=publication, data=CrinsEtAl2014, subset=c(1,4,6))
+# analyze:
 bma <- bayesmeta(crins.srr, mu.prior.mean=0, mu.prior.sd=4,
                  tau.prior=function(t){dhalfnormal(t, scale=0.5)})
 

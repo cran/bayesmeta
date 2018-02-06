@@ -34,13 +34,13 @@
 \examples{
 data("Peto1980")
 \dontrun{
-# compute effect sizes (log odds ratios):
-if (require("metafor")) {
-  peto.es <- escalc(measure="OR",
-                    ai=treat.events,   n1i=treat.cases,
-                    ci=control.events, n2i=control.cases,
-                    slab=publication, data=Peto1980)
-} else print("Sorry, 'metafor' package not installed!")
+# compute effect sizes (log odds ratios) from count data
+# (using "metafor" package's "escalc()" function):
+require("metafor")
+peto.es <- escalc(measure="OR",
+                  ai=treat.events,   n1i=treat.cases,
+                  ci=control.events, n2i=control.cases,
+                  slab=publication, data=Peto1980)
 print(peto.es)
 
 # check sensitivity to different prior choices:

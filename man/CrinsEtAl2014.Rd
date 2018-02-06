@@ -2,40 +2,48 @@
 \docType{data}
 \alias{CrinsEtAl2014}
 \title{Pediatric liver transplant example data}
-\description{Numbers of cases (transplants) and events (acute rejections
-  or steroid resistant rejections) in experimental and control groups of
+\description{Numbers of cases (transplant patients) and events (acute rejections,
+  steroid resistant rejections, PTLDs, and deaths) in experimental and control groups of
   six studies.}
 \usage{data("CrinsEtAl2014")}
 \format{The data frame contains the following columns:
   \tabular{lll}{
-    \bold{publication}        \tab \code{character} \tab publication identifier (first author and publication year) \cr
-    \bold{year}               \tab \code{numeric}   \tab publication year \cr
-    \bold{randomized}         \tab \code{factor}    \tab randomization status (y/n) \cr
-    \bold{control.type}       \tab \code{factor}    \tab type of control group (\sQuote{concurrent} or \sQuote{historical})\cr
-    \bold{comparison}         \tab \code{factor}    \tab type of comparison (\sQuote{IL-2RA only}, \sQuote{delayed CNI}, or \sQuote{no/low steroids}) \cr
-    \bold{IL2RA}              \tab \code{factor}    \tab type of interleukin-2 receptor antagonist (IL-2RA) (\sQuote{basiliximab} or \sQuote{daclizumab}) \cr
-    \bold{CNI}                \tab \code{factor}    \tab type of calcineurin inhibitor (CNI) (\sQuote{tracrolimus} or \sQuote{cyclosporine A}) \cr
-    \bold{MMF}                \tab \code{factor}    \tab use of mycofenolate mofetil (MMF) (y/n) \cr
-    \bold{followup}           \tab \code{numeric}   \tab follow-up time in months \cr
-    \bold{treat.AR.events}    \tab \code{numeric}   \tab number of AR events in experimental group \cr
-    \bold{treat.SRR.events}   \tab \code{numeric}   \tab number of SRR events in experimental group \cr
-    \bold{treat.total}        \tab \code{numeric}   \tab number of cases in experimental group \cr
-    \bold{control.AR.events}  \tab \code{numeric}   \tab number of AR events in control group \cr
-    \bold{control.SRR.events} \tab \code{numeric}   \tab number of SRR events in control group \cr
-    \bold{control.total}      \tab \code{numeric}   \tab number of cases in control group \cr
+    \bold{publication}         \tab \code{character} \tab publication identifier (first author and publication year) \cr
+    \bold{year}                \tab \code{numeric}   \tab publication year \cr
+    \bold{randomized}          \tab \code{factor}    \tab randomization status (y/n) \cr
+    \bold{control.type}        \tab \code{factor}    \tab type of control group (\sQuote{concurrent} or \sQuote{historical})\cr
+    \bold{comparison}          \tab \code{factor}    \tab type of comparison (\sQuote{IL-2RA only}, \sQuote{delayed CNI}, or \sQuote{no/low steroids}) \cr
+    \bold{IL2RA}               \tab \code{factor}    \tab type of interleukin-2 receptor antagonist (IL-2RA) (\sQuote{basiliximab} or \sQuote{daclizumab}) \cr
+    \bold{CNI}                 \tab \code{factor}    \tab type of calcineurin inhibitor (CNI) (\sQuote{tracrolimus} or \sQuote{cyclosporine A}) \cr
+    \bold{MMF}                 \tab \code{factor}    \tab use of mycofenolate mofetil (MMF) (y/n) \cr
+    \bold{followup}            \tab \code{numeric}   \tab follow-up time in months \cr
+    \bold{treat.AR.events}     \tab \code{numeric}   \tab number of AR events in experimental group \cr
+    \bold{treat.SRR.events}    \tab \code{numeric}   \tab number of SRR events in experimental group \cr
+    \bold{treat.PTLD.events}   \tab \code{numeric}   \tab number of PTLD events in experimental group \cr
+    \bold{treat.deaths}        \tab \code{numeric}   \tab number of deaths in experimental group \cr
+    \bold{treat.total}         \tab \code{numeric}   \tab number of cases in experimental group \cr
+    \bold{control.AR.events}   \tab \code{numeric}   \tab number of AR events in control group \cr
+    \bold{control.SRR.events}  \tab \code{numeric}   \tab number of SRR events in control group \cr
+    \bold{control.PTLD.events} \tab \code{numeric}   \tab number of PTLD events in control group \cr
+    \bold{control.deaths}      \tab \code{numeric}   \tab number of deaths in control group \cr
+    \bold{control.total}       \tab \code{numeric}   \tab number of cases in control group \cr
   }
 }
-\details{A systematic literature review investigated the evidence on
-  the effect of Interleukin-2 receptor antagonists (IL-2RA) and resulted
-  in six controlled studies reporting acute rejection (AR) and
-  steroid-resistant rejection (SRR) rates in pediatric liver transplant
-  recipients.
+\details{A systematic literature review investigated the evidence on the
+  effect of Interleukin-2 receptor antagonists (IL-2RA) and resulted in
+  six controlled studies reporting acute rejection (AR),
+  steroid-resistant rejection (SRR) and post-transplant
+  lymphoproliferative disorder (PTLD) rates as well as mortality in
+  pediatric liver transplant recipients.
 }
 \source{N.D. Crins, C. Roever, A.D. Goralczyk, T. Friede.
   \href{http://doi.org/10.1111/petr.12362}{Interleukin-2 receptor
   antagonists for pediatric liver transplant recipients:
   A systematic review and meta-analysis of controlled studies}.
   \emph{Pediatric Transplantation}, \bold{18}(8):839-850, 2014.
+}
+\seealso{
+  \code{\link{GoralczykEtAl2011}}.
 }
 \references{T.G. Heffron et al.
   Pediatric liver transplantation with daclizumab induction therapy.
@@ -75,13 +83,13 @@
 \examples{
 data("CrinsEtAl2014")
 \dontrun{
-# compute effect sizes (log odds ratios) from count data:
-if (require("metafor")) {
-  crins.es <- escalc(measure="OR",
-                     ai=exp.AR.events,  n1i=exp.total,
-                     ci=cont.AR.events, n2i=cont.total,
-                     slab=publication, data=CrinsEtAl2014)
-} else print("Sorry, 'metafor' package not installed!")
+# compute effect sizes (log odds ratios) from count data
+# (using "metafor" package's "escalc()" function):
+require("metafor")
+crins.es <- escalc(measure="OR",
+                   ai=exp.AR.events,  n1i=exp.total,
+                   ci=cont.AR.events, n2i=cont.total,
+                   slab=publication, data=CrinsEtAl2014)
 print(crins.es)
 
 # analyze using weakly informative half-Cauchy prior for heterogeneity:

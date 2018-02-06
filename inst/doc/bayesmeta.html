@@ -221,6 +221,10 @@ hr {
 ## Loading required package: grid
 ## Loading required package: magrittr
 ## Loading required package: checkmate
+## Loading required package: metafor
+## Loading required package: Matrix
+## Loading &#39;metafor&#39; package (version 2.0-0). For an overview 
+## and introduction to the package please type: help(metafor).
 data(&quot;Rubin1981&quot;)
 print(Rubin1981)
 ##   school effect stderr
@@ -272,13 +276,13 @@ The data from the above table is actually taken from another meta analysis examp
 
 <pre><code class="r">data(&quot;CrinsEtAl2014&quot;)
 print(CrinsEtAl2014[,c(1,10,12,13,15)])
-##       publication exp.AR.events exp.total cont.AR.events cont.total
-## 1  Heffron (2003)            14        61             15         20
-## 2  Gibelli (2004)            16        28             19         28
-## 3 Schuller (2005)             3        18              8         12
-## 4 Ganschow (2005)             9        54             29         54
-## 5    Spada (2006)             4        36             11         36
-## 6     Gras (2008)             0        50              3         34
+##       publication exp.AR.events exp.PTLD.events exp.deaths cont.AR.events
+## 1  Heffron (2003)            14              NA          4             15
+## 2  Gibelli (2004)            16              NA         NA             19
+## 3 Schuller (2005)             3               0         NA              8
+## 4 Ganschow (2005)             9               1          1             29
+## 5    Spada (2006)             4               1          4             11
+## 6     Gras (2008)             0              NA          2              3
 </code></pre>
 
 <p>The above example appears in the first row here. This data set contains the results from six such studies, along with information on other covariates and additional endpoints. Again, you can check the help (via <code>help(&quot;CrinsEtAl2014&quot;)</code>) for more details on this data set.
@@ -380,7 +384,7 @@ schools.example.1 &lt;- bayesmeta(y     = Rubin1981[,&quot;effect&quot;],
 ## 
 ## tau prior (proper):
 ## function(t){dhalfcauchy(t, scale=25)}
-## &lt;bytecode: 0x7bee1a8&gt;
+## &lt;bytecode: 0x69599a8&gt;
 ## 
 ## mu prior (proper):
 ## normal(mean=0, sd=50)

@@ -1,4 +1,4 @@
-export(bayesmeta, bayesmeta.default, bayesmeta.escalc,
+export(bayesmeta,
        print.bayesmeta, summary.bayesmeta, plot.bayesmeta,
        forestplot.bayesmeta,
        dlomax, plomax, qlomax, rlomax,
@@ -17,6 +17,7 @@ S3method(print, bayesmeta)
 S3method(summary, bayesmeta)
 S3method(plot, bayesmeta)
 S3method(forestplot, bayesmeta)
+S3method(forest, bayesmeta)
 
 importFrom("grDevices",
            "grey")
@@ -31,6 +32,8 @@ importFrom("stats",
 importFrom("forestplot",
            "forestplot", "fpDrawPointCI", "fpDrawSummaryCI","fpDrawBarCI",
            "fpColors")
+importFrom("metafor",
+           "forest")
 importFrom("parallel",
            "detectCores", "makeCluster", "clusterEvalQ","parSapply",
            "stopCluster")

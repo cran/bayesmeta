@@ -562,12 +562,11 @@ ma03a <- bayesmeta(y=sj[,"log.or"], sigma=sj[,"log.or.se"],
 
 # alternatively: may utilize "metafor" package's "escalc()" function
 # to compute log-ORs and standard errors:
-if (require("metafor")) {
-  es <- escalc(measure="OR",
-               ai=lihr.events, n1i=lihr.cases,
-               ci=oihr.events, n2i=oihr.cases,
-               slab=id, data=SidikJonkman2007)
-} else print("Sorry, 'metafor' package not installed!")
+require("metafor")
+es <- escalc(measure="OR",
+             ai=lihr.events, n1i=lihr.cases,
+             ci=oihr.events, n2i=oihr.cases,
+             slab=id, data=SidikJonkman2007)
 # apply "bayesmeta()" function directly to "escalc" object:
 ma03b <- bayesmeta(es, tau.prior=function(t){dhalfnormal(t,scale=1)})
 # "ma03a" and "ma03b" should be identical:

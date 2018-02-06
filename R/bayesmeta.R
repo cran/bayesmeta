@@ -1,6 +1,6 @@
 #
 #    bayesmeta, an R package for Bayesian random-effects meta-analysis.
-#    Copyright (C) 2017  Christian Roever
+#    Copyright (C) 2018  Christian Roever
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -2451,9 +2451,9 @@ pppvalue<- function(x,
     }
   } else if (thetapar) {
     # compute conditional posterior, conditional on theta[i]==value:
-    condy <- x$y
-    condy[indiv.which] <- value
+    condy     <- x$y
     condsigma <- x$sigma
+    condy[indiv.which]     <- value
     condsigma[indiv.which] <- 0.0
     if (alternative == "two.sided") {
       condbm <- bayesmeta(y=condy, sigma=condsigma, labels=x$labels,
@@ -2535,6 +2535,7 @@ pppvalue<- function(x,
       # draw tau from conditional (tau|mu):
       if (prior) rtau <- qtau(runif(1, 0.0, 1.0))  # prior
       else       rtau <- rctau(mu=rmu)             # posterior
+      # draw study-specific effects (theta) and effects (y):
       rtheta <- rnorm(n=x$k, mean=rmu,    sd=rtau)
       y      <- rnorm(n=x$k, mean=rtheta, sd=sigma)
     } else if (parameter=="tau") {  # Null hypothesis concerns heterogeneity tau
@@ -2554,6 +2555,7 @@ pppvalue<- function(x,
         cm <- x$cond.moment(tau=rtau)
         rmu <- rnorm(n=1, mean=cm[1,"mean"], sd=cm[1,"sd"])
       }
+      # draw study-specific effects (theta) and effects (y):
       rtheta <- rnorm(n=x$k, mean=rmu,    sd=rtau)
       y      <- rnorm(n=x$k, mean=rtheta, sd=sigma)
     } else {                        # Null hypothesis concerns ith "shrinkage" parameter theta
@@ -2580,7 +2582,8 @@ pppvalue<- function(x,
       rmu <- taumu["mu"]
       rtheta <- rnorm(n=x$k, mean=rmu, sd=rtau)
       rtheta[indiv.which] <- rtheta.i
-      y      <- rnorm(n=x$k, mean=rmu, sd=sigma)
+      #y      <- rnorm(n=x$k, mean=rmu, sd=sigma)
+      y      <- rnorm(n=x$k, mean=rtheta, sd=sigma)
     }
     # data (y) generated. Now compute statistic:
     if (statNA) {

@@ -55,14 +55,20 @@
 data("CrinsEtAl2014")
 
 \dontrun{
+# compute effect sizes (log odds ratios) from count data
+# (using "metafor" package's "escalc()" function):
 require("metafor")
 es.crins <- escalc(measure="OR",
                    ai=exp.AR.events,  n1i=exp.total,
                    ci=cont.AR.events, n2i=cont.total,
                    slab=publication, data=CrinsEtAl2014)
+# derive a prior distribution for the heterogeneity:
 tp.crins <- TurnerEtAlPrior("surgical", "pharma", "placebo / control")
+# perform meta-analysis:
 ma.crins <- bayesmeta(es.crins, tau.prior=tp.crins$dprior)
 
+########
+# plot:
 forest(ma.crins, xlab="log odds ratio")
 
 forest(ma.crins, trans=exp, refline=1, xlab="odds ratio")
