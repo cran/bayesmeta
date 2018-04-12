@@ -31,7 +31,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                               interval.type = c("shortest", "central"),
                               delta=0.01, epsilon=0.0001,
                               rel.tol.integrate=2^16*.Machine$double.eps,
-                              abs.tol.integrate=rel.tol.integrate,
+                              abs.tol.integrate=0.0,
                               tol.uniroot=rel.tol.integrate,...)
 {
   ptm <- proc.time()
@@ -1734,7 +1734,8 @@ TurnerEtAlParameters <- array(c(as.vector(meanmat), as.vector(sdmat)),
 rm(list=c("ctypes", "otypes", "meanmat", "sdmat"))
 
 
-TurnerEtAlPrior <- function(outcome=c("all-cause mortality",
+TurnerEtAlPrior <- function(outcome=c(NA,
+                                      "all-cause mortality",
                                       "obstetric outcomes",
                                       "cause-specific mortality / major morbidity event / composite (mortality or morbidity)",
                                       "resource use / hospital stay / process",
@@ -1762,25 +1763,34 @@ TurnerEtAlPrior <- function(outcome=c("all-cause mortality",
 # (see Table IV).
 #
 {
-  # match the provided arguments:
-  outcome     <- match.arg(outcome)
-  comparator1 <- match.arg(comparator1)
-  comparator2 <- match.arg(comparator2)
-  # list of 3 possible comparators:
-  clist <- c("pharmacological", "non-pharmacological", "placebo / control")
-  # index matrix to match pairs of comparators to one of five possible scenarios:
-  cmatrix <- matrix(c(2,4,1,4,5,3,1,3,NA), nrow=3, ncol=3,
-                    dimnames=list(clist, clist))
-  # list of 5 possible intervention comparison types:
-  ctypes <- dimnames(TurnerEtAlParameters)[["comparison"]]
-  # figure out current comparison scenario:
-  comparisontype <- ctypes[cmatrix[comparator1, comparator2]]
-  # assemble function output:
   param <- matrix(NA, nrow=2, ncol=2,
                   dimnames=list(c("tau^2","tau"),
                                 "log-normal"=c("mu","sigma")))
-  param["tau^2","mu"]    <- TurnerEtAlParameters[outcome, comparisontype, "mu"]
-  param["tau^2","sigma"] <- TurnerEtAlParameters[outcome, comparisontype, "sigma"]
+  if (all(!is.na(outcome))) {
+    # match the provided arguments:
+    outcome     <- match.arg(outcome)
+    comparator1 <- match.arg(comparator1)
+    comparator2 <- match.arg(comparator2)
+    # list of 3 possible comparators:
+    clist <- c("pharmacological", "non-pharmacological", "placebo / control")
+    # index matrix to match pairs of comparators to one of five possible scenarios:
+    cmatrix <- matrix(c(2,4,1,4,5,3,1,3,NA), nrow=3, ncol=3,
+                      dimnames=list(clist, clist))
+    # list of 5 possible intervention comparison types:
+    ctypes <- dimnames(TurnerEtAlParameters)[["comparison"]]
+    # figure out current comparison scenario:
+    comparisontype <- ctypes[cmatrix[comparator1, comparator2]]
+    # assemble function output:
+    param["tau^2","mu"]    <- TurnerEtAlParameters[outcome, comparisontype, "mu"]
+    param["tau^2","sigma"] <- TurnerEtAlParameters[outcome, comparisontype, "sigma"]
+  } else {  # the "marginal" setting, see p.993
+    outcome <- comparisontype <- "any"
+    param <- matrix(NA, nrow=2, ncol=2,
+                    dimnames=list(c("tau^2","tau"),
+                                  "log-normal"=c("mu","sigma")))
+    param["tau^2","mu"]    <- -2.56
+    param["tau^2","sigma"] <- 1.74
+  }
   param["tau","mu"]      <- param["tau^2","mu"] / 2
   param["tau","sigma"]   <- param["tau^2","sigma"] / 2
   result <- list("parameters"      = param,

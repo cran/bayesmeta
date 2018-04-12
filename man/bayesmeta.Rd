@@ -23,7 +23,7 @@
           interval.type = c("shortest", "central"),
           delta = 0.01, epsilon = 0.0001,
           rel.tol.integrate = 2^16*.Machine$double.eps,
-          abs.tol.integrate = rel.tol.integrate,
+          abs.tol.integrate = 0.0,
           tol.uniroot = rel.tol.integrate, ...)
   \method{bayesmeta}{escalc}(y, labels = NULL, ...)
 }

@@ -16,8 +16,8 @@
   \tabular{ll}{
     Package: \tab bayesmeta\cr
     Type:    \tab Package\cr
-    Version: \tab 2.1\cr
-    Date:    \tab 2018-02-06\cr
+    Version: \tab 2.2\cr
+    Date:    \tab 2018-04-12\cr
     License: \tab GPL (>=2)
   }
   The main functionality is provided by the \code{\link{bayesmeta}()}
@@ -38,6 +38,11 @@ Christian Roever <christian.roever@med.uni-goettingen.de>
   \emph{\href{http://arxiv.org/abs/1711.08683}{arXiv preprint 1711.08683}}
   (submitted for publication),
   2017.
+
+  C. Roever.
+  \emph{The bayesmeta app}.
+  \url{http://ams.med.uni-goettingen.de:3838/bayesmeta/app},
+  2018.
 }
 \keyword{ models }
 \keyword{ package }

@@ -9,7 +9,7 @@
   (SMD) that were published in the \emph{Cochrane Database of Systematic Reviews}.
 }
 \usage{
-RhodesEtAlPrior(outcome=c(NA,"obstetric outcome",
+RhodesEtAlPrior(outcome=c(NA, "obstetric outcome",
   "resource use and hospital stay / process",
   "internal and external structure-related outcome",
   "general physical health and adverse event and pain and quality of life / functioning",
@@ -18,7 +18,7 @@ RhodesEtAlPrior(outcome=c(NA,"obstetric outcome",
   "mental health outcome", "biological marker", "various subjectively measured outcomes"),
   comparator1=c("pharmacological", "non-pharmacological", "placebo / control"),
   comparator2=c("pharmacological", "non-pharmacological", "placebo / control"),
-  area=c("other","respiratory","cancer"))
+  area=c("other", "respiratory", "cancer"))
 }
 \arguments{
   \item{outcome}{The type of outcome investigated (see below for a list

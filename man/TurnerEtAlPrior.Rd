@@ -9,7 +9,7 @@
   published in the \emph{Cochrane Database of Systematic Reviews}.
 }
 \usage{
-TurnerEtAlPrior(outcome=c("all-cause mortality", "obstetric outcomes",
+TurnerEtAlPrior(outcome=c(NA, "all-cause mortality", "obstetric outcomes",
   "cause-specific mortality / major morbidity event / composite (mortality or morbidity)",
   "resource use / hospital stay / process", "surgical / device related success / failure",
   "withdrawals / drop-outs", "internal / structure-related outcomes",
@@ -42,6 +42,7 @@ TurnerEtAlPrior(outcome=c("all-cause mortality", "obstetric outcomes",
   investigated. It may take one of the following values
   (partial matching is supported):
   \itemize{
+    \item \code{NA}
     \item \code{"all-cause mortality"}
     \item \code{"obstetric outcomes"}
     \item \code{"cause-specific mortality / major morbidity event / composite (mortality or morbidity)"}
@@ -59,6 +60,10 @@ TurnerEtAlPrior(outcome=c("all-cause mortality", "obstetric outcomes",
     \item \code{"biological markers (dichotomized)"}
     \item \code{"subjective outcomes (various)"}
   }
+  Specifying \dQuote{\code{outcome=NA}} (the default) yields the
+  \emph{marginal} setting, without considering meta-analysis
+  characteristics as covariates.
+  
   The \code{comparator1} and \code{comparator2} arguments together
   specify the type of comparison in question.  These may take one of the
   following values (partial matching is supported):
@@ -123,7 +128,6 @@ TP$qprior(c(0.025,0.975))
 \dontrun{
 # compute effect sizes (log odds ratios) from count data
 # (using "metafor" package's "escalc()" function):
-require("metafor")
 crins.es <- escalc(measure="OR",
                    ai=exp.AR.events,  n1i=exp.total,
                    ci=cont.AR.events, n2i=cont.total,
@@ -138,21 +142,29 @@ crins.ma02 <- bayesmeta(crins.es, tau.prior=function(t){dhalfcauchy(t,scale=1)})
 # show results:
 print(crins.ma01)
 print(crins.ma02)
+# compare estimates; heterogeneity (tau):
 rbind("Turner prior"=crins.ma01$summary[,"tau"], "Cauchy prior"=crins.ma02$summary[,"tau"])
+# effect (mu):
 rbind("Turner prior"=crins.ma01$summary[,"mu"], "Cauchy prior"=crins.ma02$summary[,"mu"])
 
 # illustrate heterogeneity priors and posteriors:
-par(mfrow=c(2,1))
+par(mfcol=c(2,2))
   plot(crins.ma01, which=4, prior=TRUE, taulim=c(0,2),
        main="informative log-normal prior")
   plot(crins.ma02, which=4, prior=TRUE, taulim=c(0,2),
        main="weakly informative half-Cauchy prior")
+  plot(crins.ma01, which=3, mulim=c(-3,0),
+       main="informative log-normal prior")
+  abline(v=0, lty=3)
+  plot(crins.ma02, which=3, mulim=c(-3,0),
+       main="weakly informative half-Cauchy prior")
+  abline(v=0, lty=3)
 par(mfrow=c(1,1))
 
 # compare prior and posterior 95 percent upper limits for tau:
 TP$qprior(0.95)
 crins.ma01$qposterior(0.95)
-qcauchy(0.975)
+qhalfcauchy(0.95)
 crins.ma02$qposterior(0.95)
 }
 }
