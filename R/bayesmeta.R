@@ -1016,6 +1016,42 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                                 lower=0, upper=Inf,
                                 rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)$value
   }
+
+  # compute "shrinkage weights":
+  shrinkweights <- function(tau, study.idx, shrink.idx)
+  # "study.idx"  :  which study's weight
+  # "shrink.idx" :  which shrinkage estimate
+  {
+    stopifnot(length(tau)==1, tau>=0)
+    if (is.finite(mu.prior.mean) && is.finite(mu.prior.sd)) {
+      ivw <- 1 / c(tau^2 + sigma^2, mu.prior.sd^2)
+      names(ivw) <- c(labels, "prior mean")
+    } else {
+      ivw <- 1 / (tau^2 + sigma^2)
+      names(ivw) <- labels
+    }
+    ivw <- ivw / sum(ivw)    
+    indic <- rep(0.0, length(ivw))
+    indic[shrink.idx] <- 1.0
+    if (tau > 0)
+      swt <- (sigma[shrink.idx]^(-2)) / (sigma[shrink.idx]^(-2) + tau^(-2))
+    else
+      swt <- 0.0
+    swt <- swt*indic + (1-swt)*ivw
+    swt <- swt / sum(swt)
+    return(swt[study.idx])
+  }
+  shrinkweights <- Vectorize(shrinkweights, vectorize.args="tau")
+  shrinkageweights <- matrix(NA_real_, nrow=length(meanweights), ncol=k,
+                             dimnames=list("study"=names(meanweights),
+                                           "shrinkage estimate"=labels))
+  for (i in 1:nrow(shrinkageweights)) {
+    for (j in 1:ncol(shrinkageweights)) {
+      shrinkageweights[i,j] <- integrate(function(t){shrinkweights(tau=t,i,j)*dposterior(tau=t)},
+                                         lower=0.0, upper=Inf,
+                                         rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)$value
+    }
+  }
   
   ptm <- proc.time()[1] - ptm[1]
   
@@ -1045,6 +1081,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                  "MAP"                 = map.estimate,
                  "theta"               = shrink,
                  "weights"             = meanweights,
+                 "weights.theta"       = shrinkageweights,
                  "marginal.likelihood" = marglik,
                  "bayesfactor"         = bayesfactor,
                  "support"             = support,

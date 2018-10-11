@@ -285,6 +285,27 @@
     the effect of different settings by checking the number and range of
     support points returned in the \code{$support} element.
   }  
+
+  \subsection{Study weights}{
+    Conditional on a given \eqn{\tau} value, the posterior
+    expectations of the overall effect (\eqn{\mu}) as well as the
+    shrinkage estimates (\eqn{\theta_i}{theta[i]}) result as convex
+    combinations of the estimates \eqn{y_i}{y[i]}. The \emph{weights}
+    associated with each estimate \eqn{y_i}{y[i]} are commonly quoted
+    in frequentist meta-analysis results in order to quantify
+    (arguably somewhat heuristically) each study's contribution to the
+    overall estimates, often in terms of percentages.
+
+    In a Bayesian meta-analysis, these numbers to not immediately
+    arise, since the heterogeneity is marginalized over. However, due
+    to linearity, the posterior mean effects may still be expressed in
+    terms of linear combinations of initial estimates \eqn{y_i}{y[i]},
+    with weights now given by the \emph{posterior mean weights},
+    marginalized over the heterogeneity \eqn{\tau}. The posterior mean
+    weights are returned in the \code{$weights} and
+    \code{$weights.theta} elements, for the overall effect \eqn{\mu}
+    as well as for the shrinkage estimates \eqn{\theta_i}{theta[i]}.
+  }
 }
 \value{
   A list of class \code{bayesmeta} containing the following elements:
@@ -388,6 +409,10 @@
   \item{weights}{a \code{vector} giving the posterior expected
     \emph{inverse-variance weights} for each study (and for the effect
     prior mean, if the effect prior was proper).}
+  \item{weights.theta}{a \code{matrix} whose columns give the
+    posterior expected weights of each study (and of the effect prior
+    mean, if the effect prior was proper) for all shrinkage
+    estimates.}
   \item{marginal.likelihood}{the marginal likelihood of the data (this 
     number is only computed if proper effect and heterogeneity priors 
     are specified).}

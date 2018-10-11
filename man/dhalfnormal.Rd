@@ -82,6 +82,10 @@
   \href{http://doi.org/10.2307/1266560}{The folded normal
   distribution}. \emph{Technometrics}, \bold{3}(4):543-550, 1961. 
 
+  N. G. Polson, J. G. Scott.
+  On the half-Cauchy prior for a global scale parameter.
+  \emph{Bayesian Analysis}, \bold{7}(4):887-902, 2012.
+
   S. Psarakis, J. Panaretos.
   \href{http://doi.org/10.1080/03610929008830342}{The folded t
   distribution}. \emph{Communications in Statistics - Theory and

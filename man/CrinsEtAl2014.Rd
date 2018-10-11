@@ -14,7 +14,7 @@
     \bold{control.type}        \tab \code{factor}    \tab type of control group (\sQuote{concurrent} or \sQuote{historical})\cr
     \bold{comparison}          \tab \code{factor}    \tab type of comparison (\sQuote{IL-2RA only}, \sQuote{delayed CNI}, or \sQuote{no/low steroids}) \cr
     \bold{IL2RA}               \tab \code{factor}    \tab type of interleukin-2 receptor antagonist (IL-2RA) (\sQuote{basiliximab} or \sQuote{daclizumab}) \cr
-    \bold{CNI}                 \tab \code{factor}    \tab type of calcineurin inhibitor (CNI) (\sQuote{tracrolimus} or \sQuote{cyclosporine A}) \cr
+    \bold{CNI}                 \tab \code{factor}    \tab type of calcineurin inhibitor (CNI) (\sQuote{tacrolimus} or \sQuote{cyclosporine A}) \cr
     \bold{MMF}                 \tab \code{factor}    \tab use of mycofenolate mofetil (MMF) (y/n) \cr
     \bold{followup}            \tab \code{numeric}   \tab follow-up time in months \cr
     \bold{treat.AR.events}     \tab \code{numeric}   \tab number of AR events in experimental group \cr

@@ -34,8 +34,7 @@
 \source{A. Gelman, J.B. Carlin, H. Stern, and D.B. Rubin.
   \emph{Bayesian data analysis}. Chapman & Hall / CRC, Boca Raton, 1997.} 
 \references{
-  D.B. Rubin. \href{http://doi.org/10.2307/1164617}{Estimation
-    in parallel randomized experiments}.
+  D.B. Rubin. Estimation in parallel randomized experiments.
   \emph{Journal of Educational Statistics}, \bold{6}(4):377-401, 1981.
 
   A. Gelman. Prior distributions for variance parameters in hierarchical

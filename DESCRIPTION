@@ -1,14 +1,14 @@
 Package: bayesmeta
 Type: Package
 Title: Bayesian Random-Effects Meta-Analysis
-Version: 2.2
-Date: 2018-04-12
-Authors@R: c(person("Christian", "Roever", role=c("aut","cre"), 
-                    email="christian.roever@med.uni-goettingen.de"),
-             person("Tim", "Friede", role="ctb",
-                    email="tim.friede@med.uni-goettingen.de"))
-Author: Christian Roever [aut, cre],
-  Tim Friede [ctb]
+Version: 2.3
+Date: 2018-10-11
+Authors@R: c(person(given="Christian", family="Roever", role=c("aut","cre"), 
+                    email="christian.roever@med.uni-goettingen.de",
+                    comment=c(ORCID="0000-0002-6911-698X")),
+             person(given="Tim", family="Friede", role="ctb",
+                    email="tim.friede@med.uni-goettingen.de",
+                    comment=c(ORCID="0000-0001-5347-7441")))
 Maintainer: Christian Roever <christian.roever@med.uni-goettingen.de>
 Depends: forestplot (>= 1.6), metafor (>= 2.0-0)
 Suggests: compute.es, knitr, rmarkdown, R.rsp
@@ -18,6 +18,8 @@ URL: https://gitlab.gwdg.de/croever/bayesmeta,
         http://ams.med.uni-goettingen.de:3838/bayesmeta/app
 VignetteBuilder: knitr, R.rsp
 NeedsCompilation: no
-Packaged: 2018-04-12 07:24:50 UTC; christian
+Packaged: 2018-10-11 12:06:09 UTC; christian
+Author: Christian Roever [aut, cre] (<https://orcid.org/0000-0002-6911-698X>),
+  Tim Friede [ctb] (<https://orcid.org/0000-0001-5347-7441>)
 Repository: CRAN
-Date/Publication: 2018-04-12 07:48:25 UTC
+Date/Publication: 2018-10-11 12:40:02 UTC
