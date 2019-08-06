@@ -3,35 +3,48 @@
 \alias{phalfnormal}
 \alias{qhalfnormal}
 \alias{rhalfnormal}
+\alias{ehalfnormal}
+\alias{vhalfnormal}
 \alias{dhalft}
 \alias{phalft}
 \alias{qhalft}
 \alias{rhalft}
+\alias{ehalft}
+\alias{vhalft}
 \alias{dhalfcauchy}
 \alias{phalfcauchy}
 \alias{qhalfcauchy}
 \alias{rhalfcauchy}
+\alias{ehalfcauchy}
+\alias{vhalfcauchy}
 \title{Half-normal, half-Student-t and half-Cauchy distributions.
 }
 \description{
   Half-normal, half-Student-t and half-Cauchy density,
-  distribution, quantile functions and random number generation.
+  distribution, quantile functions, random number generation,
+  and expectation and variance.
 }
 \usage{
   dhalfnormal(x, scale=1, log=FALSE)
   phalfnormal(q, scale=1)
   qhalfnormal(p, scale=1)
   rhalfnormal(n, scale=1)
+  ehalfnormal(scale=1)
+  vhalfnormal(scale=1)
 
-  dhalft(x, scale=1, df, log=FALSE)
-  phalft(q, scale=1, df)
-  qhalft(p, scale=1, df)
-  rhalft(n, scale=1, df)
+  dhalft(x, df, scale=1, log=FALSE)
+  phalft(q, df, scale=1)
+  qhalft(p, df, scale=1)
+  rhalft(n, df, scale=1)
+  ehalft(df, scale=1)
+  vhalft(df, scale=1)
 
   dhalfcauchy(x, scale=1, log=FALSE)
   phalfcauchy(q, scale=1)
   qhalfcauchy(p, scale=1)
   rhalfcauchy(n, scale=1)
+  ehalfcauchy(scale=1)
+  vhalfcauchy(scale=1)
 }
 \arguments{
   \item{x, q}{quantile.}
@@ -70,7 +83,11 @@
   \sQuote{\code{phalfnormal()}} gives the cumulative distribution
   function (CDF),
   \sQuote{\code{qhalfnormal()}} gives the quantile function (inverse CDF),
-  and \sQuote{\code{rhalfnormal()}} generates random deviates. For the
+  and \sQuote{\code{rhalfnormal()}} generates random deviates.
+  The \sQuote{\code{ehalfnormal()}} and \sQuote{\code{vhalfnormal()}}
+  functions return the corresponding half-normal distribution's
+  expectation and variance, respectively.
+  For the
   \sQuote{\code{dhalft()}}, \sQuote{\code{dhalfcauchy()}} and related
   function it works analogously.
 }

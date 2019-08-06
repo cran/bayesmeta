@@ -1,14 +1,19 @@
 export(bayesmeta,
        print.bayesmeta, summary.bayesmeta, plot.bayesmeta,
        forestplot.bayesmeta,
-       dlomax, plomax, qlomax, rlomax,
+       dlomax, plomax, qlomax, rlomax, elomax, vlomax,
        dhalfnormal, phalfnormal, qhalfnormal, rhalfnormal,
-       dhalft, phalft, qhalft, rhalft,
+         ehalfnormal, vhalfnormal,
+       dhalft, phalft, qhalft, rhalft, ehalft, vhalft,
        dhalfcauchy, phalfcauchy, qhalfcauchy, rhalfcauchy,
+         ehalfcauchy, vhalfcauchy,
        dhalflogistic, phalflogistic, qhalflogistic, rhalflogistic,
-       drayleigh, prayleigh, qrayleigh, rrayleigh,
+         ehalflogistic, vhalflogistic,
+       dinvchi, pinvchi, qinvchi, rinvchi, einvchi, vinvchi,
+       drayleigh, prayleigh, qrayleigh, rrayleigh, erayleigh, vrayleigh,
        TurnerEtAlParameters, TurnerEtAlPrior,
        RhodesEtAlParameters, RhodesEtAlPrior,
+       funnel.bayesmeta,
        normalmixture, pppvalue)
 
 S3method(bayesmeta, default)
@@ -18,6 +23,7 @@ S3method(summary, bayesmeta)
 S3method(plot, bayesmeta)
 S3method(forestplot, bayesmeta)
 S3method(forest, bayesmeta)
+S3method(funnel, bayesmeta)
 
 importFrom("grDevices",
            "grey")
@@ -33,7 +39,7 @@ importFrom("forestplot",
            "forestplot", "fpDrawPointCI", "fpDrawSummaryCI","fpDrawBarCI",
            "fpColors")
 importFrom("metafor",
-           "forest")
+           "forest", "funnel")
 importFrom("parallel",
            "detectCores", "makeCluster", "clusterEvalQ","parSapply",
            "stopCluster")

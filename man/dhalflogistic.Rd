@@ -3,17 +3,21 @@
 \alias{phalflogistic}
 \alias{qhalflogistic}
 \alias{rhalflogistic}
+\alias{ehalflogistic}
+\alias{vhalflogistic}
 \title{Half-logistic distribution.
 }
 \description{
-  Half-logistic density, distribution, quantile functions
-  and random number generation.
+  Half-logistic density, distribution, and quantile functions,
+  random number generation and expectation and variance.
 }
 \usage{
   dhalflogistic(x, scale=1, log=FALSE)
   phalflogistic(q, scale=1)
   qhalflogistic(p, scale=1)
   rhalflogistic(n, scale=1)
+  ehalflogistic(scale=1)
+  vhalflogistic(scale=1)
 }
 \arguments{
   \item{x, q}{quantile.}
@@ -34,6 +38,9 @@
   function (CDF),
   \sQuote{\code{qhalflogistic()}} gives the quantile function (inverse CDF),
   and \sQuote{\code{rhalflogistic()}} generates random deviates.
+  The \sQuote{\code{ehalflogistic()}} and \sQuote{\code{vhalflogistic()}}
+  functions return the corresponding half-logistic distribution's
+  expectation and variance, respectively.
 }
 \references{
   N.L. Johnson, S. Kotz, N. Balakrishnan. \emph{Continuous univariate

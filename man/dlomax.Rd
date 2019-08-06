@@ -3,23 +3,27 @@
 \alias{plomax}
 \alias{qlomax}
 \alias{rlomax}
+\alias{elomax}
+\alias{vlomax}
 \title{The Lomax distribution.}
 \description{
   Lomax density, distribution and quantile functions,
-  and random number generation.
+  random number generation, and expectation and variance.
 }
 \usage{
-  dlomax(x, scale=1, shape=1, log=FALSE)
-  plomax(q, scale=1, shape=1)
-  qlomax(p, scale=1, shape=1)
-  rlomax(n, scale=1, shape=1)
+  dlomax(x, shape=1, scale=1, log=FALSE)
+  plomax(q, shape=1, scale=1)
+  qlomax(p, shape=1, scale=1)
+  rlomax(n, shape=1, scale=1)
+  elomax(shape=1, scale=1)
+  vlomax(shape=1, scale=1)
 }
 \arguments{
   \item{x,q}{quantile.}
   \item{p}{probability.}
   \item{n}{number of observations.}
-  \item{scale}{scale parameter (\eqn{\lambda > 0}).}
   \item{shape}{shape parameter (\eqn{\alpha > 0}).}
+  \item{scale}{scale parameter (\eqn{\lambda > 0}).}
   \item{log}{logical; if \code{TRUE}, logarithmic density will be returned.}
 }
 \details{
@@ -61,6 +65,9 @@
   function (CDF),
   \sQuote{\code{qlomax()}} gives the quantile function (inverse CDF),
   and \sQuote{\code{rlomax()}} generates random deviates.
+  The \sQuote{\code{elomax()}} and \sQuote{\code{vlomax()}}
+  functions return the corresponding Lomax distribution's
+  expectation and variance, respectively.
 }
 \references{
   N.L. Johnson, S. Kotz, N. Balakrishnan. \emph{Continuous univariate

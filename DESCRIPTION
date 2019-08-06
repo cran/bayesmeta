@@ -1,8 +1,8 @@
 Package: bayesmeta
 Type: Package
 Title: Bayesian Random-Effects Meta-Analysis
-Version: 2.3
-Date: 2018-10-11
+Version: 2.4
+Date: 2019-08-06
 Authors@R: c(person(given="Christian", family="Roever", role=c("aut","cre"), 
                     email="christian.roever@med.uni-goettingen.de",
                     comment=c(ORCID="0000-0002-6911-698X")),
@@ -18,8 +18,8 @@ URL: https://gitlab.gwdg.de/croever/bayesmeta,
         http://ams.med.uni-goettingen.de:3838/bayesmeta/app
 VignetteBuilder: knitr, R.rsp
 NeedsCompilation: no
-Packaged: 2018-10-11 12:06:09 UTC; christian
+Packaged: 2019-08-06 10:38:34 UTC; christian
 Author: Christian Roever [aut, cre] (<https://orcid.org/0000-0002-6911-698X>),
   Tim Friede [ctb] (<https://orcid.org/0000-0001-5347-7441>)
 Repository: CRAN
-Date/Publication: 2018-10-11 12:40:02 UTC
+Date/Publication: 2019-08-06 11:20:07 UTC

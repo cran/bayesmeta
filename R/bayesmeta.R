@@ -1023,6 +1023,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   # "shrink.idx" :  which shrinkage estimate
   {
     stopifnot(length(tau)==1, tau>=0)
+    # compute inverse variance weights:
     if (is.finite(mu.prior.mean) && is.finite(mu.prior.sd)) {
       ivw <- 1 / c(tau^2 + sigma^2, mu.prior.sd^2)
       names(ivw) <- c(labels, "prior mean")
@@ -1030,15 +1031,26 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       ivw <- 1 / (tau^2 + sigma^2)
       names(ivw) <- labels
     }
-    ivw <- ivw / sum(ivw)    
-    indic <- rep(0.0, length(ivw))
-    indic[shrink.idx] <- 1.0
+    ivw <- ivw / sum(ivw)
+    if (any(sigma==0)) { # catch zero sigma case:
+      s0 <- which(sigma==0)[1]
+      ivw <- rep(0.0, length(ivw))
+      ivw[s0] <- 1.0
+    }
+    # compute shrinkage weights:
     if (tau > 0)
       swt <- (sigma[shrink.idx]^(-2)) / (sigma[shrink.idx]^(-2) + tau^(-2))
     else
       swt <- 0.0
+    indic <- rep(0.0, length(ivw))
+    indic[shrink.idx] <- 1.0
     swt <- swt*indic + (1-swt)*ivw
     swt <- swt / sum(swt)
+    if (any(sigma==0)) { # catch zero sigma case:
+      s0 <- which(sigma==0)[1]
+      swt <- rep(0.0, length(ivw))
+      swt[s0] <- 1.0
+    }
     return(swt[study.idx])
   }
   shrinkweights <- Vectorize(shrinkweights, vectorize.args="tau")
@@ -1489,7 +1501,7 @@ plot.bayesmeta <- function(x, main=deparse(substitute(x)),
 }
 
 
-dlomax <- function(x, scale=1, shape=1, log=FALSE)
+dlomax <- function(x, shape=1, scale=1, log=FALSE)
 # probability density function for Lomax distribution
 {
   stopifnot(length(shape)==1, length(scale)==1,
@@ -1500,7 +1512,7 @@ dlomax <- function(x, scale=1, shape=1, log=FALSE)
   return(result)
 }
 
-plomax <- function(q, scale=1, shape=1)
+plomax <- function(q, shape=1, scale=1)
 # cumulative probability distribution function (CDF) of a Lomax distribution
 {
   stopifnot(length(shape)==1, length(scale)==1,
@@ -1511,7 +1523,7 @@ plomax <- function(q, scale=1, shape=1)
   return(result)
 }
 
-qlomax <- function(p, scale=1, shape=1)
+qlomax <- function(p, shape=1, scale=1)
 # quantile function (inverse CDF) of a Lomax distribution
 {
   stopifnot(length(shape)==1, length(scale)==1,
@@ -1524,7 +1536,7 @@ qlomax <- function(p, scale=1, shape=1)
   return(result)
 }
 
-rlomax <- function(n, scale=1, shape=1)
+rlomax <- function(n, shape=1, scale=1)
 # random number generation for a Lomax distribution
 # (based on inversion method)
 {
@@ -1533,6 +1545,30 @@ rlomax <- function(n, scale=1, shape=1)
   u <- runif(n)
   result <- qlomax(u, scale=scale, shape=shape)
   return(result)
+}
+
+elomax <- function(shape=1, scale=1)
+# expectation of a Lomax distribution
+{
+  stopifnot(length(shape)==1, length(scale)==1,
+            all(shape>0), all(scale>0))
+  if (shape > 1)
+    expectation <- scale / (shape-1)
+  else
+    expectation <- Inf
+  return(expectation)
+}
+
+vlomax <- function(shape=1, scale=1)
+# variance of a Lomax distribution
+{
+  stopifnot(length(shape)==1, length(scale)==1,
+            all(shape>0), all(scale>0))
+  if (shape > 2)
+    variance <- elomax(shape,scale)^2 * (shape/(shape-2))
+  else
+    variance <- Inf
+  return(variance)
 }
 
 
@@ -1572,8 +1608,22 @@ rhalfnormal <- function(n, scale=1)
   return(abs(rnorm(n=n, mean=0, sd=scale)))  
 }
 
+ehalfnormal <- function(scale=1)
+# expectation of a half-normal distribution
+{
+  stopifnot(scale>0)
+  return(scale*sqrt(2/pi))  
+}
 
-dhalft <- function(x, scale=1, df, log=FALSE)
+vhalfnormal <- function(scale=1)
+# variance of a half-normal distribution
+{
+  stopifnot(scale>0)
+  return(scale^2*(1-2/pi))  
+}
+
+
+dhalft <- function(x, df, scale=1, log=FALSE)
 # probability density function for half-Student-t distribution
 {
   stopifnot(scale>0, df>0)
@@ -1583,7 +1633,7 @@ dhalft <- function(x, scale=1, df, log=FALSE)
   return(result)  
 }
 
-phalft <- function(q, scale=1, df)
+phalft <- function(q, df, scale=1)
 # cumulative distribution function (CDF) of a half-Student-t distribution
 {
   stopifnot(scale>0, df>0)
@@ -1592,7 +1642,7 @@ phalft <- function(q, scale=1, df)
   return(result)  
 }
 
-qhalft <- function(p, scale=1, df)
+qhalft <- function(p, df, scale=1)
 # quantile function (inverse CDF) of a half-Student-t distribution
 {
   stopifnot(scale>0, df>0)
@@ -1602,11 +1652,33 @@ qhalft <- function(p, scale=1, df)
   return(result)  
 }
 
-rhalft <- function(n, scale=1, df)
+rhalft <- function(n, df, scale=1)
 # random number generation for half-Student-t distribution
 {
   stopifnot(scale>0, df>0)
   return(abs(rt(n=n, df=df))*scale)  
+}
+
+ehalft <- function(df, scale=1)
+# expectation of a half-Student-t distribution
+{
+  stopifnot(scale>0, df>0)
+  if (df>1)
+    expectation <- exp(log(2)+log(scale)+0.5*log(df)-0.5*log(pi)+lgamma((df+1)/2)-lgamma(df/2)-log(df-1))
+  else
+    expectation <- Inf
+  return(expectation)
+}
+
+vhalft <- function(df, scale=1)
+# variance of a half-Student-t distribution
+{
+  stopifnot(scale>0, df>0)
+  if (df>2)
+    variance <- scale^2 * ((df / (df-2)) - ehalft(df=df, scale=1.0)^2)
+  else
+    variance <- Inf
+  return(variance)
 }
 
 
@@ -1646,6 +1718,20 @@ rhalfcauchy <- function(n, scale=1)
   return(abs(rcauchy(n=n, location=0, scale=scale)))
 }
 
+ehalfcauchy <- function(scale=1)
+# expectation of a half-Cauchy distribution
+{
+  stopifnot(scale>0)
+  return(Inf)
+}
+
+vhalfcauchy <- function(scale=1)
+# variance of a half-Cauchy distribution
+{
+  stopifnot(scale>0)
+  return(Inf)
+}
+
 
 dhalflogistic <- function(x, scale=1, log=FALSE)
 # probability density function of a half-logistic distribution
@@ -1681,6 +1767,20 @@ rhalflogistic <- function(n, scale=1)
 {
   stopifnot(scale>0)
   return(abs(rlogis(n=n, location=0, scale=scale)))
+}
+
+ehalflogistic <- function(scale=1)
+# expectation of a half-logistic distribution
+{
+  stopifnot(scale>0)
+  return(scale * log(4))
+}
+
+vhalflogistic <- function(scale=1)
+# variance of a half-logistic distribution
+{
+  stopifnot(scale>0)
+  return(scale^2 * (((pi^2)/3) - log(4)^2))
 }
 
 
@@ -1720,6 +1820,77 @@ rrayleigh <- function(n, scale=1)
   return(sqrt(rexp(n, rate=1/(2*scale^2))))
 }
 
+erayleigh <- function(scale=1)
+# expectation of a Rayleigh distribution
+{
+  stopifnot(scale>0)
+  return(scale * sqrt(pi/2))
+}
+
+vrayleigh <- function(scale=1)
+# variance of a Rayleigh distribution
+{
+  stopifnot(scale>0)
+  return(scale^2 * (4-pi)/2)
+}
+
+
+dinvchi <- function(x, df, scale=1, log=FALSE)
+# probability density function of a scaled inverse chi distribution
+{
+  stopifnot(length(df)==1, is.finite(df), df>0,
+            length(scale)==1, is.finite(scale), scale>0)
+  idx <- (is.finite(x) & (x>0))
+  ldens <- rep(-Inf, length(x))
+  ldens[idx] <- -(df/2-1)*log(2)-lgamma(df/2)-log(scale) -(df+1)*(log(x[idx])-log(scale)) - 0.5*(scale/x[idx])^2
+  if (log) result <- ldens
+  else     result <- exp(ldens)
+  return(result)
+}
+
+pinvchi <- function(q, df, scale=1.0, lower.tail=TRUE, log.p=FALSE)
+# cumulative distribution function (CDF) of a scaled inverse chi distribution
+{
+  stopifnot(length(df)==1, is.finite(df), df>0,
+            length(scale)==1, is.finite(scale), scale>0)
+  return(stats::pchisq(q=(q/scale)^(-2), df=df, lower.tail=(!lower.tail), log.p=log.p))
+}
+
+qinvchi <- function(p, df, scale=1.0, lower.tail=TRUE, log.p=FALSE)
+# quantile function (inverse CDF) of a scaled inverse chi distribution
+{
+  stopifnot(length(df)==1, is.finite(df), df>0,
+            length(scale)==1, is.finite(scale), scale>0)
+  return(scale*stats::qchisq(p=p, df=df, lower.tail=(!lower.tail), log.p=log.p)^(-0.5))
+}
+
+rinvchi <- function(n=1, df, scale=1.0)
+# random number generation for a scaled inverse chi distribution
+{
+  stopifnot(length(df)==1, is.finite(df), df>0,
+            length(scale)==1, is.finite(scale), scale>0)
+  return(scale * stats::rchisq(n=n, df=df)^(-0.5))
+}
+
+einvchi <- function(df, scale=1)
+# expectation of a scaled inverse chi distribution
+{
+  stopifnot(length(scale)==1, is.finite(scale), scale>0,
+            length(df)==1, is.finite(df), df>0)
+  if (df<=1) result <- Inf
+  else       result <- exp(log(scale)+lgamma((df-1)/2)-lgamma(df/2)-0.5*log(2))
+  return(result)
+}
+
+vinvchi <- function(df, scale=1)
+# variance of a scaled inverse chi distribution
+{
+  stopifnot(length(scale)==1, is.finite(scale), scale>0,
+            length(df)==1, is.finite(df), df>0)
+  if (df<=2) result <- Inf
+  else       result <- scale^2/(df-2) - einvchi(df=df, scale=scale)^2
+  return(result)
+}
 
 
 # Turner & al. prior data:
@@ -2036,11 +2207,12 @@ forest.bayesmeta <- function(x, xlab="effect size", refline=0, cex=1,...)
 
 
 forestplot.bayesmeta <- function(x, labeltext,
-                                 exponentiate = FALSE,
-                                 prediction   = TRUE,
-                                 shrinkage    = TRUE,
-                                 digits       = 2,
-                                 plot         = TRUE,
+                                 exponentiate  = FALSE,
+                                 prediction    = TRUE,
+                                 shrinkage     = TRUE,
+                                 heterogeneity = TRUE,
+                                 digits        = 2,
+                                 plot          = TRUE,
                                  fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
 #
 # ARGUMENTS:
@@ -2066,6 +2238,13 @@ forestplot.bayesmeta <- function(x, labeltext,
     stop("required 'forestplot' package not available!")
   if (utils::packageVersion("forestplot") < "1.5.2")
     warning("you may need to update 'forestplot' to a more recent version (>=1.5.2).")
+  # auxiliary function:
+  decplaces <- function(x, signifdigits=3)
+  # number of decimal places (after decimal point)
+  # to be displayed if you want at least "signifdigits" digits
+  {
+    return(max(c(0, -(floor(log10(x))-(signifdigits-1)))))
+  }
   # some sanity checks for the provided arguments:
   stopifnot(is.element("bayesmeta", class(x)),
             length(digits)==1, digits==round(digits), digits>=0,
@@ -2095,12 +2274,6 @@ forestplot.bayesmeta <- function(x, labeltext,
   }
   # generate "labeltext" data table for plot (unless already provided):
   if (missing(labeltext)) {
-    decplaces <- function(x, signifdigits=3)
-    # number of decimal places (after decimal point)
-    # to be displayed if you want at least "signifdigits" digits
-    {
-      return(max(c(0, -(floor(log10(x))-(signifdigits-1)))))
-    }
     # determine numbers of digits based on standard deviations:
     if (exponentiate) {
       stdevs <- c(exp(x$y)*x$sigma,
@@ -2170,7 +2343,7 @@ forestplot.bayesmeta <- function(x, labeltext,
     upper.arg <- ma.dat[,3]
   }
   fp <- NULL
-  if (plot)
+  if (plot) {
     fp <- forestplot::forestplot(labeltext  = labeltext,
                                  mean       = mean.arg,
                                  lower      = lower.arg,
@@ -2182,11 +2355,240 @@ forestplot.bayesmeta <- function(x, labeltext,
                                  col        = col,
                                  boxsize    = boxsize,
                                  legend     = legend, ...)
+    # add heterogeneity phrase at bottom left:
+    if (heterogeneity) {
+      tauFigures <- x$summary[c("median","95% lower", "95% upper"), "tau"]
+      tauFigures <- tauFigures[tauFigures > 0]
+      formatstring <- paste0("%.", decplaces(tauFigures, digits), "f")
+      tauphrase <- sprintf(paste0("Heterogeneity (tau): ",formatstring,
+                                  " [",formatstring,", ",formatstring,"]"),
+                           x$summary["median","tau"],
+                           x$summary["95% lower","tau"], x$summary["95% upper","tau"])
+      grid::seekViewport("axis_margin")
+      tvp <- grid::viewport(x=grid::unit(0.0, "npc"), y=grid::unit(0.0, "npc"),
+                            width=grid::stringWidth(tauphrase),
+                            height=grid::unit(2, "lines"),
+                            just=c("left","bottom"), name="heterogeneityEstimate")
+      grid::pushViewport(tvp)
+      grid::grid.text(tauphrase, x=grid::unit(0.0, "npc"), y=grid::unit(0.5,"npc"),
+                      just=c("left", "centre"), gp=grid::gpar(fontface="oblique"))
+    }
+  }
   invisible(list("data"       = ma.dat[-1,],
                  "shrinkage"  = ma.shrink[2:(x$k+1),],
                  "labeltext"  = labeltext,
                  "forestplot" = fp))
 }
+
+
+
+convolve <- function(dens1, dens2,
+                     cdf1=Vectorize(function(x){integrate(dens1,-Inf,x)$value}),
+                     cdf2=Vectorize(function(x){integrate(dens2,-Inf,x)$value}),
+                     delta=0.01, epsilon=0.0001)
+# Convolution function from:
+#   C. Roever, T. Friede.
+#   Discrete approximation of a mixture distribution via restricted divergence.
+#   Journal of Computational and Graphical Statistics, 26(1):217-222, 2017.
+#   http://doi.org/10.1080/10618600.2016.1276840
+#
+# (a grid is constructed in the first density's domain ("dens1")
+#  so that the convolution is a sum of "dens2" conditionals,
+#  weighted by "dens1".)
+{
+  # some basic sanity checks:
+  stopifnot(is.function(dens1), is.function(dens2),
+            is.function(cdf1), is.function(cdf2),
+            #dens1(-1)>0, dens2(-1)>0,
+            delta>0, epsilon>0)
+  
+  symKL <- function(d)
+  # divergence w.r.t. shifting of the 2nd distribution ("dens2()")
+  {
+    stopifnot(d>=0)
+    func1 <- function(x)
+    # integrand for one directed divergence
+    {
+      d2md <- dens2(x-d)
+      # utilize density's "log" argument, if possible:
+      if (is.element("log", names(formals(dens2)))) {
+        logd2   <- dens2(x, log=TRUE)
+        logd2md <- dens2(x-d, log=TRUE)
+      } else {
+        logd2   <- log(dens2(x))
+        logd2md <- log(d2md)
+      }
+      return(ifelse((logd2>-Inf) & (logd2md>-Inf), (logd2md-logd2)*d2md, 0.0))
+    }
+    
+    func2 <- function(x)
+    # integrand for other directed divergence
+    {
+      d2 <- dens2(x)
+      # utilize density's "log" argument, if possible:
+      if (is.element("log", names(formals(dens2)))) {
+        logd2   <- dens2(x, log=TRUE)
+        logd2md <- dens2(x-d, log=TRUE)
+      } else {
+        logd2   <- log(d2)
+        logd2md <- log(dens2(x-d))
+      }
+      return(ifelse((logd2>-Inf) & (logd2md>-Inf), (logd2-logd2md)*d2, 0.0))
+    }
+    int1 <- integrate(func1, -Inf, Inf)
+    if (int1$message != "OK")
+      warning(paste0("Problem computing KL-divergence (1): \"", int1$message,"\""))
+    int2 <- integrate(func2, -Inf, Inf)
+    if (int2$message != "OK")
+      warning(paste0("Problem computing KL-divergence (2): \"", int2$message,"\""))
+    return(int1$value + int2$value)
+  }
+
+  # determine bin half-width:
+  step <- sqrt(delta)
+  while (symKL(step) < delta) step <- 2*step
+  ur <- uniroot(function(X){return(symKL(X)-delta)}, lower=0, upper=step)
+  step <- ur$root
+  # determine grid range via  epsilon/2  and  1-epsilon/2  quantiles:
+  mini <- -1
+  while (cdf1(mini) > epsilon/2) mini <- 2*mini
+  maxi <- 1
+  while (cdf1(maxi) < 1-(epsilon/2)) maxi <- 2*maxi
+  ur <- uniroot(function(X){return(cdf1(X)-epsilon/2)},
+                lower=mini, upper=maxi)
+  mini <- ur$root
+  ur <- uniroot(function(X){return(cdf1(X)-(1-epsilon/2))},
+                lower=mini, upper=maxi)
+  maxi <- ur$root
+  # determine number of reference points:
+  k <- ceiling((maxi-mini)/(2*step))+1
+  # determine reference points:
+  support <- mini - ((k*2*step)-(maxi-mini))/2 + (0:(k-1))*2*step
+  # determine bin margins:
+  margins <- support[-1]-step
+  # determine bin weights:
+  weight <- rep(NA, length(support))
+  for (i in 1:(k-1))
+    weight[i] <- cdf1(margins[i])
+  weight[k] <- 1
+  for (i in k:2)
+    weight[i] <- weight[i]-weight[i-1]
+  # the eventual grid:
+  grid <- cbind("lower"=c(-Inf, margins),
+                "upper"=c(margins, Inf),
+                "reference"=support,
+                "prob"=weight)
+
+  # probability density of convolution:
+  density <- function(x)
+  {
+    return(apply(matrix(x,ncol=1), 1,
+                 function(x){sum(grid[,"prob"]*dens2(x-grid[,"reference"]))}))
+  }
+
+  # cumulative distribution function (CDF) of convolution:
+  cdf <- function(x)
+  {
+    return(apply(matrix(x,ncol=1), 1,
+                 function(x){sum(grid[,"prob"]*cdf2(x-grid[,"reference"]))}))
+  }
+
+  # quantile function (inverse CDF) of convolution:
+  quantile <- function(p)
+  {
+    quant <- function(pp)
+    {
+      mini <- -1
+      while (cdf(mini) > pp) mini <- 2*mini
+      maxi <- 1
+      while (cdf(maxi) < pp) maxi <- 2*maxi
+      ur <- uniroot(function(x){return(cdf(x)-pp)}, lower=mini, upper=maxi)
+      return(ur$root)      
+    }
+    proper <- ((p>0) & (p<1))
+    result <- rep(NA,length(p))
+    if (any(proper)) result[proper] <- apply(matrix(p[proper],ncol=1), 1, quant)
+    return(result)
+  }
+  
+  return(list("delta"    = delta,     # tuning parameter (maximum divergence)
+              "epsilon"  = epsilon,   # tuning parameter (neglected tail probability)
+              "binwidth" = 2*step,    # bin width (constant across bins)
+              "bins"     = k,         # number of bins
+              "support"  = grid,      # bin margins, reference points and weights
+              "density"  = density,   # resulting probability density function
+              "cdf"      = cdf,       # resulting cumulative distribution function (CDF)
+              "quantile" = quantile)) # resulting quantile function (inverse CDF)
+}
+
+
+
+funnel.bayesmeta <- function(x,
+                             main=deparse(substitute(x)),
+                             xlab=expression("effect "*y[i]),
+                             ylab=expression("standard error "*sigma[i]),
+                             zero=0.0, FE=FALSE, legend=FE, ...)
+# generate funnel plot from a "bayesmeta" object.
+{
+  # sanity check:
+  stopifnot(is.element("bayesmeta", class(x)))
+  # range of standard error axis:
+  yrange <- c(0.0, max(x$sigma))
+  # standard error levels for prediction intervals:
+  sevec <- seq(from=0, yrange[2]*1.04, le=27)
+  # compute (RE) prediction intervals
+  # (for observed "y" values, conditional on standard error):
+  intRE <- matrix(NA_real_, nrow=length(sevec), ncol=2,
+                dimnames=list(NULL, c("lower","upper")))
+  intRE[1,] <- x$qposterior(theta.p=c(0.025, 0.975), predict=TRUE)
+  for (i in 2:length(sevec)){
+    conv <- try(convolve(dens1=function(a, log=FALSE){return(x$dposterior(theta=a, predict=TRUE, log=log))},
+                         dens2=function(b, log=FALSE){return(dnorm(x=b, mean=0, sd=sevec[i], log=log))},
+                         cdf1 =function(a){return(x$pposterior(theta=a, predict=TRUE))},
+                         cdf2 =function(b){return(pnorm(q=b, mean=0, sd=sevec[i]))}))
+    if (all(class(conv)!="try-error")) {
+      intRE[i,] <- conv$quantile(p=c(0.025, 0.975))
+    }
+  }
+  # compute _FE_ prediction intervals
+  # (for observed "y" values, conditional on standard error):
+  intFE <- matrix(NA_real_, nrow=length(sevec), ncol=2,
+                  dimnames=list(NULL, c("lower","upper")))
+  cm <- x$cond.moment(tau=0)
+  for (i in 1:length(sevec)){
+    intFE[i,] <- qnorm(c(0.025, 0.975), mean=cm[1,"mean"], sd=sqrt(cm[1,"sd"]^2+sevec[i]^2))
+  }
+  FEcol="red3"
+  REcol="blue3"
+  # empty plot:
+  plot(range(intRE), -yrange, type="n",
+       ylab=ylab, xlab=xlab, main=main, axes=FALSE)
+  # funnels (grey area):
+  polygon(c(intRE[,1], rev(intRE[,2])), c(-sevec, rev(-sevec)), col="grey90", border=NA)
+  if (FE) polygon(c(intFE[,1], rev(intFE[,2])), c(-sevec, rev(-sevec)), col="grey80", border=NA)
+  # grid lines:
+  lines(c(intRE[1,1], intRE[1,1], NA, intRE[1,2], intRE[1,2]),
+        c(0,-max(sevec), NA, 0, -max(sevec)), col="grey75", lty="dashed")
+  abline(h=0, col="darkgrey")
+  yticks <- pretty(yrange)
+  abline(h=-yticks[yticks>0], col="grey75", lty="15")
+  # funnels (outline):
+  matlines(intRE, cbind(-sevec, -sevec), col=REcol, lty="dashed")
+  if (FE) matlines(intFE, cbind(-sevec, -sevec), col=FEcol, lty="dotted")
+  lines(rep(x$summary["median","theta"], 2), range(-sevec), col=REcol, lty="dashed")
+  if (FE) lines(rep(cm[1,"mean"], 2), range(-sevec), col=FEcol, lty="dotted")
+  # zero line:
+  if (is.finite(zero))
+    lines(c(zero, zero), c(-1,1)*max(sevec), col="darkgrey", lty="solid")
+  # actual points:
+  points(x$y, -x$sigma, pch=21, col="black", bg=grey(0.5, alpha=0.5), cex=1)
+  if (FE && legend)
+    legend("topleft", c("RE model", "FE model"),
+           col=c(REcol, FEcol), lty=c("dashed", "dotted"), bg="white")
+  axis(1); axis(2, at=-yticks, labels=yticks); box()
+  invisible()
+}
+
 
 
 normalmixture <- function(density,

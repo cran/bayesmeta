@@ -11,7 +11,8 @@
 }
 \usage{
   \method{forestplot}{bayesmeta}(x, labeltext, exponentiate=FALSE,
-           prediction=TRUE, shrinkage=TRUE, digits=2, plot=TRUE,
+           prediction=TRUE, shrinkage=TRUE, heterogeneity=TRUE, 
+           digits=2, plot=TRUE,
            fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
 }
 \arguments{
@@ -34,6 +35,10 @@
   \item{shrinkage}{
     a logical flag indicating whether to show shrinkage intervals along
     with the quoted estimates.
+  }
+  \item{heterogeneity}{
+    a logical flag indicating whether to quote the heterogeneity estimate 
+    and CI (at the bottom left).
   }
   \item{digits}{
     The number of significant digits to be shown.

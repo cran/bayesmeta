@@ -3,6 +3,8 @@
 \alias{prayleigh}
 \alias{qrayleigh}
 \alias{rrayleigh}
+\alias{erayleigh}
+\alias{vrayleigh}
 \title{The Rayleigh distribution.
 }
 \description{
@@ -13,6 +15,8 @@
   prayleigh(q, scale=1)
   qrayleigh(p, scale=1)
   rrayleigh(n, scale=1)
+  erayleigh(scale=1)
+  vrayleigh(scale=1)
 }
 \arguments{
   \item{x, q}{quantile.}
@@ -42,6 +46,9 @@
   function (CDF),
   \sQuote{\code{qrayleigh()}} gives the quantile function (inverse CDF),
   and \sQuote{\code{rrayleigh()}} generates random deviates.
+  The \sQuote{\code{erayleigh()}} and \sQuote{\code{vrayleigh()}}
+  functions return the corresponding Rayleigh distribution's
+  expectation and variance, respectively.
 }
 \references{
   N.L. Johnson, S. Kotz, N. Balakrishnan. \emph{Continuous univariate
