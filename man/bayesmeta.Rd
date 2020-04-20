@@ -437,10 +437,8 @@
   }
 \references{
   C. Roever.
-  Bayesian random-effects meta-analysis using the bayesmeta R package.
-  \emph{\href{http://arxiv.org/abs/1711.08683}{arXiv preprint 1711.08683}}
-  (submitted for publication),
-  2017.
+  \href{http://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
 
   C. Roever, T. Friede.
   \href{http://doi.org/10.1080/10618600.2016.1276840}{Discrete
@@ -502,7 +500,7 @@
   for one parameter of many}. \emph{Biometrika}, \bold{76}(3):604-608,
   1989.
 
-  W. Viechtbauer. \href{http://www.jstatsoft.org/v36/i03/}{Conducting
+  W. Viechtbauer. \href{http://www.doi.org/10.18637/jss.v036.i03}{Conducting
   meta-analyses in R with the metafor package}. \emph{Journal of
   Statistical Software}, \bold{36}(3):1-48, 2010.
 }

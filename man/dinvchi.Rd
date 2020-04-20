@@ -75,7 +75,7 @@ chi2 <- rchisq(1000, df=10)
 # transform:
 invchi <- sqrt(1 / chi2)
 # show histogram:
-hist(invchi, probability=TRUE)
+hist(invchi, probability=TRUE, col="grey")
 # show density for comparison:
 x <- seq(0, 1, length=100)
 lines(x, dinvchi(x, df=10, scale=1), col="red")

@@ -1,6 +1,6 @@
 #
 #    bayesmeta, an R package for Bayesian random-effects meta-analysis.
-#    Copyright (C) 2018  Christian Roever
+#    Copyright (C) 2019  Christian Roever
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   
   k <- length(y)
   if (is.null(labels))
-    labels <- as.character(1:k)  
+    labels <- sprintf("%02d", 1:k)
   sigma2hat <- (k-1)*sum(1/sigma^2) / (sum(1/sigma^2)^2 - sum(1/sigma^4)) # Higgins/Thompson (2002), eqn. (9)
 
   maxratio <- max(sigma) / min(sigma)
@@ -1034,7 +1034,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     ivw <- ivw / sum(ivw)
     if (any(sigma==0)) { # catch zero sigma case:
       s0 <- which(sigma==0)[1]
-      ivw <- rep(0.0, length(ivw))
+      for (i in 1:length(ivw)) ivw[i] <- 0.0
       ivw[s0] <- 1.0
     }
     # compute shrinkage weights:
@@ -2376,6 +2376,149 @@ forestplot.bayesmeta <- function(x, labeltext,
   }
   invisible(list("data"       = ma.dat[-1,],
                  "shrinkage"  = ma.shrink[2:(x$k+1),],
+                 "labeltext"  = labeltext,
+                 "forestplot" = fp))
+}
+
+
+
+forestplot.escalc <- function(x, labeltext,
+                              exponentiate  = FALSE,
+                              digits        = 2,
+                              plot          = TRUE,
+                              fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
+#
+# ARGUMENTS:
+#   x            :  a "bayesmeta" object.
+#   labeltext    :  you may provide an alternative "labeltext" argument here
+#                   (see also the "forestplot()" help).
+#   exponentiate :  flag indicating whether to exponentiate numbers (figure and table).
+#   prediction   :  flag indicating whether to show prediction interval.
+#   shrinkage    :  flag indicating whether to show shrinkage estimates.
+#   digits       :  number of significant digits to be shown (based on standard deviations).
+#   plot         :  flag you can use to suppress actual plotting.
+#   ...          :  further arguments passed to the "forestplot" function.
+#   
+# VALUE:
+#   a list with components
+#     $data       :  the meta-analyzed data, and mean and prediction estimates
+#     $labeltext  :  the "forestplot()" function's "labeltext" argument used internally
+#     $forestplot :  the "forestplot()" function's returned value
+#
+{
+  if (!requireNamespace("forestplot", quietly=TRUE))
+    stop("required 'forestplot' package not available!")
+  if (utils::packageVersion("forestplot") < "1.5.2")
+    warning("you may need to update 'forestplot' to a more recent version (>=1.5.2).")
+  # auxiliary function:
+  decplaces <- function(x, signifdigits=3)
+  # number of decimal places (after decimal point)
+  # to be displayed if you want at least "signifdigits" digits
+  {
+    return(max(c(0, -(floor(log10(x))-(signifdigits-1)))))
+  }
+  # some sanity checks for the provided arguments:
+  stopifnot(is.element("escalc", class(x)),
+            length(digits)==1, digits==round(digits), digits>=0,
+            length(exponentiate)==1, is.logical(exponentiate),
+            length(plot)==1, is.logical(plot))
+  
+  # extract relevant column names:
+  attri <- attributes(x)
+  if (all(is.element(c("yi.names", "vi.names"), names(attri)))) { # (for recent "metafor" versions)
+    var.names <- c(attri$yi.names, attri$vi.names)
+  } else if (is.element("var.names", names(attri))) {             # (for older "metafor" versions)
+    var.names <- attri$var.names
+  } else {
+    stop(paste("Cannont extract \"yi.names\" and \"vi.names\" (or \"var.names\") attribute(s) from escalc object ",
+               "(check use of the \"var.names\" option).", sep=""))
+  }
+  stopifnot(length(var.names)==2, all(is.character(var.names)))
+  if (!all(is.element(var.names, names(x)))) {
+    stop(paste("Cannont find columns \"",
+               var.names[1],"\" and/or \"",
+               var.names[2],"\" in escalc object ",
+               "(check use of the \"var.names\" option).", sep=""))
+  }
+  if (is.element("slab", names(attributes(x[,var.names[1]])))) {
+    labels <- as.character(attr(x[,var.names[1]], "slab"))
+  } else {
+    labels <- sprintf("%02d", 1:nrow(x))
+  }
+  
+  # extract data to be plotted:
+  y      <- as.vector(x[,var.names[1]])
+  sigma  <- sqrt(as.vector(x[,var.names[2]]))
+  k <- length(y)
+  q95 <- qnorm(0.975)
+  ma.dat <- rbind(NA,
+                  cbind(y, y - q95*sigma, y + q95*sigma))
+  colnames(ma.dat) <- c("estimate", "lower", "upper")
+  rownames(ma.dat) <- c("", labels)
+  if (exponentiate) {
+    ma.dat    <- exp(ma.dat)
+  }
+  
+  # generate "labeltext" data table for plot (unless already provided):
+  if (missing(labeltext)) {
+    # determine numbers of digits based on standard deviations:
+    if (exponentiate) {
+      stdevs <- exp(y)*sigma
+    } else {
+      stdevs <- sigma
+    }
+    stdevs <- abs(stdevs[is.finite(stdevs) & (stdevs != 0)])
+    formatstring <- paste0("%.", decplaces(stdevs, digits), "f")
+    # fill data table:
+    labeltext <- matrix(NA_character_, nrow=nrow(ma.dat), ncol=3)
+    labeltext[1,] <- c("study","estimate", "95% CI")
+    labeltext[,1] <- c("study", labels)[1:nrow(ma.dat)]
+    for (i in 2:(nrow(ma.dat))) {
+      labeltext[i,2] <- sprintf(formatstring, ma.dat[i,"estimate"])
+      labeltext[i,3] <- paste0("[", sprintf(formatstring, ma.dat[i,"lower"]),
+                                 ", ", sprintf(formatstring, ma.dat[i,"upper"]), "]")
+    }
+  }
+  # add horizontal lines to plot:
+  horizl <- list(grid::gpar(col="grey"))
+  names(horizl) <- as.character(c(2))
+  # specify function(s) for drawing estimates / shrinkage estimates:
+  if (missing(fn.ci_norm)) {
+    fn.ci_norm <- function(...) {forestplot::fpDrawPointCI(pch=15,...)}
+  }
+  # specify function(s) for drawing summaries (diamond / bar):
+  if (missing(fn.ci_sum)) {
+    fn.ci_sum <- list(NULL)
+    for (i in 1:(k+1))
+      fn.ci_sum[[i]] <- function(y.offset,...) {forestplot::fpDrawSummaryCI(y.offset=0.5,...)}
+  }
+  # specify colors:
+  if (missing(col)) {
+    col <- forestplot::fpColors(box="black", lines="black", summary="grey30")
+  }
+  # specify plotting sizes:
+  if (missing(boxsize)) {
+    boxsize <- rep(0.25,k+1)
+  }
+  # specify data for plotting:
+  mean.arg  <- ma.dat[,1]
+  lower.arg <- ma.dat[,2]
+  upper.arg <- ma.dat[,3]
+  fp <- NULL
+  if (plot) {
+    fp <- forestplot::forestplot(labeltext  = labeltext,
+                                 mean       = mean.arg,
+                                 lower      = lower.arg,
+                                 upper      = upper.arg,
+                                 is.summary = c(TRUE, rep(FALSE, k)),
+                                 hrzl_lines = horizl,
+                                 fn.ci_norm = fn.ci_norm,
+                                 fn.ci_sum  = fn.ci_sum,
+                                 col        = col,
+                                 boxsize    = boxsize,
+                                 legend     = legend, ...)
+  }
+  invisible(list("data"       = ma.dat[-1,],
                  "labeltext"  = labeltext,
                  "forestplot" = fp))
 }

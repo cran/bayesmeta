@@ -101,11 +101,10 @@
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
-\references{C. Roever.
-  Bayesian random-effects meta-analysis using the bayesmeta R package.
-  \emph{\href{http://arxiv.org/abs/1711.08683}{arXiv preprint 1711.08683}}
-  (submitted for publication),
-  2017.
+\references{
+  C. Roever.
+  \href{http://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
   
   C. Guddat, U. Grouven, R. Bender and G. Skipka.
   \href{http://doi.org/10.1186/2046-4053-1-34}{A note on the

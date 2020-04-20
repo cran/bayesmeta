@@ -115,10 +115,8 @@
   \bold{26}(1):217-222, 2017.
 
   C. Roever.
-  Bayesian random-effects meta-analysis using the bayesmeta R package.
-  \emph{\href{http://arxiv.org/abs/1711.08683}{arXiv preprint 1711.08683}}
-  (submitted for publication),
-  2017.
+  \href{http://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
   
   W.E. Seidel. Mixture models.
   In M. Lovric (ed.) \emph{International Encyclopedia of Statistical

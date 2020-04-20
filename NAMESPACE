@@ -1,6 +1,6 @@
 export(bayesmeta,
        print.bayesmeta, summary.bayesmeta, plot.bayesmeta,
-       forestplot.bayesmeta,
+       forestplot.bayesmeta, forestplot.escalc,
        dlomax, plomax, qlomax, rlomax, elomax, vlomax,
        dhalfnormal, phalfnormal, qhalfnormal, rhalfnormal,
          ehalfnormal, vhalfnormal,
@@ -22,6 +22,7 @@ S3method(print, bayesmeta)
 S3method(summary, bayesmeta)
 S3method(plot, bayesmeta)
 S3method(forestplot, bayesmeta)
+S3method(forestplot, escalc)
 S3method(forest, bayesmeta)
 S3method(funnel, bayesmeta)
 

@@ -109,7 +109,7 @@ Again, an (improper) uniform prior may be an option, but this must be used with 
 
 ### Inference
 The posterior density is denoted by $p(\mu, \tau | y, \sigma)$. This is the *conditional distribution* of $\mu$ and $\tau$ *given* the values of $y$ and $\sigma$, which here are our ($k$-dimensional) vectors of estimates $y_i$ and associated standard errors $\sigma_i$. The posterior density effectively results as the product of the prior density $p(\mu,\tau)$ and the likelihood function $p(y|\sigma,\mu,\tau)$. Having this (joint, 2-dimensional) density alone, however, is of little practical use. Usually, one is mainly interested in the effect $\mu$, while the heterogeneity $\tau$ constitutes a nuisance parameter that needs to be accounted for, but that is not of primary interest. In order infer the effect $\mu$, one needs to integrate over the posterior distribution:
-$$ p(\mu | y, \sigma) = \int p(\mu, \tau | y, \sigma) \, \mathrm{d}\sigma \mbox{.} $$
+$$ p(\mu | y, \sigma) = \int p(\mu, \tau | y, \sigma) \, \mathrm{d}\tau \mbox{.} $$
 The resulting *marginal distribution* of $\mu$ then expresses the (posterior) information about the effect. In order to quantify this information, what is of interest are numbers like the expectation, standard deviation, or quantiles of this distribution; these again result as integrals over the marginal density. The `bayesmeta` package provides functions to evaluate all these integrals of interest. 
 
 

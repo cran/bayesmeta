@@ -223,7 +223,7 @@ hr {
 ## Loading required package: checkmate
 ## Loading required package: metafor
 ## Loading required package: Matrix
-## Loading &#39;metafor&#39; package (version 2.0-0). For an overview 
+## Loading &#39;metafor&#39; package (version 2.1-0). For an overview 
 ## and introduction to the package please type: help(metafor).
 data(&quot;Rubin1981&quot;)
 print(Rubin1981)
@@ -294,12 +294,12 @@ crins.es &lt;- escalc(measure=&quot;OR&quot;,
                    ci=cont.AR.events, n2i=cont.total,
                    slab=publication, data=CrinsEtAl2014)
 print(crins.es[,c(&quot;publication&quot;, &quot;yi&quot;, &quot;vi&quot;)])
-##       publication      yi     vi
-## 1  Heffron (2003) -2.3097 0.3594
-## 2  Gibelli (2004) -0.4595 0.3096
-## 3 Schuller (2005) -2.3026 0.7750
-## 4 Ganschow (2005) -1.7579 0.2078
-## 5    Spada (2006) -1.2585 0.4122
+##       publication      yi     vi 
+## 1  Heffron (2003) -2.3097 0.3594 
+## 2  Gibelli (2004) -0.4595 0.3096 
+## 3 Schuller (2005) -2.3026 0.7750 
+## 4 Ganschow (2005) -1.7579 0.2078 
+## 5    Spada (2006) -1.2585 0.4122 
 ## 6     Gras (2008) -2.4179 2.3373
 </code></pre>
 
@@ -354,7 +354,7 @@ Again, an (improper) uniform prior may be an option, but this must be used with 
 <h3>Inference</h3>
 
 <p>The posterior density is denoted by \(p(\mu, \tau | y, \sigma)\). This is the <em>conditional distribution</em> of \(\mu\) and \(\tau\) <em>given</em> the values of \(y\) and \(\sigma\), which here are our (\(k\)-dimensional) vectors of estimates \(y_i\) and associated standard errors \(\sigma_i\). The posterior density effectively results as the product of the prior density \(p(\mu,\tau)\) and the likelihood function \(p(y|\sigma,\mu,\tau)\). Having this (joint, 2-dimensional) density alone, however, is of little practical use. Usually, one is mainly interested in the effect \(\mu\), while the heterogeneity \(\tau\) constitutes a nuisance parameter that needs to be accounted for, but that is not of primary interest. In order infer the effect \(\mu\), one needs to integrate over the posterior distribution:
-\[ p(\mu | y, \sigma) = \int p(\mu, \tau | y, \sigma) \, \mathrm{d}\sigma \mbox{.} \]
+\[ p(\mu | y, \sigma) = \int p(\mu, \tau | y, \sigma) \, \mathrm{d}\tau \mbox{.} \]
 The resulting <em>marginal distribution</em> of \(\mu\) then expresses the (posterior) information about the effect. In order to quantify this information, what is of interest are numbers like the expectation, standard deviation, or quantiles of this distribution; these again result as integrals over the marginal density. The <code>bayesmeta</code> package provides functions to evaluate all these integrals of interest. </p>
 
 <h2>The practical side</h2>
@@ -384,7 +384,7 @@ schools.example.1 &lt;- bayesmeta(y     = Rubin1981[,&quot;effect&quot;],
 ## 
 ## tau prior (proper):
 ## function(t){dhalfcauchy(t, scale=25)}
-## &lt;bytecode: 0x55c49774fa38&gt;
+## &lt;bytecode: 0x564c78703b68&gt;
 ## 
 ## mu prior (proper):
 ## normal(mean=0, sd=50)

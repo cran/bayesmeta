@@ -1,23 +1,21 @@
-\name{forestplot.bayesmeta}
-\alias{forestplot.bayesmeta}
+\name{forestplot.escalc}
+\alias{forestplot.escalc}
 \title{
-  Generate a forest plot for a \code{\link{bayesmeta}} object
+  Generate a forest plot for an \code{\link[metafor]{escalc}} object
   (based on the \code{forestplot} package's plotting functions).
 }
 \description{
-  Generates a forest plot, showing individual estimates along with their
-  95 percent confidence intervals, shrinkage intervals, resulting effect
-  estimate and prediction interval.
+  Generates a forest plot, showing estimates along with their
+  95 percent confidence intervals.
 }
 \usage{
-  \method{forestplot}{bayesmeta}(x, labeltext, exponentiate=FALSE,
-           prediction=TRUE, shrinkage=TRUE, heterogeneity=TRUE, 
+  \method{forestplot}{escalc}(x, labeltext, exponentiate=FALSE,
            digits=2, plot=TRUE,
            fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
 }
 \arguments{
   \item{x}{
-    a \code{\link{bayesmeta}} object.
+    an \code{\link[metafor]{escalc}} object.
   }
   \item{labeltext}{an (alternative) \dQuote{\code{labeltext}} argument
     which is then handed on to the \code{\link[forestplot]{forestplot}()}
@@ -27,18 +25,6 @@
   \item{exponentiate}{
     a logical flag indicating whether to exponentiate numbers (effect
     sizes) in table and plot.
-  }
-  \item{prediction}{
-    a logical flag indicating whether to show the prediction interval
-    below the mean estimate.
-  }
-  \item{shrinkage}{
-    a logical flag indicating whether to show shrinkage intervals along
-    with the quoted estimates.
-  }
-  \item{heterogeneity}{
-    a logical flag indicating whether to quote the heterogeneity estimate 
-    and CI (at the bottom left).
   }
   \item{digits}{
     The number of significant digits to be shown.
@@ -54,9 +40,10 @@
   }
 }
 \details{
-  Generates a forest plot illustrating the underlying data and
-  resulting estimates (effect estimate and prediction interval,
-  as well as shrinkage estimates and intervals).
+  Generates a forest plot illustrating the data returned by the
+  \dQuote{\code{\link[metafor]{escalc}()}} function (showing the
+  estimates potentially to be meta-analyzed, but without a combined
+  summary estimate).
 }
 \note{This function is based on the \pkg{forestplot} package's
       \dQuote{\code{\link[forestplot]{forestplot}()}} function.
@@ -73,83 +60,76 @@
   Forest plots: trying to see the wood and the trees.
   \emph{BMJ}, \bold{322}:1479, 2001.
 
-  C. Guddat, U. Grouven, R. Bender and G. Skipka.
-  \href{http://doi.org/10.1186/2046-4053-1-34}{A note on the
-    graphical presentation of prediction intervals in random-effects
-    meta-analyses}. \emph{Systematic Reviews}, \bold{1}(34), 2012.
-  
   R.D. Riley, J.P. Higgins and J.J. Deeks.
   Interpretation of random effects meta-analyses.
   \emph{BMJ}, \bold{342}:d549, 2011.
 } 
 \seealso{
-  \code{\link{bayesmeta}},
+  \code{\link[metafor]{escalc}},
   \code{\link[forestplot]{forestplot}},
-  \code{\link{forest.bayesmeta}},
-  \code{\link{plot.bayesmeta}}.
+  \code{\link{forestplot.bayesmeta}}.
 }
 \examples{
 # load data:
 data("CrinsEtAl2014")
 
-\dontrun{
 # compute effect sizes (log odds ratios) from count data
 # (using "metafor" package's "escalc()" function):
-require("metafor")
 crins.es <- escalc(measure="OR",
                    ai=exp.AR.events,  n1i=exp.total,
                    ci=cont.AR.events, n2i=cont.total,
                    slab=publication, data=CrinsEtAl2014)
 print(crins.es)
 
-# perform meta analysis:
-crins.ma <- bayesmeta(crins.es, tau.prior=function(t){dhalfcauchy(t,scale=1)})
-
 ########################
-# generate forest plots
-require("forestplot")
-
-# default options:
-forestplot(crins.ma)
+# generate forest plots;
+# with default settings:
+forestplot(crins.es)
 
 # exponentiate values (shown in table and plot), show vertical line at OR=1:
-forestplot(crins.ma, expo=TRUE, zero=1)
+forestplot(crins.es, expo=TRUE, zero=1)
 
 # logarithmic x-axis:
-forestplot(crins.ma, expo=TRUE, xlog=TRUE)
-
-# omit prediction interval:
-forestplot(crins.ma, predict=FALSE)
-
-# omit shrinkage intervals:
-forestplot(crins.ma, shrink=FALSE)
+forestplot(crins.es, expo=TRUE, xlog=TRUE)
 
 # show more decimal places:
-forestplot(crins.ma, digits=3)
+forestplot(crins.es, digits=3)
 
 # change table values:
 # (here: add columns for event counts)
-fp <- forestplot(crins.ma, expo=TRUE, plot=FALSE)
+fp <- forestplot(crins.es, expo=TRUE, plot=FALSE)
 labtext <- fp$labeltext
 labtext <- cbind(labtext[,1],
                  c("treatment",
-                   paste0(CrinsEtAl2014[,"exp.AR.events"], "/", CrinsEtAl2014[,"exp.total"]),
-                   "",""),
+                   paste0(CrinsEtAl2014[,"exp.AR.events"], "/", CrinsEtAl2014[,"exp.total"])),
                  c("control",
-                   paste0(CrinsEtAl2014[,"cont.AR.events"], "/", CrinsEtAl2014[,"cont.total"]),
-                   "",""),
+                   paste0(CrinsEtAl2014[,"cont.AR.events"], "/", CrinsEtAl2014[,"cont.total"])),
                  labtext[,2:3])
 labtext[1,4] <- "OR"
 print(fp$labeltext) # before
 print(labtext)      # after
-forestplot(crins.ma, labeltext=labtext, expo=TRUE, xlog=TRUE)
+forestplot(crins.es, labeltext=labtext, expo=TRUE, xlog=TRUE)
 
 # see also the "forestplot" help for more arguments that you may change,
 # e.g. the "clip", "xticks", "xlab" and "title" arguments,
 # or the "txt_gp" argument for label sizes etc.:
-forestplot(crins.ma, clip=c(-4,1), xticks=(-3):0,
+forestplot(crins.es, clip=c(-4,1), xticks=(-3):0,
            xlab="log-OR", title="pediatric transplantation example",
            txt_gp = fpTxtGp(ticks = gpar(cex=1), xlab = gpar(cex=1)))
-}
+
+
+###########################################################
+# In case effects and standard errors are computed already
+# (and normally one wouldn't need to call "escalc()")
+# you can still use "escalc()" to assemble the plot, e.g.:
+
+data("HinksEtAl2010")
+print(HinksEtAl2010)
+
+hinks.es <- escalc(yi=log.or, sei=log.or.se,
+                   slab=study, measure="OR",
+                   data=HinksEtAl2010)
+
+forestplot(hinks.es)
 }
 \keyword{ hplot }
