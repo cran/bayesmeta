@@ -103,18 +103,16 @@
 }
 \references{
   C. Roever.
-  \href{http://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  \href{https://doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
   
   C. Guddat, U. Grouven, R. Bender and G. Skipka.
-  \href{http://doi.org/10.1186/2046-4053-1-34}{A note on the
+  \href{https://doi.org/10.1186/2046-4053-1-34}{A note on the
     graphical presentation of prediction intervals in random-effects
     meta-analyses}. \emph{Systematic Reviews}, \bold{1}(34), 2012.
 
   R.D. Riley, J.P. Higgins and J.J. Deeks.
-%  \href{http://doi.org/10.1136/bmj.d549}{Interpretation of random
-%    effects meta-analyses}.
-  Interpretation of random effects meta-analyses.
+  \href{https://doi.org/10.1136/bmj.d549}{Interpretation of random effects meta-analyses}.
   \emph{BMJ}, \bold{342}:d549, 2011.
 }
 \seealso{

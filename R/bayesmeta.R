@@ -1,6 +1,6 @@
 #
 #    bayesmeta, an R package for Bayesian random-effects meta-analysis.
-#    Copyright (C) 2019  Christian Roever
+#    Copyright (C) 2020  Christian Roever
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -3327,4 +3327,147 @@ pppvalue<- function(x,
                  "computation.time" = c("seconds"=unname(ptm[3])))
   class(result) <- "htest"
   return(result)
+}
+
+
+
+uisd <- function(n, ...)
+{
+  UseMethod("uisd")
+}
+
+
+uisd.default <- function(n, sigma, sigma2=sigma^2, labels=NULL, individual=FALSE, ...)
+# Compute unit information standard deviation (UISD).
+# Arguments:
+#   nc         :  studies' sample sizes
+#   sigma      :  studies' standard errors
+#   sigma2     :  studies' variances (squared standard errors)
+#   individual :  if `TRUE', study-specific UISDs are returned
+#                 (instead of overall)
+{
+  stopifnot(length(n)==length(sigma2),
+            all(is.finite(n)), all(is.finite(sigma2)),
+            all(n>0), all(sigma2>0),
+            (!individual) |
+             ((length(labels)==0) || (length(labels)==length(sigma2))))
+  
+  if (individual) {
+    if (!is.character(labels))
+      labels <- as.character(labels)
+    result <- sqrt(n*sigma2)
+    names(result) <- labels
+  } else {
+    result <- sqrt(sum(n) / sum(1/sigma2))
+  }
+  return(result)
+}
+
+
+uisd.escalc <- function(n, ...)
+# Compute unit information standard deviation (UISD).
+# Arguments:
+#   n :  an "escalc" object
+{
+  stopifnot(is.element("escalc", class(n)))
+  if (!is.element("ni", names(attributes(n$yi))))
+    stop("An \"ni\" attribute is required for the \"escalc\" object!")
+  return(uisd(n=attr(n$yi, "ni"), sigma2=n$vi,
+              labels=attr(n$yi, "slab"), ...))
+}
+
+
+ess.elir <- function(object, uisd)
+{
+  # Computation of the "expected local-information-ratio ESS (ESS_ELIR)"
+  #
+  #   B. Neuenschwander, S. Weber, H. Schmidli, A. O'Hagan.
+  #   Predictively consistent prior effective sample sizes.
+  #   Biometrics 76(2): 578-587, 2020.
+  #   https://doi.org/10.1111/biom.13252
+
+  # preliminary sanity checks for provided arguments:
+  stopifnot(is.element("bayesmeta", class(object)))
+  if (missing(uisd)) {
+    stop("\"uisd\" argument need to be specified (either a numeric value or a function)!")
+  }
+  stopifnot(is.vector(uisd) | is.function(uisd))
+  if (is.vector(uisd)) { # specify function returning a constant:
+    stopifnot(length(uisd)==1, is.numeric(uisd),
+              is.finite(uisd), uisd > 0)
+    uisdFun <- function(theta) {return(rep(uisd, length(theta)))}
+  } else {               # specify a wrapper function (with built-in sanity checks):
+    uisdFun <- function(theta)
+    {
+      result <- uisd(theta)
+      if (!is.vector(result) | !is.numeric(result)) {
+        warning(paste0("Invalid output from \"uisd()\" function: uisd(",theta,")"))
+      }
+      if (!is.finite(result)) {
+        warning(paste0("\"uisd()\" function needs to return finite values! (uisd(",theta,") <= 0)"))
+      }
+      if (result <= 0.0) {
+        warning(paste0("\"uisd()\" function needs to return positive values! (uisd(",theta,") <= 0)"))
+      }
+      return(result)
+    }
+    uisdFun <- Vectorize(uisdFun, "theta")
+  }
+  
+  # specify function "i(p(theta))"
+  # (equation (3) in Neuenschwander & al. (2020)):
+  ip <- function(object, theta)
+  {
+    stopifnot(length(theta)==1, is.finite(theta))
+    # compute Hessian:
+    hessi <- hessian(function(x){object$dposterior(theta=x,
+                                                   predict=TRUE,
+                                                   log=TRUE)},
+                     theta)
+    # note the slight hack here:
+    margin <- 6 * diff(object$summary[c("95% lower","95% upper"),"theta"])
+    # (this should -roughly- correspond to a 20-sigma margin)
+    if ((!is.finite(hessi))
+        && (abs(theta-object$summary["median","theta"]) > margin)) {
+      hessi <- 0.0
+    }
+    # (Hessian is set to zero in case of numerical problems
+    #  AND a ~ 20-sigma difference from median)
+    return(as.vector(-hessi))
+  }
+
+  ip <- Vectorize(ip, "theta")
+
+  # compute expectation  (equation (7)):
+  
+  integrand <- function(x)
+  {
+    # NB: For numerical ease, the integrand is computed in a structured way.
+    #     The integrand results as a product of 3 factors.
+    #     Factors are computed one-by-one, _UNLESS_ one of the factors
+    #     turned out as zero already.
+    factors <- matrix(0.0, nrow=length(x), ncol=3,
+                      dimnames=list(NULL, c("ip", "uisd2", "density")))
+    # first, compute density:
+    factors[,"density"] <- object$dposterior(theta=x, predict=TRUE)
+    # second, compute i(p(theta)):
+    zero <- (factors[,"density"] == 0.0)
+    if (any(!zero)) {
+      factors[!zero, "ip"] <- ip(object, theta=x[!zero])
+    }
+    # third, compute uisd^2:
+    zero <- (factors[,"ip"] == 0.0)
+    if (any(!zero)) {
+      factors[!zero, "uisd2"] <- uisdFun(x[!zero])^2
+    }
+    # print(cbind("x"=x, factors)
+    # multiply 3 factors:
+    result <- apply(factors, 1, prod)
+    return(result)
+  }
+  
+  expect <- integrate(integrand, lower=-Inf, upper=Inf)
+  if (expect$message != "OK")
+    warning(paste0("Problem computing expectation (\"", expect$message,"\")."))
+  return(expect$value)
 }

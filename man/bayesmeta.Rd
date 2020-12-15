@@ -221,7 +221,8 @@
     }
     For empirically motivated informative heterogeneity priors see also
     the \code{\link{TurnerEtAlPrior}()} and \code{\link{RhodesEtAlPrior}()}
-    functions.
+    functions. For more general information especially on (weakly)
+    informative heterogeneity prior distributions, see Roever et al. (2020).
   }
 
   \subsection{Credible intervals}{
@@ -301,10 +302,11 @@
     to linearity, the posterior mean effects may still be expressed in
     terms of linear combinations of initial estimates \eqn{y_i}{y[i]},
     with weights now given by the \emph{posterior mean weights},
-    marginalized over the heterogeneity \eqn{\tau}. The posterior mean
-    weights are returned in the \code{$weights} and
-    \code{$weights.theta} elements, for the overall effect \eqn{\mu}
-    as well as for the shrinkage estimates \eqn{\theta_i}{theta[i]}.
+    marginalized over the heterogeneity \eqn{\tau} (Roever and Friede,
+    2020). The posterior mean weights are returned in the
+    \code{$weights} and \code{$weights.theta} elements, for the overall
+    effect \eqn{\mu} as well as for the shrinkage estimates
+    \eqn{\theta_i}{theta[i]}.
   }
 }
 \value{
@@ -437,23 +439,35 @@
   }
 \references{
   C. Roever.
-  \href{http://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  \href{https://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
 
+  C. Roever, R. Bender, S. Dias, C.H. Schmid, H. Schmidli, S. Sturtz,
+  S. Weber, T. Friede.
+  On weakly informative prior distributions for the heterogeneity
+  parameter in Bayesian random-effects meta-analysis.
+  \emph{\href{https://arxiv.org/abs/2007.08352}{arXiv preprint 2007.08352}}
+  (submitted for publication), 2020.
+  
   C. Roever, T. Friede.
-  \href{http://doi.org/10.1080/10618600.2016.1276840}{Discrete
+  \href{https://doi.org/10.1080/10618600.2016.1276840}{Discrete
   approximation of a mixture distribution via restricted divergence}.
   \emph{Journal of Computational and Graphical Statistics},
   \bold{26}(1):217-222, 2017.
 
+  C. Roever, T. Friede.
+  Bounds for the weight of external data in shrinkage estimation.
+  \emph{\href{https://arxiv.org/abs/2004.02525}{arXiv preprint 2004.02525}}
+  (submitted for publication), 2020.
+  
   J.O. Berger, J. Deely.
-  \href{http://doi.org/10.1080/01621459.1988.10478606}{A Bayesian
+  \href{https://doi.org/10.1080/01621459.1988.10478606}{A Bayesian
   approach to ranking and selection of related means with alternatives
   to analysis-of-variance methodology}. \emph{Journal of the American
   Statistical Association}, \bold{83}(402):364-373, 1988. 
 
   O. Bodnar, A. Link, C. Elster.
-  \href{http://doi.org/10.1214/14-BA933}{Objective Bayesian inference
+  \href{https://doi.org/10.1214/14-BA933}{Objective Bayesian inference
   for a generalized marginal random effects model}. \emph{Bayesian
   Analysis}, \bold{11}(1):25-45, 2016.
 
@@ -470,25 +484,25 @@
   Academic Press, San Diego, 1985
 
   A.E. Kass, R.E. Raftery.
-  \href{http://doi.org/10.2307/2291091}{Bayes factors}.
+  \href{https://doi.org/10.2307/2291091}{Bayes factors}.
   \emph{Journal of the American Statistical Association},
   \bold{90}(430):773-795, 1995.
 
   D.V. Lindley.
-  \href{http://doi.org/10.1093/biomet/44.1-2.187}{A statistical paradox}.
+  \href{https://doi.org/10.1093/biomet/44.1-2.187}{A statistical paradox}.
   \emph{Biometrika}, \bold{44}(1/2):187-192, 1957.
   
   B. Neuenschwander, G. Capkun-Niggli, M. Branson, D.J. Spiegelhalter.
-  \href{http://doi.org/10.1177/1740774509356002}{Summarizing
+  \href{https://doi.org/10.1177/1740774509356002}{Summarizing
   historical information on controls in clinical
   trials}. \emph{Trials}. \bold{7}(1):5-18, 2010.
 
   A. O'Hagan, L. Pericchi.
-  \href{http://doi.org/10.1214/11-BJPS164}{Bayesian heavy-tailed
+  \href{https://doi.org/10.1214/11-BJPS164}{Bayesian heavy-tailed
   models and conflict resolution: A review}. \emph{Brazilian Journal of
   Probability and Statistics}. \bold{26}(4):372-401, 2012.
 
-  S. Shalloway. \href{http://doi.org/10.1214/14-BA883}{The
+  S. Shalloway. \href{https://doi.org/10.1214/14-BA883}{The
   evidentiary credible region}. \emph{Bayesian Analysis},
   \bold{9}(4):909-922, 2014. 
 
@@ -496,11 +510,11 @@
   to clinical trials and health-care evaluation}. Wiley & Sons, 2004.
   
   R. Tibshirani.
-  \href{http://doi.org/10.1093/biomet/76.3.604}{Noninformative priors
+  \href{https://doi.org/10.1093/biomet/76.3.604}{Noninformative priors
   for one parameter of many}. \emph{Biometrika}, \bold{76}(3):604-608,
   1989.
 
-  W. Viechtbauer. \href{http://www.doi.org/10.18637/jss.v036.i03}{Conducting
+  W. Viechtbauer. \href{https://doi.org/10.18637/jss.v036.i03}{Conducting
   meta-analyses in R with the metafor package}. \emph{Journal of
   Statistical Software}, \bold{36}(3):1-48, 2010.
 }

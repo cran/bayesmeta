@@ -47,13 +47,13 @@
   }
 }
 \source{M.A. Memon, N.J. Cooper, B. Memon, M.I. Memon, and
-  K.R. Abrams. \href{http://doi.org/10.1002/bjs.4301}{Meta-analysis
+  K.R. Abrams. \href{https://doi.org/10.1002/bjs.4301}{Meta-analysis
   of randomized clinical trials comparing open and laparoscopic inguinal
   hernia repair}. \emph{British Journal of Surgery},
   \bold{90}(12):1479-1492, 2003. 
 }
 \references{K. Sidik and J.N. Jonkman.
-  \href{http://doi.org/10.1002/sim.2688}{A comparison of
+  \href{https://doi.org/10.1002/sim.2688}{A comparison of
   heterogeneity variance estimators in combining results of
   studies}. \emph{Statistics in Medicine}, \bold{26}(9):1964-1981,
   2007.}

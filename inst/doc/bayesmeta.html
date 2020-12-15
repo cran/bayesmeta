@@ -223,8 +223,9 @@ hr {
 ## Loading required package: checkmate
 ## Loading required package: metafor
 ## Loading required package: Matrix
-## Loading &#39;metafor&#39; package (version 2.1-0). For an overview 
+## Loading &#39;metafor&#39; package (version 2.4-0). For an overview 
 ## and introduction to the package please type: help(metafor).
+## Loading required package: numDeriv
 data(&quot;Rubin1981&quot;)
 print(Rubin1981)
 ##   school effect stderr
@@ -384,7 +385,7 @@ schools.example.1 &lt;- bayesmeta(y     = Rubin1981[,&quot;effect&quot;],
 ## 
 ## tau prior (proper):
 ## function(t){dhalfcauchy(t, scale=25)}
-## &lt;bytecode: 0x564c78703b68&gt;
+## &lt;bytecode: 0x55cbf51a2e20&gt;
 ## 
 ## mu prior (proper):
 ## normal(mean=0, sd=50)
@@ -545,10 +546,10 @@ schools.example.1$qposterior(tau.p=c(0.025, 0.975))
 <h1>References</h1>
 
 <ul>
-<li>C. Röver. Bayesian random-effects meta-analysis using the bayesmeta R package. <em>arXiv preprint 1711.08683</em> (submitted for publication), <a href="http://www.arxiv.org/abs/1711.08683">http://www.arxiv.org/abs/1711.08683</a> , 2017.</li>
+<li>C. Röver. Bayesian random-effects meta-analysis using the bayesmeta R package. <em>Journal of Statistical Software</em>, 93(6):1&ndash;51, 2020. <a href="https://doi.org/10.18637/jss.v093.i06">https://doi.org/10.18637/jss.v093.i06</a></li>
 <li>L. V. Hedges, I. Olkin. <em>Statistical methods for meta-analysis</em>. Academic Press, 1985.</li>
 <li>J. Hartung, G. Knapp, B. K. Sinha. <em>Statistical meta-analysis with applications</em>. Wiley, 2008.</li>
-<li>J. P. T. Higgins, S. Green (eds.). Cochrane handbook for systematic reviews of interventions. <a href="http://handbook.cochrane.org/">http://handbook.cochrane.org/</a>, 2011.</li>
+<li>J. P. T. Higgins, S. Green (eds.). Cochrane handbook for systematic reviews of interventions, 2011. <a href="https://training.cochrane.org/cochrane-handbook-systematic-reviews-interventions">https://training.cochrane.org/cochrane-handbook-systematic-reviews-interventions</a></li>
 <li>J. L. Fleiss. The statistical basis of meta-analysis. <em>Statistical Methods in Medical Research</em>, 2(2):121&ndash;145, 1993.</li>
 <li>A. Gelman, J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, D. B. Rubin. <em>Bayesian Data Analysis</em>. Chapman &amp; Hall / CRC, 2014.</li>
 <li>D. J. Spiegelhalter, K. R. Abrams, J. P. Myles. <em>Bayesian approaches to clinical trials and health-care evaluation</em>. Wiley &amp; Sons, 2004.</li>

@@ -14,7 +14,7 @@ export(bayesmeta,
        TurnerEtAlParameters, TurnerEtAlPrior,
        RhodesEtAlParameters, RhodesEtAlPrior,
        funnel.bayesmeta,
-       normalmixture, pppvalue)
+       normalmixture, pppvalue, uisd, ess.elir)
 
 S3method(bayesmeta, default)
 S3method(bayesmeta, escalc)
@@ -25,6 +25,8 @@ S3method(forestplot, bayesmeta)
 S3method(forestplot, escalc)
 S3method(forest, bayesmeta)
 S3method(funnel, bayesmeta)
+S3method(uisd, default)
+S3method(uisd, escalc)
 
 importFrom("grDevices",
            "grey")
@@ -41,6 +43,8 @@ importFrom("forestplot",
            "fpColors")
 importFrom("metafor",
            "forest", "funnel")
+importFrom("numDeriv",
+           "hessian")
 importFrom("parallel",
            "detectCores", "makeCluster", "clusterEvalQ","parSapply",
            "stopCluster")

@@ -109,14 +109,21 @@
   Institute of Mathematical Statistics, Hayward, CA, USA, 1995.
 
   C. Roever, T. Friede.
-  \href{http://doi.org/10.1080/10618600.2016.1276840}{Discrete
+  \href{https://doi.org/10.1080/10618600.2016.1276840}{Discrete
   approximation of a mixture distribution via restricted divergence}.
   \emph{Journal of Computational and Graphical Statistics},
   \bold{26}(1):217-222, 2017.
 
   C. Roever.
-  \href{http://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  \href{https://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
+  
+  C. Roever, R. Bender, S. Dias, C.H. Schmid, H. Schmidli, S. Sturtz,
+  S. Weber, T. Friede.
+  On weakly informative prior distributions for the heterogeneity
+  parameter in Bayesian random-effects meta-analysis.
+  \emph{\href{https://arxiv.org/abs/2007.08352}{arXiv preprint 2007.08352}}
+  (submitted for publication), 2020.
   
   W.E. Seidel. Mixture models.
   In M. Lovric (ed.) \emph{International Encyclopedia of Statistical

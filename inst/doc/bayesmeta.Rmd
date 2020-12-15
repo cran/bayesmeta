@@ -222,10 +222,10 @@ schools.example.1$theta[,c("A","G","H")]
 You can see the original data ($y_i$ and $\sigma_i$) along with a summary of the posterior distribution for the corresponding study-specific mean $\theta_i$. You can again use e.g. the `...$dposterior()` and `...$post.interval()` functions to extract posterior density and credibility intervals by supplying the `individual` argument (see the `bayesmeta` help for more details).
 
 # References
-  * C. Röver. Bayesian random-effects meta-analysis using the bayesmeta R package. *arXiv preprint 1711.08683* (submitted for publication), http://www.arxiv.org/abs/1711.08683 , 2017.
+  * C. Röver. Bayesian random-effects meta-analysis using the bayesmeta R package. *Journal of Statistical Software*, 93(6):1--51, 2020. https://doi.org/10.18637/jss.v093.i06
   * L. V. Hedges, I. Olkin. *Statistical methods for meta-analysis*. Academic Press, 1985.
   * J. Hartung, G. Knapp, B. K. Sinha. *Statistical meta-analysis with applications*. Wiley, 2008.
-  * J. P. T. Higgins, S. Green (eds.). Cochrane handbook for systematic reviews of interventions. http://handbook.cochrane.org/, 2011.
+  * J. P. T. Higgins, S. Green (eds.). Cochrane handbook for systematic reviews of interventions, 2011. https://training.cochrane.org/cochrane-handbook-systematic-reviews-interventions
   * J. L. Fleiss. The statistical basis of meta-analysis. *Statistical Methods in Medical Research*, 2(2):121--145, 1993.
   * A. Gelman, J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, D. B. Rubin. *Bayesian Data Analysis*. Chapman & Hall / CRC, 2014.
   * D. J. Spiegelhalter, K. R. Abrams, J. P. Myles. *Bayesian approaches to clinical trials and health-care evaluation*. Wiley & Sons, 2004.

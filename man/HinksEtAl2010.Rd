@@ -26,25 +26,25 @@
 }
 \source{
   A. Hinks et al.
-  \href{http://doi.org/10.1038/gene.2010.25}{Association of the CCR5
+  \href{https://doi.org/10.1038/gene.2010.25}{Association of the CCR5
     gene with juvenile idiopathic arthritis}. \emph{Genes and Immunity},
   \bold{11}(7):584-589, 2010. 
 }
 \references{
   S. Prahalad et al.
-  \href{http://doi.org/10.1038/sj.gene.6364317}{Association of two
+  \href{https://doi.org/10.1038/sj.gene.6364317}{Association of two
     functional polymorphisms in the CCR5 gene with juvenile rheumatoid
     arthritis}
   \emph{Genes and Immunity}, \bold{7}:468-475, 2006.
 
   E. Lindner et al.
-  \href{http://doi.org/10.1186/1471-2350-8-33}{Lack of association
+  \href{https://doi.org/10.1186/1471-2350-8-33}{Lack of association
   between the chemokine receptor 5 polymorphism CCR5delta32 in
   rheumatoid arthritis and juvenile idiopathic arthritis}.
   \emph{BMC Medical Genetics}, \bold{8}:33, 2007.
 
   C. Roever, G. Knapp, T. Friede.
-  \href{http://doi.org/10.1186/s12874-015-0091-1}{Hartung-Knapp-Sidik-Jonkman
+  \href{https://doi.org/10.1186/s12874-015-0091-1}{Hartung-Knapp-Sidik-Jonkman
   approach and its modification for random-effects meta-analysis with
   few studies}. \emph{BMC Medical Research Methodology}, 15:99, 2015.
 }

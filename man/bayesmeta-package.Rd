@@ -16,8 +16,8 @@
   \tabular{ll}{
     Package: \tab bayesmeta\cr
     Type:    \tab Package\cr
-    Version: \tab 2.5\cr
-    Date:    \tab 2020-04-20\cr
+    Version: \tab 2.6\cr
+    Date:    \tab 2020-12-14\cr
     License: \tab GPL (>=2)
   }
   The main functionality is provided by the \code{\link{bayesmeta}()}
@@ -34,13 +34,13 @@ Christian Roever <christian.roever@med.uni-goettingen.de>
 }
 \references{
   C. Roever.
-  \href{http://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  \href{https://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
-  
-  C. Roever.
-  \emph{The bayesmeta app}.
-  \url{http://ams.med.uni-goettingen.de:3838/bayesmeta/app},
-  2018.
+%  
+%  C. Roever.
+%  \emph{The bayesmeta app}.
+%  \url{https://ams.med.uni-goettingen.de:3838/bayesmeta/app},
+%  2018.
 }
 \keyword{ models }
 \keyword{ package }

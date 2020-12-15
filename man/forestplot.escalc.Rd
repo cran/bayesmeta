@@ -57,11 +57,11 @@
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
 
   C. Lewis and M. Clarke.
-  Forest plots: trying to see the wood and the trees.
+  \href{https://doi.org/10.1136/bmj.322.7300.1479}{Forest plots: trying to see the wood and the trees}.
   \emph{BMJ}, \bold{322}:1479, 2001.
 
   R.D. Riley, J.P. Higgins and J.J. Deeks.
-  Interpretation of random effects meta-analyses.
+  \href{https://doi.org/10.1136/bmj.d549}{Interpretation of random effects meta-analyses}.
   \emph{BMJ}, \bold{342}:d549, 2011.
 } 
 \seealso{

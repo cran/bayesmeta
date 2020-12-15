@@ -22,14 +22,49 @@
     or a control drug is recorded.}
 }
 \source{S.E. Brockwell, I.R. Gordon.
-  \href{http://doi.org/10.1002/sim.650}{A comparison of statistical
+  \href{https://doi.org/10.1002/sim.650}{A comparison of statistical
     methods for meta-analysis}.
   \emph{Statistics in Medicine}, \bold{20}(6):825-840, 2001.
 }
 \references{R. Peto.
-  \href{http://doi.org/10.1016/S0140-6736(80)91626-8}{Aspirin after
+  \href{https://doi.org/10.1016/S0140-6736(80)91626-8}{Aspirin after
     myocardial infarction}. 
   \emph{The Lancet}, \bold{315}(8179):1172-1173, 1980.
+  
+  P.C. Elwood, A.L. Cochrane, M.L.Burr, P.M. Sweetnam, G. Williams,
+  E. Welsby, S.J. Hughes, R. Renton.
+  \href{https://doi.org/10.1136/bmj.1.5905.436}{A randomized controlled
+  trial of acetyl salicylic acid in the secondary prevention of
+  mortality from myocardial infarction}. 
+  \emph{British Medical Journal}, \bold{1}(5905):436-440, 1974.
+
+  The Coronary Drug Project Research Group.
+  \href{https://doi.org/10.1016/0021-9681(76)90020-5}{Aspirin in coronary
+  heart disease}.
+  \emph{Journal of Chronic Diseases}, \bold{29}(10):625-642, 1976.
+
+  K. Breddin, D. Loew, K. Lechner, K. Ueberla, E. Walter.
+  \href{https://doi.org/10.1159/000214375}{Secondary prevention of
+  myocardial infarction: a comparison of acetylsalicylic acid, placebo
+  and phenprocoumon}.
+  \emph{Haemostasis}, \bold{9}(6):325-344, 1980.
+
+  P.C. Elwood, P.M. Sweetnam.
+  \href{https://doi.org/10.1016/S0140-6736(79)92808-3}{Aspirin and
+  secondary mortality after myocardial infarction}.
+  \emph{The Lancet}, \bold{314}(8156):1313-1315, 1979.
+
+  Aspirin Myocardial Infarction Study Research Group.
+  \href{https://doi.org/10.1001/jama.1980.03300330019023}{A randomized,
+  controlled trial of aspirin in persons recovered from myocardial
+  infarction}.
+  \emph{Journal of the American Medical Association},
+  \bold{243}(7):661-669, 1980.
+
+  The Persantine-Aspirin Reinfarction Study Research Group.
+  \href{https://doi.org/10.1161/01.CIR.62.3.449}{Persantine and aspirin
+    in coronary heart disease}.
+  \emph{Circulation}, \bold{62}(3):449-461, 1980.  
 }
 \examples{
 data("Peto1980")

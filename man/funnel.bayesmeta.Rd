@@ -98,7 +98,7 @@
   \bold{58}(9):894-901, 2005.
 
   C. Roever, T. Friede.
-  \href{http://doi.org/10.1080/10618600.2016.1276840}{Discrete
+  \href{https://doi.org/10.1080/10618600.2016.1276840}{Discrete
   approximation of a mixture distribution via restricted divergence}.
   \emph{Journal of Computational and Graphical Statistics},
   \bold{26}(1):217-222, 2017.

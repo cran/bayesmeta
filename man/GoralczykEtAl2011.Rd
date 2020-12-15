@@ -34,7 +34,7 @@
   liver transplant recipients.
 }
 \source{A.D. Goralczyk, N. Hauke, N. Bari, T.Y. Tsui, T. Lorf, A. Obed.
-  \href{http://doi.org/10.1002/hep.24385}{Interleukin-2 receptor
+  \href{https://doi.org/10.1002/hep.24385}{Interleukin-2 receptor
   antagonists for liver transplant recipients:
   A systematic review and meta-analysis of controlled studies}.
   \emph{Hepatology}, \bold{54}(2):541-554, 2011.

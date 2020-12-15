@@ -92,11 +92,18 @@
   function it works analogously.
 }
 \references{
+  C. Roever, R. Bender, S. Dias, C.H. Schmid, H. Schmidli, S. Sturtz,
+  S. Weber, T. Friede.
+  On weakly informative prior distributions for the heterogeneity
+  parameter in Bayesian random-effects meta-analysis.
+  \emph{\href{https://arxiv.org/abs/2007.08352}{arXiv preprint 2007.08352}}
+  (submitted for publication), 2020.
+  
   A. Gelman. Prior distributions for variance parameters in hierarchical
   models. \emph{Bayesian Analysis}, \bold{1}(3):515-534, 2006.
 
   F. C. Leone, L. S. Nelson, R. B. Nottingham.
-  \href{http://doi.org/10.2307/1266560}{The folded normal
+  \href{https://doi.org/10.2307/1266560}{The folded normal
   distribution}. \emph{Technometrics}, \bold{3}(4):543-550, 1961. 
 
   N. G. Polson, J. G. Scott.
@@ -104,7 +111,7 @@
   \emph{Bayesian Analysis}, \bold{7}(4):887-902, 2012.
 
   S. Psarakis, J. Panaretos.
-  \href{http://doi.org/10.1080/03610929008830342}{The folded t
+  \href{https://doi.org/10.1080/03610929008830342}{The folded t
   distribution}. \emph{Communications in Statistics - Theory and
   Methods}, \bold{19}(7):2717-2734, 1990.
 }

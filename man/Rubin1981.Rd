@@ -34,11 +34,11 @@
 \source{A. Gelman, J.B. Carlin, H. Stern, and D.B. Rubin.
   \emph{Bayesian data analysis}. Chapman & Hall / CRC, Boca Raton, 1997.} 
 \references{
-  D.B. Rubin. Estimation in parallel randomized experiments.
+  D.B. Rubin. \href{https://doi.org/10.3102/10769986006004377}{Estimation in parallel randomized experiments}.
   \emph{Journal of Educational Statistics}, \bold{6}(4):377-401, 1981.
 
-  A. Gelman. Prior distributions for variance parameters in hierarchical
-  models. \emph{Bayesian Analysis}, \bold{1}(3):515-534, 2006.
+  A. Gelman. \href{https://doi.org/10.1214/06-BA117A}{Prior distributions for variance parameters in hierarchical models}.
+  \emph{Bayesian Analysis}, \bold{1}(3):515-534, 2006.
 }
 \examples{
 data("Rubin1981")

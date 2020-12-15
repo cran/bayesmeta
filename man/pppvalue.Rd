@@ -178,7 +178,7 @@
   \item{computation.time}{The computation time (in seconds) used.}
 }
 \references{
-  X.-L. Meng. \href{http://doi.org/10.1214/aos/1176325622}{Posterior
+  X.-L. Meng. \href{https://doi.org/10.1214/aos/1176325622}{Posterior
     predictive p-values}.
   \emph{The Annals of Statistics}, \bold{22}(3):1142-1160, 1994.
 
@@ -192,7 +192,7 @@
   Chapman & Hall / CRC, Boca Raton, 2014.
   
   C. Roever.
-  \href{http://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  \href{https://doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
 }
 \author{

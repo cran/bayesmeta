@@ -57,6 +57,13 @@
   expectation and variance, respectively.
 }
 \references{
+  C. Roever, R. Bender, S. Dias, C.H. Schmid, H. Schmidli, S. Sturtz,
+  S. Weber, T. Friede.
+  On weakly informative prior distributions for the heterogeneity
+  parameter in Bayesian random-effects meta-analysis.
+  \emph{\href{https://arxiv.org/abs/2007.08352}{arXiv preprint 2007.08352}}
+  (submitted for publication), 2020.
+  
   J.M. Bernardo, A.F.M. Smith. \emph{Bayesian theory},
   Appendix A.1. Wiley, Chichester, UK, 1994.
 }
