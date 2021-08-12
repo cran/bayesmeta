@@ -27,7 +27,7 @@
     inspection of table 9 suggests no such bias, the data will serve
     to illustrate the application of partial weighting.} 
 }
-\source{W.G. Cochran. \href{https://doi.org/10.2307/3001666}{The combination of estimates from different experiments}.
+\source{W.G. Cochran. The combination of estimates from different experiments.
     \emph{Biometrics}, \bold{10}(1):101-129, 1954.}
 \examples{
 data("Cochran1954")

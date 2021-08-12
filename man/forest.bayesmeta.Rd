@@ -39,13 +39,16 @@
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
-\references{C. Lewis and M. Clarke.
-  \href{https://doi.org/10.1136/bmj.322.7300.1479}{Forest plots: trying to see the wood and the trees}.
+\references{
+  C. Lewis and M. Clarke.
+  Forest plots: trying to see the wood and the trees.
   \emph{BMJ}, \bold{322}:1479, 2001.
+  \doi{10.1136/bmj.322.7300.1479}.
 
   R.D. Riley, J.P. Higgins and J.J. Deeks.
-  \href{https://doi.org/10.1136/bmj.d549}{Interpretation of random effects meta-analyses}.
+  Interpretation of random effects meta-analyses.
   \emph{BMJ}, \bold{342}:d549, 2011.
+  \doi{10.1136/bmj.d549}.
 } 
 \seealso{
   \code{\link{bayesmeta}}, \code{\link[metafor]{forest.default}},

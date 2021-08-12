@@ -178,9 +178,10 @@
   \item{computation.time}{The computation time (in seconds) used.}
 }
 \references{
-  X.-L. Meng. \href{https://doi.org/10.1214/aos/1176325622}{Posterior
-    predictive p-values}.
+  X.-L. Meng.
+  Posterior predictive p-values.
   \emph{The Annals of Statistics}, \bold{22}(3):1142-1160, 1994.
+  \doi{10.1214/aos/1176325622}.
 
   A. Gelman, X.-L. Meng, H. Stern.
   Posterior predictive assessment of model fitness
@@ -188,12 +189,14 @@
   \emph{Statistica Sinica}, \bold{6}(4):733-760, 1996.
   
   A. Gelman, J.B. Carlin, H.S. Stern, D.B. Dunson, A. Vehtari,
-  D.B. Rubin. \emph{Bayesian data analysis}.
+  D.B. Rubin.
+  \emph{Bayesian data analysis}.
   Chapman & Hall / CRC, Boca Raton, 2014.
   
   C. Roever.
-  \href{https://doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  Bayesian random-effects meta-analysis using the bayesmeta R package.
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
+  \doi{10.18637/jss.v093.i06}.
 }
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}

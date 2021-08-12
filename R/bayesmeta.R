@@ -1,6 +1,6 @@
 #
 #    bayesmeta, an R package for Bayesian random-effects meta-analysis.
-#    Copyright (C) 2020  Christian Roever
+#    Copyright (C) 2021  Christian Roever
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -2355,6 +2355,7 @@ forestplot.bayesmeta <- function(x, labeltext,
                                  col        = col,
                                  boxsize    = boxsize,
                                  legend     = legend, ...)
+    plot(fp)
     # add heterogeneity phrase at bottom left:
     if (heterogeneity) {
       tauFigures <- x$summary[c("median","95% lower", "95% upper"), "tau"]
@@ -2517,6 +2518,7 @@ forestplot.escalc <- function(x, labeltext,
                                  col        = col,
                                  boxsize    = boxsize,
                                  legend     = legend, ...)
+    plot(fp)
   }
   invisible(list("data"       = ma.dat[-1,],
                  "labeltext"  = labeltext,
@@ -3377,14 +3379,24 @@ uisd.escalc <- function(n, ...)
 }
 
 
-ess.elir <- function(object, uisd)
+ess <- function(object, ...)
 {
-  # Computation of the "expected local-information-ratio ESS (ESS_ELIR)"
+  UseMethod("ess")
+}
+
+
+ess.bayesmeta <- function(object, uisd,
+                          method=c("elir", "vr", "pr", "mtm.pt"), ...)
+{
+  # Computation of effective sample sizes; see:
   #
   #   B. Neuenschwander, S. Weber, H. Schmidli, A. O'Hagan.
   #   Predictively consistent prior effective sample sizes.
   #   Biometrics 76(2): 578-587, 2020.
   #   https://doi.org/10.1111/biom.13252
+  #
+  # Note that  i_F(theta)  here equals  1 / UISD^2
+  # (where the UISD may or may not vary with theta).
 
   # preliminary sanity checks for provided arguments:
   stopifnot(is.element("bayesmeta", class(object)))
@@ -3413,61 +3425,334 @@ ess.elir <- function(object, uisd)
     }
     uisdFun <- Vectorize(uisdFun, "theta")
   }
-  
-  # specify function "i(p(theta))"
-  # (equation (3) in Neuenschwander & al. (2020)):
-  ip <- function(object, theta)
-  {
-    stopifnot(length(theta)==1, is.finite(theta))
-    # compute Hessian:
+
+  ####################
+  # determine method:
+  method <- match.arg(tolower(method), c("elir", "vr", "pr", "mtm.pt"))
+  # switch:
+  if (method == "elir") { #  "expected local-information-ratio (ELIR)" method:
+    # specify function "i(p(theta))"
+    # (equation (3) in Neuenschwander & al. (2020)):
+    ip <- function(object, theta)
+    {
+      stopifnot(length(theta)==1, is.finite(theta))
+      # compute Hessian:
+      hessi <- hessian(function(x){object$dposterior(theta=x,
+                                                     predict=TRUE,
+                                                     log=TRUE)},
+                       theta)
+      # note the slight hack here:
+      margin <- 6 * diff(object$summary[c("95% lower","95% upper"),"theta"])
+      # (this should -roughly- correspond to a 20-sigma margin)
+      if ((!is.finite(hessi))
+          && (abs(theta-object$summary["median","theta"]) > margin)) {
+        hessi <- 0.0
+      }
+      # (Hessian is set to zero in case of numerical problems
+      #  AND a ~ 20-sigma difference from median)
+      return(as.vector(-hessi))
+    }
+    ip <- Vectorize(ip, "theta")
+
+    # compute expectation  (equation (7)):
+    integrand <- function(x)
+    {
+      # NB: For numerical ease, the integrand is computed in a structured way.
+      #     The integrand results as a product of 3 factors.
+      #     Factors are computed one-by-one, _UNLESS_ one of the factors
+      #     turned out as zero already.
+      factors <- matrix(0.0, nrow=length(x), ncol=3,
+                        dimnames=list(NULL, c("ip", "uisd2", "density")))
+      # first, compute density:
+      factors[,"density"] <- object$dposterior(theta=x, predict=TRUE)
+      # second, compute i(p(theta)):
+      zero <- (factors[,"density"] == 0.0)
+      if (any(!zero)) {
+        factors[!zero, "ip"] <- ip(object, theta=x[!zero])
+      }
+      # third, compute uisd^2:
+      zero <- (factors[,"ip"] == 0.0)
+      if (any(!zero)) {
+        factors[!zero, "uisd2"] <- uisdFun(x[!zero])^2
+      }
+      # multiply 3 factors:
+      result <- apply(factors, 1, prod)
+      return(result)
+    }
+    expect <- integrate(integrand, lower=-Inf, upper=Inf)
+    if (expect$message != "OK")
+      warning(paste0("Problem computing expectation (\"", expect$message,"\")."))
+    ESS <- expect$value
+  } else if (method == "vr") {  # "variance ratio (VR)" method:
+    # compute expectation  (equation (2)):
+    if (is.vector(uisd)) {
+      numerator <- uisd^2
+    } else {
+      integrand <- function(x)
+      {
+        # NB: For numerical ease, the integrand is computed in a structured way.
+        #     The integrand results as a product of 2 factors (uisd and density).
+        #     Factors are computed one-by-one, _UNLESS_ one of the factors
+        #     turned out as zero already.
+        factors <- matrix(0.0, nrow=length(x), ncol=2,
+                          dimnames=list(NULL, c("uisd2", "density")))
+        # first, compute density:
+        factors[,"density"] <- object$dposterior(theta=x, predict=TRUE)
+        # second, compute i(p(theta)):
+        zero <- (factors[,"density"] == 0.0)
+        if (any(!zero)) {
+          factors[!zero, "uisd2"] <- uisdFun(x[!zero])^2
+        }
+        # multiply 2 factors:
+        result <- apply(factors, 1, prod)
+        return(result)
+      }
+      expect <- integrate(integrand, lower=-Inf, upper=Inf)
+      if (expect$message != "OK")
+        warning(paste0("Problem computing expectation (\"", expect$message,"\")."))
+      numerator <- expect$value
+    }
+    denominator <- object$summary["sd","theta"]^2
+    ESS <- numerator / denominator
+  } else if (method == "pr") {  # "precision ratio (PR)" method:
+    # compute expectation  (equation (2)):
+    if (is.vector(uisd)) {
+      denominator <- uisd^-2
+    } else {
+      integrand <- function(x)
+      {
+        # NB: For numerical ease, the integrand is computed in a structured way.
+        #     The integrand results as a product of 2 factors (uisd and density).
+        #     Factors are computed one-by-one, _UNLESS_ one of the factors
+        #     turned out as zero already.
+        factors <- matrix(0.0, nrow=length(x), ncol=2,
+                          dimnames=list(NULL, c("uisd2", "density")))
+        # first, compute density:
+        factors[,"density"] <- object$dposterior(theta=x, predict=TRUE)
+        # second, compute i(p(theta)):
+        zero <- (factors[,"density"] == 0.0)
+        if (any(!zero)) {
+          factors[!zero, "uisd2"] <- uisdFun(x[!zero])^-2
+        }
+        # multiply 2 factors:
+        result <- apply(factors, 1, prod)
+        return(result)
+      }
+      expect <- integrate(integrand, lower=-Inf, upper=Inf)
+      if (expect$message != "OK")
+        warning(paste0("Problem computing expectation (\"", expect$message,"\")."))
+      denominator <- expect$value
+    }
+    numerator <- object$summary["sd","theta"]^-2
+    ESS <- numerator / denominator
+  } else if (method == "mtm.pt"){  # "Morita-Thall-Mueller / Pennello-Thompson (MTM.PM)" method:
+    denominator <- uisdFun(theta=object$summary["mode","theta"])^-2
     hessi <- hessian(function(x){object$dposterior(theta=x,
                                                    predict=TRUE,
                                                    log=TRUE)},
-                     theta)
-    # note the slight hack here:
-    margin <- 6 * diff(object$summary[c("95% lower","95% upper"),"theta"])
-    # (this should -roughly- correspond to a 20-sigma margin)
-    if ((!is.finite(hessi))
-        && (abs(theta-object$summary["median","theta"]) > margin)) {
-      hessi <- 0.0
-    }
-    # (Hessian is set to zero in case of numerical problems
-    #  AND a ~ 20-sigma difference from median)
-    return(as.vector(-hessi))
+                     object$summary["mode","theta"])
+    numerator <- as.numeric(-hessi)
+    ESS <- numerator / denominator
   }
+  return(ESS)
+}
 
-  ip <- Vectorize(ip, "theta")
 
-  # compute expectation  (equation (7)):
+weightsplot <- function(x, ...)
+{
+  UseMethod("weightsplot")
+}
+
+weightsplot.bayesmeta <- function(x, individual=FALSE, ordered=TRUE,
+                                  extramargin=4,
+                                  priorlabel="prior mean", main, ...)
+# Illustrate posterior mean weights (percentages)
+# for overall mean or shrinkage estimates in a bar plot
+# (See https://doi.org/10.1002/bimj.202000227 ).
+# Numbers are taken from the bayesmeta object's
+# "...$weights" or "...$weights.theta" elements.
+{
+  stopifnot(length(ordered)==1, is.logical(ordered),
+            is.numeric(extramargin), length(extramargin)==1, all(is.finite(extramargin)),
+            length(individual)==1)
+  if (! (is.logical(individual) && (!individual))) { #  individual != FALSE
+    indiv.logi <- TRUE       # (non-empty "individual" specification)
+    if (is.numeric(individual))   indiv.which <- which(is.element(1:x$k, individual))
+    if (is.character(individual)) indiv.which <- which(is.element(x$labels, match.arg(individual,x$labels)))
+    if (length(indiv.which)==0) warning("cannot make sense of 'individual' argument: empty subset.")
+  }
+  else indiv.logi <- FALSE   # (the default (overall mean weight))
+  mu.prior.proper <- all(is.finite(x$mu.prior))
+  # create empty data frame to hold plotted data:
+  plotdat <- cbind.data.frame("label"=rep(NA_character_, ifelse(mu.prior.proper, x$k+1, x$k)),
+                              "weight"=NA_real_, "percentage"=NA_character_, stringsAsFactors=FALSE)
+  if (!indiv.logi){ # fill in data for overall mean estimate
+    plotdat[,"label"]  <- names(x$weights)
+    plotdat[,"weight"] <- x$weights
+    targetparam <- "overall mean estimate"
+  } else {          # fill in data for shrinkage estimate
+    plotdat[,"label"] <- rownames(x$weights.theta)
+    plotdat[,"weight"] <- x$weights.theta[,indiv.which]
+    targetparam <- paste0("shrinkage estimate \"", x$labels[indiv.which], "\"")
+  }
+  if (ordered) {    # sort rows in descending order
+    plotdat[1:x$k,] <- plotdat[order(plotdat[1:x$k,"weight"], decreasing=TRUE),]
+  }
+  plotdat[,"percentage"] <- paste(sprintf("%.1f", plotdat[,"weight"] * 100), "%")
+  maxweight <- max(plotdat[,"weight"]*100)
+  if (missing(main)) {
+    main <- paste0("posterior mean weights (",targetparam,")")
+  }
+  # set figure margins:
+  if (extramargin != 0) {
+    parmar <- par("mar")
+    on.exit(par(mar=parmar))
+    par(mar = parmar + c(0, extramargin, 0, 0))
+  }
+  bp <- graphics::barplot(rev(plotdat[,"weight"])*100, horiz=TRUE,
+                          names.arg=rev(plotdat[,"label"]), las=1,
+                          xlim=c(0, maxweight * 1.15),
+                          xlab="weight (%)", ylab="", main=main, ...)
+  graphics::text(rev(plotdat[,"weight"])*100 + maxweight*0.02, bp[,1],
+                 rev(plotdat[,"percentage"]), adj=c(0,0.5))
+  invisible(plotdat)
+}
+
+
+traceplot <- function(x, ...)
+{
+  UseMethod("traceplot")
+}
+
+
+traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
+                                rightmargin=8, col=rainbow(x$k), ...)
+{
+  stopifnot(missing(mulim) || (length(mulim) == 2),
+            missing(taulim) || (length(taulim) <= 2),
+            rightmargin >= 0, length(col) == x$k)
+  # convert "taulim" and "mulim" arguments
+  # to eventual "taurange" and "murange" vectors:
+  if (!missing(taulim) && all(is.finite(taulim))) {
+    if ((length(taulim)==2) && (taulim[1]>=0) && (taulim[2]>taulim[1]))
+      taurange <- taulim
+    else if ((length(taulim)==1) && (taulim>0))
+      taurange <- c(0, taulim)
+    else
+      taurange <- c(0, x$qposterior(tau=0.995)*1.1)
+  } else {
+    taurange <- c(0, x$qposterior(tau=0.995)*1.1)
+  }
   
-  integrand <- function(x)
+  if (!missing(mulim) && (all(is.finite(mulim)) && (mulim[1] < mulim[2]))) {
+    murange <- mulim
+  } else {
+    cm <- x$cond.moment(tau=taurange[2], indiv=TRUE)
+    if (ci){
+      murange <- range(c(cm[,"mean",]-q975*cm[,"sd",], cm[,"mean",]+q975*cm[,"sd",]))
+    } else {
+      murange <- range(cm[,"mean",])
+    }
+    murange <- murange + c(-1,1)*diff(murange)*0.05
+  }
+  
+  vertlines <- pretty(taurange)
+  gridcol <- "grey85"
+  q975 <- qnorm(0.975)
+
+  mutrace <- function(x)
   {
-    # NB: For numerical ease, the integrand is computed in a structured way.
-    #     The integrand results as a product of 3 factors.
-    #     Factors are computed one-by-one, _UNLESS_ one of the factors
-    #     turned out as zero already.
-    factors <- matrix(0.0, nrow=length(x), ncol=3,
-                      dimnames=list(NULL, c("ip", "uisd2", "density")))
-    # first, compute density:
-    factors[,"density"] <- object$dposterior(theta=x, predict=TRUE)
-    # second, compute i(p(theta)):
-    zero <- (factors[,"density"] == 0.0)
-    if (any(!zero)) {
-      factors[!zero, "ip"] <- ip(object, theta=x[!zero])
+    # range of tau values:
+    tau <- seq(max(c(0,taurange[1]-0.1*diff(taurange))),
+                   taurange[2]+0.1*diff(taurange), le=200)
+    cm.overall <- x$cond.moment(tau=tau)
+    cm.indiv   <- x$cond.moment(tau=tau, indiv=TRUE)
+    plot(taurange, murange,         
+         type="n", axes=FALSE, xlab="", ylab="effect", main="", ...)
+    abline(v=vertlines, col=gridcol)
+    abline(h=pretty(murange), col=gridcol)
+    abline(v=0, col=grey(0.40))
+    # grey shading:
+    if (ci) {
+      for (i in 1:x$k) {
+        polygon(c(tau, rev(tau)),
+                c(cm.indiv[,"mean",i] - q975*cm.indiv[,"sd",i],
+                  rev(cm.indiv[,"mean",i] + q975*cm.indiv[,"sd",i])),
+                col=grey(0.75, alpha=0.25), border=NA)
+      }
+      polygon(c(tau, rev(tau)),
+              c(cm.overall[,"mean"] - q975*cm.overall[,"sd"],
+                rev(cm.overall[,"mean"] + q975*cm.overall[,"sd"])),
+              col=grey(0.75, alpha=0.25), border=NA)
+    }    
+    # individual estimates:
+    matlines(tau, cm.indiv[,"mean",], col=col, lty=1)
+    if (ci) {
+      matlines(tau, cm.indiv[,"mean",]-q975*cm.indiv[,"sd",], col=col, lty=3)
+      matlines(tau, cm.indiv[,"mean",]+q975*cm.indiv[,"sd",], col=col, lty=3)
     }
-    # third, compute uisd^2:
-    zero <- (factors[,"ip"] == 0.0)
-    if (any(!zero)) {
-      factors[!zero, "uisd2"] <- uisdFun(x[!zero])^2
+    # overall mean:
+    lines(tau, cm.overall[,"mean"], col="black", lty=2, lwd=1.5)
+    if (ci) {
+      lines(tau, cm.overall[,"mean"]-q975*cm.overall[,"sd"], col="black", lty=3, lwd=1.5)
+      lines(tau, cm.overall[,"mean"]+q975*cm.overall[,"sd"], col="black", lty=3, lwd=1.5)
     }
-    # print(cbind("x"=x, factors)
-    # multiply 3 factors:
-    result <- apply(factors, 1, prod)
-    return(result)
+    axis(2)
+    for (i in 1:x$k)
+      axis(side=4, at=cm.indiv[length(tau),"mean",i],
+           labels=x$labels[i], tick=FALSE,
+           col.axis=col[i], las=1)
+    axis(side=4, at=cm.overall[length(tau),"mean"],
+         labels="overall mean", tick=FALSE, las=1)
+    invisible()
   }
   
-  expect <- integrate(integrand, lower=-Inf, upper=Inf)
-  if (expect$message != "OK")
-    warning(paste0("Problem computing expectation (\"", expect$message,"\")."))
-  return(expect$value)
+  taumarginal <- function(x)
+  # NB: function is (essentially) identical to the one within "plot.bayesmeta()"
+  {
+    # range of tau values:
+    tau <- seq(max(c(0,taurange[1]-0.1*diff(taurange))),
+                   taurange[2]+0.1*diff(taurange), le=200)
+    # corresponding posterior density:
+    dens <- x$dposterior(tau=tau)
+    # empty plot:
+    maxdens <- max(dens[is.finite(dens)],na.rm=TRUE)
+    plot(c(taurange[1],taurange[2]), c(0,maxdens),         
+         type="n", axes=FALSE, xlab="", ylab="", main="")
+    abline(v=vertlines, col=gridcol)
+    # "fix" diverging density:
+    dens[!is.finite(dens)] <- 10*maxdens
+    # light grey shaded contour for density across whole range:
+    polygon(c(0,tau,max(tau)), c(0,dens,0), border=NA, col=grey(0.90))
+    # dark grey shaded contour for density within 95% bounds:
+    indi <- ((tau>=x$summary["95% lower","tau"]) & (tau<=x$summary["95% upper","tau"]))
+    polygon(c(rep(x$summary["95% lower","tau"],2), tau[indi], rep(x$summary["95% upper","tau"],2)),
+            c(0, min(c(x$dposterior(tau=x$summary["95% lower","tau"]), 10*maxdens)),
+              dens[indi], x$dposterior(tau=x$summary["95% upper","tau"]), 0),
+            border=NA, col=grey(0.80))
+    # vertical line at posterior median:
+    lines(rep(x$summary["median","tau"],2), c(0,x$dposterior(tau=x$summary["median","tau"])), col=grey(0.6))
+    # actual density line:
+    lines(tau, dens, col="black")
+    # x-axis, y-axis:
+    abline(h=0, v=0, col=grey(0.40))
+    # add axes, labels, bounding box, ...
+    mtext(side=1, line=par("mgp")[1], expression("heterogeneity "*tau))
+    #mtext(side=2, line=par("mgp")[2], expression("marginal posterior density"))
+    axis(1)#; box()
+    invisible()
+  }
+
+  # make sure to re-set graphical parameters later:
+  prevpar <- par(no.readonly=TRUE)
+  on.exit(par(prevpar))
+  # generate actual plot:
+  graphics::layout(rbind(1,2), heights=c(2,1))
+  par(mar=c(-0.1,3,0,rightmargin)+0.1, mgp=c(2.0, 0.8, 0))
+  mutrace(x)
+  par(mar=c(3,3,-0.1,rightmargin)+0.1)
+  taumarginal(x)
+  graphics::layout(1)
+  par(mar=c(5,4,4,2)+0.1)
+  invisible()
 }

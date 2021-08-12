@@ -32,20 +32,27 @@
   each other than to any other.}
 }
 \source{A. Gelman, J.B. Carlin, H. Stern, and D.B. Rubin.
-  \emph{Bayesian data analysis}. Chapman & Hall / CRC, Boca Raton, 1997.} 
+  \emph{Bayesian data analysis}. Chapman & Hall / CRC, Boca Raton, 1997.
+} 
 \references{
-  D.B. Rubin. \href{https://doi.org/10.3102/10769986006004377}{Estimation in parallel randomized experiments}.
+  D.B. Rubin.
+  Estimation in parallel randomized experiments.
   \emph{Journal of Educational Statistics}, \bold{6}(4):377-401, 1981.
+  \doi{10.3102/10769986006004377}.
 
-  A. Gelman. \href{https://doi.org/10.1214/06-BA117A}{Prior distributions for variance parameters in hierarchical models}.
+  A. Gelman.
+  Prior distributions for variance parameters in hierarchical models.
   \emph{Bayesian Analysis}, \bold{1}(3):515-534, 2006.
+  \doi{10.1214/06-BA117A}.
+}
+\seealso{
+  \code{\link{traceplot}}.
 }
 \examples{
 data("Rubin1981")
 
 \dontrun{
-# analysis using weakly informative half-Cauchy prior
-# (may take a few seconds to compute!):
+# analysis using a weakly informative half-Cauchy prior:
 schools <- bayesmeta(y=Rubin1981[,"effect"], sigma=Rubin1981[,"stderr"],
                      labels=Rubin1981[,"school"],
                      tau.prior=function(x){return(dhalfcauchy(x, scale=25))})
@@ -55,6 +62,7 @@ summary(schools)
 
 # show shrinkage effect for 8 individual estimates:
 schools$theta
+traceplot(schools)
 }
 }
 \keyword{datasets}

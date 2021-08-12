@@ -52,9 +52,9 @@
   (more or less) symmetric \dQuote{funnel} shape (Sterne \emph{et al},
   2005). Presence of publication bias, i.e., selection bias due to the
   fact that more dramatic effects may have higher chances of publication
-  than less pronounced (or controversial) findings, may cause asymmetry
-  in the plot; especially towards the bottom of the plot, studies may
-  then populate a preferred corner. 
+  than less pronounced (or less controversial) findings, may cause
+  asymmetry in the plot; especially towards the bottom of the plot,
+  studies may then populate a preferred corner. 
 
   Besides the \eqn{k} individual studies that are shown as circles, a
   vertical reference line is shown; its position is determined by
@@ -66,8 +66,9 @@
   \eqn{\theta_i}{theta[i]} with a normal distribution with variance
   \eqn{\sigma_i^2}{sigma[i]^2}. At \eqn{\sigma_i=0}{sigma[i]=0} (top of
   the funnel), this simply corresponds to the \dQuote{plain} prediction
-  interval for \eqn{\theta_i}{theta[i]}. Convolutions are computed using
-  the algorithm described in Roever and Friede (2017).
+  interval for \eqn{\theta_i}{theta[i]}. Convolutions are computed via
+  the \code{\link{convolve}()} function, using the algorithm described
+  in Roever and Friede (2017).
 
   By setting the \dQuote{\code{FE=TRUE}} argument, one may request a
   \dQuote{fixed effect} (FE) funnel along with the \dQuote{random
@@ -76,7 +77,7 @@
   \emph{homogeneity} (\eqn{\tau=0}).
 }
 \note{Especially for few studies (small \eqn{k}), the conclusions from a
-  forest plot are usually not very obvious (Sterne \emph{et al}, 2001;
+  forest plot are usually not very obvious (Sterne \emph{et al}, 2011;
   Terrin \emph{et al.}, 2005). Publication bias often requires rather
   large sample sizes to become apparent; funnel plots should hence
   always be interpreted with caution. 
@@ -84,25 +85,32 @@
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
-\references{J.A.C. Sterne, B.J. Becker and M. Egger.
-  \href{https://doi.org/10.1002/0470870168.ch5}{The funnel plot}.
+\references{
+  J.A.C. Sterne, B.J. Becker and M. Egger.
+  The funnel plot.
   In: H.R. Rothstein, A.J. Sutton and M. Borenstein, eds.
   \emph{Publication bias in meta-analysis - prevention,
         assessment and adjustments}.
   Wiley and Sons, 2005 (Chapter 5).
+  \doi{10.1002/0470870168.ch5}.
 
+  J.A.C. Sterne \emph{et al}.
+  Recommendations for examining and interpreting funnel plot asymmetry
+  in meta-analyses of randomised controlled trials.
+  \emph{BMJ}, \bold{343}:d4002, 2011.
+  \doi{10.1136/bmj.d4002}.
+  
   N. Terrin, C.H. Schmid and J. Lau.
-  \href{https://doi.org/10.1016/j.jclinepi.2005.01.006}{In an empirical
-  evaluation of the funnel plot, researchers could not visually identify
-  publication bias}. \emph{Journal of Clinical Epidemiology},
-  \bold{58}(9):894-901, 2005.
+  In an empirical evaluation of the funnel plot, researchers could not
+  visually identify publication bias.
+  \emph{Journal of Clinical Epidemiology}, \bold{58}(9):894-901, 2005.
+  \doi{10.1016/j.jclinepi.2005.01.006}.
 
   C. Roever, T. Friede.
-  \href{https://doi.org/10.1080/10618600.2016.1276840}{Discrete
-  approximation of a mixture distribution via restricted divergence}.
+  Discrete approximation of a mixture distribution via restricted divergence.
   \emph{Journal of Computational and Graphical Statistics},
   \bold{26}(1):217-222, 2017.
-
+  \doi{10.1080/10618600.2016.1276840}.
 } 
 \seealso{
   \code{\link{bayesmeta}}, \code{\link[metafor]{funnel}}

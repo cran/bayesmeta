@@ -107,30 +107,34 @@
   Vol. 5 of \emph{CBMS Regional Conference Series in Probability and
     Statistics}, 
   Institute of Mathematical Statistics, Hayward, CA, USA, 1995.
-
+  
   C. Roever, T. Friede.
-  \href{https://doi.org/10.1080/10618600.2016.1276840}{Discrete
-  approximation of a mixture distribution via restricted divergence}.
+  Discrete approximation of a mixture distribution via restricted divergence.
   \emph{Journal of Computational and Graphical Statistics},
   \bold{26}(1):217-222, 2017.
+  \doi{10.1080/10618600.2016.1276840}.
 
   C. Roever.
-  \href{https://www.doi.org/10.18637/jss.v093.i06}{Bayesian random-effects meta-analysis using the bayesmeta R package}.
+  Bayesian random-effects meta-analysis using the bayesmeta R package.
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
+  \doi{10.18637/jss.v093.i06}.
   
   C. Roever, R. Bender, S. Dias, C.H. Schmid, H. Schmidli, S. Sturtz,
   S. Weber, T. Friede.
   On weakly informative prior distributions for the heterogeneity
   parameter in Bayesian random-effects meta-analysis.
-  \emph{\href{https://arxiv.org/abs/2007.08352}{arXiv preprint 2007.08352}}
-  (submitted for publication), 2020.
+  \emph{Research Synthesis Methods}, \bold{12}(4):448-474, 2021.
+  \doi{10.1002/jrsm.1475}.
   
   W.E. Seidel. Mixture models.
-  In M. Lovric (ed.) \emph{International Encyclopedia of Statistical
-  Science}, Springer, Heidelberg, pp. 827-829, 2010.
+  In: M. Lovric (ed.),
+  \emph{International Encyclopedia of Statistical Science},
+  Springer, Heidelberg, pp. 827-829, 2010.
 
-  D.J. Spiegelhalter, K.R. Abrams, J.P.Myles. \emph{Bayesian approaches
-  to clinical trials and health-care evaluation}. Wiley & Sons, 2004.
+  D.J. Spiegelhalter, K.R. Abrams, J.P.Myles.
+  \emph{Bayesian approaches to clinical trials and health-care
+    evaluation}. 
+  Wiley & Sons, 2004.
 }
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}

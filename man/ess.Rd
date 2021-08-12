@@ -1,22 +1,27 @@
-\name{ess.elir}
-\alias{ess.elir}
+\name{ess}
+\alias{ess}
+\alias{ess.bayesmeta}
 \concept{Effective sample size (ESS)}
 \title{
-  Expected local-information-ratio ESS
+  Effective sample size (ESS)
 }
 \description{
-  This function computes \eqn{ESS_{ELIR}}{ESS_ELIR}, the \emph{expected
-    local-information-ratio ESS (effective sample size)} of a posterior
+  This function computes the effective sample size (ESS) of a posterior
   predictive distribution.
 }
 \usage{
-  ess.elir(object, uisd)
+  ess(object, ...)
+  \method{ess}{bayesmeta}(object, uisd, method=c("elir", "vr", "pr", "mtm.pt"), ...)
 }
 \arguments{
   \item{object}{a \code{bayesmeta} object.}
   \item{uisd}{the \emph{unit infomation standard deviation}
     (a single numerical value, \emph{or} a \code{function} of the
-    parameter (\eqn{\theta}{theta})).}
+    parameter (\eqn{\mu}{mu})).}
+  \item{method}{a character string specifying the method to be used for
+    ESS computation. By default, the expected local-information-ratio
+    ESS (\eqn{ESS_{ELIR}}{ESS_ELIR}) is returned.}
+  \item{...}{additional arguments}
 }
 \details{
   The information conveyed by a prior distribution may often be
@@ -27,10 +32,8 @@
   al., 2014). In the context of the normal-normal hierarchical model
   (NNHM), the MAP prior results as the (posterior) predictive
   distribution for a \dQuote{new} study mean
-  \eqn{\theta_{k+1}}{theta[k+1]}. This function computes the \emph{expected
-    local-information-ratio ESS (\eqn{ESS_{ELIR}}{ESS_ELIR})}, which was
-  proposed by Neuenschwander et al. (2020), for the posterior predictive
-  distribution based on a \code{bayesmeta} object.
+  \eqn{\theta_{k+1}}{theta[k+1]}. This function computes the ESS for the
+  posterior predictive distribution based on a \code{bayesmeta} object.
 
   Within the NNHM, the notion of an effective sample size requires the
   specification of a \emph{unit information standard deviation (UISD)}
@@ -47,33 +50,44 @@
 
   Specifying the UISD as a constant is often an approximation,
   sometimes it is also possible to specify the UISD as a function of the
-  parameter (\eqn{\theta}{theta}). For example, in case the outcome in
+  parameter (\eqn{\mu}{mu}). For example, in case the outcome in
   the meta-analyses are log-odds, then the UISD varies with the (log-)
-  odds and is given by \eqn{2\,\mathrm{cosh}(\theta/2)}{2*cosh(theta/2)}
-  (see also the example below). 
+  odds and is given by \eqn{2\,\mathrm{cosh}(\mu/2)}{2*cosh(mu/2)}
+  (see also the example below).
+
+  The ESS may be computed or approximated in several ways.
+  Possible choices here are:
+  \itemize{
+    \item \code{"elir"}: the \emph{expected local-information-ratio (ELIR)} method (the default),
+    \item \code{"vr"}: the \emph{variance ratio (VR)} method,
+    \item \code{"pr"}: the \emph{precision ratio (PR)} method,
+    \item \code{"mtm.pt"}: the \emph{Morita-Thall-Mueller / Pennello-Thompson (MTM.PM)} method.
+  }
+  For more details on these see also Neuenschwander et al. (2020).
+  
 }
 \value{
-  The expected local-information-ratio ESS (\eqn{ESS_{ELIR}}{ESS_ELIR}).
+  The effective sample size (ESS).
 }
 \references{
   B. Neuenschwander, S. Weber, H. Schmidli, A. O'Hagan.
-  \href{https://doi.org/10.1111/biom.13252}{Predictively consistent
-  prior effective sample sizes}. \emph{Biometrics},
-  \bold{76}(2):578-587, 2020.
+  Predictively consistent prior effective sample sizes.
+  \emph{Biometrics}, \bold{76}(2):578-587, 2020.
+  \doi{10.1111/biom.13252}.
   
   H. Schmidli, S. Gsteiger, S. Roychoudhury, A. O'Hagan,
   D. Spiegelhalter, B. Neuenschwander.
-  \href{https://doi.org/10.1111/biom.12242}{Robust
-  meta-analytic-predictive priors in clinical trials with historical
-  control information}.
+  Robust meta-analytic-predictive priors in clinical trials with
+  historical control information.
   \emph{Biometrics}, \bold{70}(4):1023-1032, 2014.
+  \doi{10.1111/biom.12242}.
 
   C. Roever, R. Bender, S. Dias, C.H. Schmid, H. Schmidli, S. Sturtz,
   S. Weber, T. Friede.
   On weakly informative prior distributions for the heterogeneity
   parameter in Bayesian random-effects meta-analysis.
-  \emph{\href{https://arxiv.org/abs/2007.08352}{arXiv preprint 2007.08352}}
-  (submitted for publication), 2020.
+  \emph{Research Synthesis Methods}, \bold{12}(4):448-474, 2021.
+  \doi{10.1002/jrsm.1475}.
 }
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
@@ -103,7 +117,7 @@ bm <- bayesmeta(as)
 forestplot(bm, zero=NA, xlab="log-odds")
 
 # compute ESS_ELIR (based on fixed UISD):
-ess.elir(bm, uisd=2.35)  # = 45.7 patients
+ess(bm, uisd=2.35)  # = 45.7 patients
 
 # compute ESS_ELIR based on UISD as a function of the log-odds:
 uisdLogOdds <- function(logodds)
@@ -112,11 +126,11 @@ uisdLogOdds <- function(logodds)
 }
 
 # Note: in the present example, probabilities are
-# at approximately 0.25, corresponding to odds of 1/3.
+# at approximately 0.25, corresponding to odds of 1:3.
 uisdLogOdds(log(1/3))
 # The UISD value of 2.31 roughly matches the above empirical figure.
 
-ess.elir(bm, uisd=uisdLogOdds)  # = 43.4 patients
+ess(bm, uisd=uisdLogOdds)  # = 43.4 patients
 }
 }
 \keyword{ models }

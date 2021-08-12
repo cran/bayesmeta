@@ -109,17 +109,17 @@ RhodesEtAlPrior(outcome=c(NA, "obstetric outcome",
 }
 \references{
   K.M. Rhodes, R.M. Turner, J.P.T. Higgins.
-  \href{https://doi.org/10.1016/j.jclinepi.2014.08.012}{Predictive
-    distributions were developed for the extent of heterogeneity in
-    meta-analyses of continuous outcome data}. \emph{Journal of Clinical
-    Epidemiology}, \bold{68}(1):52-60, 2015.
+  Predictive distributions were developed for the extent of
+  heterogeneity in meta-analyses of continuous outcome data. 
+  \emph{Journal of Clinical Epidemiology}, \bold{68}(1):52-60, 2015.
+  \doi{10.1016/j.jclinepi.2014.08.012}.
   
   C. Roever, R. Bender, S. Dias, C.H. Schmid, H. Schmidli, S. Sturtz,
   S. Weber, T. Friede.
   On weakly informative prior distributions for the heterogeneity
   parameter in Bayesian random-effects meta-analysis.
-  \emph{\href{https://arxiv.org/abs/2007.08352}{arXiv preprint 2007.08352}}
-  (submitted for publication), 2020.
+  \emph{Research Synthesis Methods}, \bold{12}(4):448-474, 2021.
+  \doi{10.1002/jrsm.1475}.
 }
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}

@@ -33,27 +33,28 @@
 }
 \source{
   D. Baeten et al.
-  \href{https://doi.org/10.1016/S0140-6736(13)61134-4}{Anti-interleukin-17A
-  monoclonal antibody secukinumab in treatment of ankylosing
-  spondylitis: a randomised, double-blind, placebo-controlled trial}.
+  Anti-interleukin-17A monoclonal antibody secukinumab in treatment of
+  ankylosing spondylitis: a randomised, double-blind, placebo-controlled
+  trial.
   \emph{The Lancet}, \bold{382}(9906):1705-1713, 2013.
+  \doi{10.1016/S0140-6736(13)61134-4}.
 }
 \seealso{
-  \code{\link{uisd}}, \code{\link{ess.elir}}.
+  \code{\link{uisd}}, \code{\link{ess}}.
 }
 \references{
   C. McLeod et al.
-  \href{https://doi.org/10.3310/hta11280}{Anti-interleukin-17A
-    monoclonal antibody secukinumab in treatment of ankylosing
-    spondylitis: a randomised, double-blind, placebo-controlled trial}.
+  Adalimumab, etanercept, and infliximab for the treatment of ankylosing
+  spondylitis: a systematic review and economic evaluation.
   \emph{Health Technology Assessment}, \bold{11}(28), 2007.
+  \doi{10.3310/hta11280}.
 
   H. Schmidli, S. Gsteiger, S. Roychoudhury, A. O'Hagan,
   D. Spiegelhalter, B. Neuenschwander.
-  \href{https://doi.org/10.1111/biom.12242}{Robust
-  meta-analytic-predictive priors in clinical trials with historical
-  control information}.
+  Robust meta-analytic-predictive priors in clinical trials with
+  historical control information.
   \emph{Biometrics}, \bold{70}(4):1023-1032, 2014.
+  \doi{10.1111/biom.12242}.
 }
 \examples{
 data("BaetenEtAl2013")

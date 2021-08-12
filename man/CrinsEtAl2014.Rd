@@ -37,10 +37,11 @@
   pediatric liver transplant recipients.
 }
 \source{N.D. Crins, C. Roever, A.D. Goralczyk, T. Friede.
-  \href{https://doi.org/10.1111/petr.12362}{Interleukin-2 receptor
-  antagonists for pediatric liver transplant recipients:
-  A systematic review and meta-analysis of controlled studies}.
+  Interleukin-2 receptor antagonists for pediatric liver transplant
+  recipients: A systematic review and meta-analysis of controlled
+  studies.
   \emph{Pediatric Transplantation}, \bold{18}(8):839-850, 2014.
+  \doi{10.1111/petr.12362}.
 }
 \seealso{
   \code{\link{GoralczykEtAl2011}}.
@@ -48,38 +49,39 @@
 \references{T.G. Heffron et al.
   Pediatric liver transplantation with daclizumab induction therapy.
   \emph{Transplantation}, \bold{75}(12):2040-2043, 2003.
+  \doi{10.1097/01.TP.0000065740.69296.DA}.
   
   N.E.M. Gibelli et al.
-  \href{https://doi.org/10.1016/j.transproceed.2004.04.070}{Basiliximab-chimeric
-    anti-IL2-R monoclonal antibody in pediatric liver transplantation:
-    comparative study}.
+  Basiliximab-chimeric anti-IL2-R monoclonal antibody in pediatric liver
+  transplantation: comparative study.
   \emph{Transplantation Proceedings}, \bold{36}(4):956-957, 2004.
+  \doi{10.1016/j.transproceed.2004.04.070}.
 
   S. Schuller et al.
-  \href{https://doi.org/10.1016/j.transproceed.2005.01.023}{Daclizumab 
-    induction therapy associated with tacrolimus-MMF has better outcome
-  compared with tacrolimus-MMF alone in pediatric living donor liver
-  transplantation}.
+  Daclizumab induction therapy associated with tacrolimus-MMF has better
+  outcome compared with tacrolimus-MMF alone in pediatric living donor
+  liver transplantation.
   \emph{Transplantation Proceedings}, \bold{37}(2):1151-1152, 2005.
+  \doi{10.1016/j.transproceed.2005.01.023}.
 
   R. Ganschow et al.
-  \href{https://doi.org/10.1111/j.1399-3046.2005.00371.x}{Long-term
-  results of basiliximab induction immunosuppression in pediatric liver
-  transplant recipients}.
+  Long-term results of basiliximab induction immunosuppression in
+  pediatric liver transplant recipients.
   \emph{Pediatric Transplantation}, \bold{9}(6):741-745, 2005.
+  \doi{10.1111/j.1399-3046.2005.00371.x}.
 
   M. Spada et al.
-  \href{https://doi.org/10.1111/j.1600-6143.2006.01406.x}{Randomized
-  trial of basiliximab induction versus steroid therapy in pediatric
-  liver allograft recipients under tacrolimus
-  immunosuppression}.
+  Randomized trial of basiliximab induction versus steroid therapy in
+  pediatric liver allograft recipients under tacrolimus immunosuppression.
   \emph{American Journal of Transplantation}, \bold{6}(8):1913-1921, 2006.
-
+  \doi{10.1111/j.1600-6143.2006.01406.x}.
+  
   J.M. Gras et al.
-  \href{https://doi.org/10.1002/lt.21397}{Steroid-free,
-  tacrolimus-basiliximab immunosuppression in pediatric liver
-  transplantation: Clinical and pharmacoeconomic study in 50 children}.
-  \emph{Liver Transplantation}, \bold{14}(4):469-477, 2008.}
+  Steroid-free, tacrolimus-basiliximab immunosuppression in pediatric
+  liver transplantation: Clinical and pharmacoeconomic study in 50 children.
+  \emph{Liver Transplantation}, \bold{14}(4):469-477, 2008.
+  \doi{10.1002/lt.21397}.
+}
 \examples{
 data("CrinsEtAl2014")
 \dontrun{

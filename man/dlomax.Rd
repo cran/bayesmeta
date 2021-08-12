@@ -74,8 +74,8 @@
   S. Weber, T. Friede.
   On weakly informative prior distributions for the heterogeneity
   parameter in Bayesian random-effects meta-analysis.
-  \emph{\href{https://arxiv.org/abs/2007.08352}{arXiv preprint 2007.08352}}
-  (submitted for publication), 2020.
+  \emph{Research Synthesis Methods}, \bold{12}(4):448-474, 2021.
+  \doi{10.1002/jrsm.1475}.
   
   N.L. Johnson, S. Kotz, N. Balakrishnan. \emph{Continuous univariate
   distributions}, volume 1. Wiley, New York, 2nd edition, 1994.

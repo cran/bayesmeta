@@ -104,17 +104,18 @@ TurnerEtAlPrior(outcome=c(NA, "all-cause mortality", "obstetric outcomes",
 }
 \references{
   R.M. Turner, D. Jackson, Y. Wei, S.G. Thompson,
-  J.P.T. Higgins. \href{https://doi.org/10.1002/sim.6381}{Predictive
-    distributions for between-study heterogeneity and simple methods for
-  their application in Bayesian meta-analysis}. \emph{Statistics in
-  Medicine}, \bold{34}(6):984-998, 2015.
+  J.P.T. Higgins.
+  Predictive distributions for between-study heterogeneity and simple
+  methods for their application in Bayesian meta-analysis.
+  \emph{Statistics in Medicine}, \bold{34}(6):984-998, 2015.
+  \doi{10.1002/sim.6381}.
 
   C. Roever, R. Bender, S. Dias, C.H. Schmid, H. Schmidli, S. Sturtz,
   S. Weber, T. Friede.
   On weakly informative prior distributions for the heterogeneity
-  parameter in Bayesian random-effects meta-analysis.
-  \emph{\href{https://arxiv.org/abs/2007.08352}{arXiv preprint 2007.08352}}
-  (submitted for publication), 2020.
+  parameter in Bayesian random-effects meta-analysis. 
+  \emph{Research Synthesis Methods}, \bold{12}(4):448-474, 2021.
+  \doi{10.1002/jrsm.1475}.
 }
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
