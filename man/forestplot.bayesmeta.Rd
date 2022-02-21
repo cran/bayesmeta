@@ -61,6 +61,14 @@
 \note{This function is based on the \pkg{forestplot} package's
       \dQuote{\code{\link[forestplot]{forestplot}()}} function.
 }
+\value{
+  A list containing the following elements:
+  \item{data}{a \code{matrix} of estimates and CIs.}
+  \item{shrinkage}{a \code{matrix} of shrinkage estimates and CIs.}
+  \item{labeltext}{a \code{matrix} of table entries.}
+  \item{forestplot}{result of the call to the
+    \sQuote{\code{forestplot()}} function.}
+}
 \author{
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }

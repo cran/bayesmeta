@@ -1,6 +1,8 @@
-export(bayesmeta,
+export(bayesmeta, bmr,
        print.bayesmeta, summary.bayesmeta, plot.bayesmeta,
-       forestplot.bayesmeta, forestplot.escalc,
+       print.bmr, summary.bmr, print.summary.bmr,
+       plot.bmr, pairs.bmr,
+       forestplot.bayesmeta, forestplot.escalc, forestplot.bmr,
        dlomax, plomax, qlomax, rlomax, elomax, vlomax,
        dhalfnormal, phalfnormal, qhalfnormal, rhalfnormal,
          ehalfnormal, vhalfnormal,
@@ -14,7 +16,8 @@ export(bayesmeta,
        TurnerEtAlParameters, TurnerEtAlPrior,
        RhodesEtAlParameters, RhodesEtAlPrior,
        convolve, funnel.bayesmeta,
-       normalmixture, pppvalue, uisd, ess, weightsplot, traceplot)
+       normalmixture, pppvalue, uisd, ess, weightsplot, traceplot,
+       kldiv)
 
 S3method(bayesmeta, default)
 S3method(bayesmeta, escalc)
@@ -30,23 +33,35 @@ S3method(uisd, escalc)
 S3method(ess, bayesmeta)
 S3method(weightsplot, bayesmeta)
 S3method(traceplot, bayesmeta)
+S3method(bmr, default)
+S3method(bmr, escalc)
+S3method(print, bmr)
+S3method(summary, bmr)
+S3method(print, summary.bmr)
+S3method(plot, bmr)
+S3method(pairs, bmr)
+S3method(forestplot, bmr)
+S3method(traceplot, bmr)
 
 importFrom("grDevices",
-           "grey", "rainbow")
+           "grey", "rainbow", "rgb")
 importFrom("graphics",
            "abline", "axis", "barplot", "box", "contour", "image", "layout",
            "lines", "matlines", "mtext", "par", "plot", "points", "polygon",
            "text")
 importFrom("stats",
-           "dcauchy", "dlnorm", "dlogis", "dnorm", "dt", "integrate", "optim",
-           "optimize", "pcauchy", "plnorm", "plogis", "pnorm", "pt", "qcauchy",
-           "qchisq", "qlnorm", "qlogis", "qnorm", "qt", "rcauchy", "rexp",
-           "rlogis", "rnorm", "rt", "runif", "uniroot")
+           "dcauchy", "dlnorm", "dlogis", "dnorm", "dt", "integrate", "median",
+           "optim", "optimize", "pcauchy", "plnorm", "plogis", "pnorm",
+           "pt", "qcauchy", "qchisq", "qlnorm", "qlogis", "qnorm", "qt",
+           "rcauchy", "rexp", "rlogis", "rmultinom", "rnorm", "rt", "runif",
+           "uniroot")
 importFrom("forestplot",
            "forestplot", "fpDrawPointCI", "fpDrawSummaryCI","fpDrawBarCI",
            "fpColors")
 importFrom("metafor",
            "forest", "funnel")
+importFrom("mvtnorm",
+           "dmvnorm", "rmvnorm")
 importFrom("numDeriv",
            "hessian")
 importFrom("parallel",

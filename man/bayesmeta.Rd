@@ -535,6 +535,7 @@
 \seealso{
   \code{\link{forestplot.bayesmeta}}, \code{\link{plot.bayesmeta}},
   \code{\link[metafor]{escalc}},
+  \code{\link{bmr}},
   \code{\link[compute.es:compute.es-package]{compute.es}}.
 }
 \examples{

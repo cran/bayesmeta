@@ -57,7 +57,12 @@
   \doi{10.1111/biom.12242}.
 }
 \examples{
+# load data:
 data("BaetenEtAl2013")
+
+# show data:
+BaetenEtAl2013
+
 \dontrun{
 # compute effect sizes (logarithmic odds) from the count data:
 as <- escalc(xi=events, ni=total, slab=study,
@@ -79,8 +84,8 @@ forestplot(bm, exponentiate=TRUE, xlab="odds", zero=NA)
 # in terms of log-odds:
 bm$summary[,"theta"]
 # in terms of odds:
-logodds <- bm$summary[c(2,5,6), "theta"]
-exp(logodds)
+logodds <- exp(bm$summary[c(2,5,6), "theta"])
+logodds
 # in terms of probabilities:
 (exp(logodds) / (exp(logodds) + 1))
 

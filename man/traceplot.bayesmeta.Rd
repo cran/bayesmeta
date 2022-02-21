@@ -2,6 +2,7 @@
 \alias{traceplot}
 \alias{traceplot.default}
 \alias{traceplot.bayesmeta}
+\alias{traceplot.bmr}
 \title{
   Illustrate conditional means of overall effect as well as study-specific
   estimates as a function of heterogeneity.
@@ -15,10 +16,12 @@
   traceplot(x, ...)
   \method{traceplot}{bayesmeta}(x, mulim, taulim, ci=FALSE,
           rightmargin=8, col=rainbow(x$k), ...)
+  \method{traceplot}{bmr}(x, mulim, taulim, ci=FALSE,
+          rightmargin=8, col=rainbow(x$k), ...)
 }
 \arguments{
   \item{x}{
-    a \code{\link{bayesmeta}} object.
+    a \code{\link{bayesmeta}} or \code{\link{bmr}}object.
   }
   \item{mulim, taulim}{(optional) ranges for the effect (mu) and
     heterogeneity (tau) axes. If only one value is given for
@@ -75,7 +78,7 @@
   \doi{10.3102/10769986006004377}.
 } 
 \seealso{
-  \code{\link{bayesmeta}}.
+  \code{\link{bayesmeta}}, \code{\link{bmr}}.
 }
 \examples{
 # load example data:

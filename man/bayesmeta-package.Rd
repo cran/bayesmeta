@@ -2,7 +2,7 @@
 \alias{bayesmeta-package}
 \docType{package}
 \title{
-  Bayesian Random-Effects Meta-Analysis
+  Bayesian Random-Effects Meta-Analysis and Meta-Regression
 }
 \description{
   Description: A collection of functions allowing to derive the
@@ -16,8 +16,8 @@
   \tabular{ll}{
     Package: \tab bayesmeta\cr
     Type:    \tab Package\cr
-    Version: \tab 2.7\cr
-    Date:    \tab 2021-08-11\cr
+    Version: \tab 3.0\cr
+    Date:    \tab 2022-02-21\cr
     License: \tab GPL (>=2)
   }
   The main functionality is provided by the \code{\link{bayesmeta}()}
@@ -25,12 +25,14 @@
   errors) and prior information (effect and heterogeneity priors), and
   returns an object containing functions that allow to derive posterior
   quantities like joint or marginal densities, quantiles, etc.
+  The \code{\link{bmr}()} function extends the approach to meta-regression.
 }
 \author{
 Christian Roever <christian.roever@med.uni-goettingen.de>
 }
 \seealso{
-  \code{\link{forestplot.bayesmeta}}, \code{\link{plot.bayesmeta}}.
+  \code{\link{forestplot.bayesmeta}}, \code{\link{plot.bayesmeta}},
+  \code{\link{bmr}}.
 }
 \references{
   C. Roever.
