@@ -70,7 +70,8 @@
 \seealso{
   \code{\link[metafor]{escalc}},
   \code{\link[forestplot]{forestplot}},
-  \code{\link{forestplot.bayesmeta}}.
+  \code{\link{forestplot.bayesmeta}},
+  \code{\link{forestplot.bmr}}.
 }
 \examples{
 # load data:

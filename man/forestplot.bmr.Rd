@@ -90,6 +90,10 @@
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
 \references{
+  C. Roever, T. Friede.
+  Using the bayesmeta R package for Bayesian random-effects meta-regression.
+  \href{https://arxiv.org/abs/2209.06004}{arXiv preprint 2209.06004}, 2022.
+
   C. Roever.
   Bayesian random-effects meta-analysis using the bayesmeta R package.
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.

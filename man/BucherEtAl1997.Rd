@@ -41,7 +41,12 @@
   \emph{Journal of Clinical Epidemiology}, \bold{50}(6):683-691, 1997.
   \doi{10.1016/S0895-4356(97)00049-8}.
 }
-\references{J.P.T. Higgins, J. Thomas, J. Chandler, M. Cumpston, T. Li,
+\references{
+  C. Roever, T. Friede.
+  Using the bayesmeta R package for Bayesian random-effects meta-regression.
+  \href{https://arxiv.org/abs/2209.06004}{arXiv preprint 2209.06004}, 2022.
+
+  J.P.T. Higgins, J. Thomas, J. Chandler, M. Cumpston, T. Li,
   M.J. Page, V.A. Welch (eds.).
   \emph{Cochrane handbook for systematic reviews of interventions}.
   Wiley and Sons, 2nd edition, 2019.

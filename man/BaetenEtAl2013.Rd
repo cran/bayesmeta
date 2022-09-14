@@ -83,9 +83,10 @@ forestplot(bm, exponentiate=TRUE, xlab="odds", zero=NA)
 # show posterior predictive distribution --
 # in terms of log-odds:
 bm$summary[,"theta"]
-# in terms of odds:
-logodds <- exp(bm$summary[c(2,5,6), "theta"])
+logodds <- bm$summary[c(2,5,6), "theta"]
 logodds
+# in terms of odds:
+exp(logodds)
 # in terms of probabilities:
 (exp(logodds) / (exp(logodds) + 1))
 

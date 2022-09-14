@@ -63,9 +63,15 @@ beta.convert <- function(beta, which.beta, d, betanames)
   if (missing(which.beta)) { # default "which.beta"
     betaIdx <- 1:d
   } else {  # try to make sense of "which.beta" argument; general sanity checks:
+    #if (!is.vector(which.beta)
+    #    || (!is.element(class(which.beta),
+    #                    c("numeric", "integer", "logical", "character"))
+    #        | (length(which.beta) > d))) {
+    #  warning("Cannot make sense of \"which.beta\" argument (1).")
+    #}
     if (!is.vector(which.beta)
-        || (!is.element(class(which.beta),
-                        c("numeric", "integer", "logical", "character"))
+        || (!inherits(which.beta,
+                      c("numeric", "integer", "logical", "character"))
             | (length(which.beta) > d))) {
       warning("Cannot make sense of \"which.beta\" argument (1).")
     }
@@ -430,13 +436,23 @@ bmr.default <- function(y, sigma, labels = names(y),
               missing(beta) || (is.matrix(beta) | is.data.frame(beta) | is.vector(beta)))
     if (!missing(beta)) {
       if (!missing(which.beta)) { # general sanity checks
+        #if (!is.vector(which.beta)
+        #    || (!is.element(class(which.beta),
+        #                    c("numeric", "integer", "logical", "character"))
+        #        | ((class(which.beta)=="logical")
+        #            && ((length(which.beta) != d) | (sum(which.beta)!=1)))
+        #        | ((is.element(class(which.beta),
+        #                       c("numeric", "integer", "character"))
+        #            & (length(which.beta) != 1))))) {
+        #  warning("Cannot make sense of \"which.beta\" argument (1).")
+        #}
         if (!is.vector(which.beta)
-            || (!is.element(class(which.beta),
-                            c("numeric", "integer", "logical", "character"))
-                | ((class(which.beta)=="logical")
+            || (!inherits(which.beta,
+                          c("numeric", "integer", "logical", "character"))
+                | (inherits(which.beta, "logical")
                     && ((length(which.beta) != d) | (sum(which.beta)!=1)))
-                | ((is.element(class(which.beta),
-                               c("numeric", "integer", "character"))
+                | ((inherits(which.beta,
+                             c("numeric", "integer", "character"))
                     & (length(which.beta) != 1))))) {
           warning("Cannot make sense of \"which.beta\" argument (1).")
         }
@@ -517,13 +533,23 @@ bmr.default <- function(y, sigma, labels = names(y),
               missing(beta.p) || (is.matrix(beta.p) | is.data.frame(beta.p) | is.vector(beta.p)))
     if (!missing(beta.p)) {
       if (!missing(which.beta)) { # general sanity checks
+        #if (!is.vector(which.beta)
+        #    || (!is.element(class(which.beta),
+        #                    c("numeric", "integer", "logical", "character"))
+        #        | ((class(which.beta)=="logical")
+        #            & ((length(which.beta) != d) | (sum(which.beta) != 1)))
+        #        | ((is.element(class(which.beta),
+        #                       c("numeric", "integer", "character"))
+        #            & (length(which.beta) != 1))))) {
+        #  warning("Cannot make sense of \"which.beta\" argument (1).")
+        #}
         if (!is.vector(which.beta)
-            || (!is.element(class(which.beta),
-                            c("numeric", "integer", "logical", "character"))
-                | ((class(which.beta)=="logical")
-                    & ((length(which.beta) != d) | (sum(which.beta) != 1)))
-                | ((is.element(class(which.beta),
-                               c("numeric", "integer", "character"))
+            || (!inherits(which.beta,
+                          c("numeric", "integer", "logical", "character"))
+                | (inherits(which.beta,"logical")
+                   & ((length(which.beta) != d) | (sum(which.beta) != 1)))
+                | ((inherits(which.beta,
+                             c("numeric", "integer", "character"))
                     & (length(which.beta) != 1))))) {
           warning("Cannot make sense of \"which.beta\" argument (1).")
         }
@@ -1248,7 +1274,7 @@ bmr.default <- function(y, sigma, labels = names(y),
                                lower=0, upper=Inf,
                                rel.tol=rel.tol.integrate,
                                abs.tol=abs.tol.integrate)$value, silent=TRUE)
-  if (class(expectation)=="try-error") {
+  if (inherits(expectation,"try-error")) {
     expectation <- NA
     variance <- NA
   } else {
@@ -1256,7 +1282,7 @@ bmr.default <- function(y, sigma, labels = names(y),
                               lower=0, upper=Inf,
                               rel.tol=rel.tol.integrate,
                               abs.tol=abs.tol.integrate)$value, silent=TRUE)
-    if (class(variance)=="try-error")
+    if (inherits(variance, "try-error"))
       variance <- NA
   }
   sumstats[c("mean","sd"), "tau"] <- c(expectation, sqrt(variance))
@@ -1583,7 +1609,7 @@ summary.bmr <- function(object, X.mean, X.prediction, ...)
 {
   ############################################################
   # default treatment of "X.mean" argument:
-  if (missing(X.mean) || (is.null(X.mean) || is.na(X.mean))) {
+  if (missing(X.mean) || (is.null(X.mean) || all(is.na(X.mean)))) {
       X.mean <- NULL
       meanNumber <- 0
   } else {
@@ -1597,7 +1623,7 @@ summary.bmr <- function(object, X.mean, X.prediction, ...)
     meanNumber <- nrow(X.mean)
   }
   # default treatment of "X.prediction" argument:
-  if (missing(X.prediction) || (is.null(X.prediction) || is.na(X.prediction))) {
+  if (missing(X.prediction) || (is.null(X.prediction) || all(is.na(X.prediction)))) {
       X.prediction <- NULL
       predNumber <- 0
   } else {
@@ -1672,7 +1698,7 @@ summary.bmr <- function(object, X.mean, X.prediction, ...)
         }
       }
       maxi <- optimize(function(b){return(object$dpredict(theta=b, x=X.prediction[i,], mean=FALSE))},
-                       lower=summary.mean[,"95% lower"], upper=summary.mean[,"95% upper"],
+                       lower=summary.pred[,"95% lower"], upper=summary.pred[,"95% upper"],
                        maximum=TRUE)
       summary.pred[i,"mode"] <- maxi$maximum
     }
@@ -2195,6 +2221,7 @@ forestplot.bmr <- function(x,
 
 
 traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
+                          ylab="effect",
                           rightmargin=8, col=rainbow(x$k), ...)
 {
   stopifnot(missing(mulim) || (length(mulim) == 2),
@@ -2241,7 +2268,7 @@ traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
       cm.indiv[,,i] <- x$shrink.moment(tau=tau, which=i)
     }
     plot(taurange, murange,         
-         type="n", axes=FALSE, xlab="", ylab="effect", main="", ...)
+         type="n", axes=FALSE, xlab="", ylab=ylab, main="", ...)
     abline(v=vertlines, col=gridcol)
     abline(h=pretty(murange), col=gridcol)
     abline(v=0, col=grey(0.40))

@@ -40,6 +40,10 @@
   \bold{216}(2):110-120, 2017.
   \doi{10.1016/j.ajog.2016.09.076}.
 }
+\references{C. Roever, T. Friede.
+  Using the bayesmeta R package for Bayesian random-effects meta-regression.
+  \href{https://arxiv.org/abs/2209.06004}{arXiv preprint 2209.06004}, 2022.
+}
 \seealso{
   \code{\link{bmr}}, \code{\link[metafor]{escalc}},
   \code{\link[stats]{model.matrix}}.

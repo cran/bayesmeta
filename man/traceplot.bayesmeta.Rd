@@ -15,8 +15,10 @@
 \usage{
   traceplot(x, ...)
   \method{traceplot}{bayesmeta}(x, mulim, taulim, ci=FALSE,
+          ylab="effect",
           rightmargin=8, col=rainbow(x$k), ...)
   \method{traceplot}{bmr}(x, mulim, taulim, ci=FALSE,
+          ylab="effect",
           rightmargin=8, col=rainbow(x$k), ...)
 }
 \arguments{
@@ -31,6 +33,9 @@
   \item{ci}{
     a logical flag indicating whether to also show (conditional)
     confidence intervals.
+  }
+  \item{ylab}{
+    a y-axis label.
   }
   \item{rightmargin}{
     an additional margin to be added to the right side of the plot, in
@@ -51,7 +56,7 @@
   the study-specific parameters (\eqn{\theta_i}{theta[i]}) are again
   normal. The conditional normal moments (mean and variance) then vary
   as functions of the heterogeneity; for large heterogeneity, the
-  shrinkage estimates approach the original data (\eqn{\mu_i}{mu[i]}),
+  shrinkage estimates approach the original data (\eqn{y_i}{y[i]}),
   while the overall mean approaches an un-weighted overall average. For
   small heterogeneity, both overall mean as well as study-specific
   estimates are increasingly \emph{shrunk} towards the
@@ -72,6 +77,10 @@
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
   \doi{10.18637/jss.v093.i06}.
   
+  C. Roever, T. Friede.
+  Using the bayesmeta R package for Bayesian random-effects meta-regression.
+  \href{https://arxiv.org/abs/2209.06004}{arXiv preprint 2209.06004}, 2022.
+
   D.B. Rubin.
   Estimation in parallel randomized experiments.
   \emph{Journal of Educational Statistics}, \bold{6}(4):377-401, 1981.

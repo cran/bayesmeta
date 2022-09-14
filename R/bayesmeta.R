@@ -792,7 +792,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
                                    c("tau","mu","theta")))
   expectation <- try(integrate(function(x)return(dposterior(x)*x), lower=0, upper=Inf,
                                rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)$value, silent=TRUE)
-  if (class(expectation)=="try-error") {
+  if (inherits(expectation, "try-error")) {
     expectation <- NA
     variance <- NA
   }
@@ -800,7 +800,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     variance <- try(integrate(function(x)return(dposterior(x)*(x-expectation)^2), lower=0, upper=Inf,
                               rel.tol=rel.tol.integrate, abs.tol=abs.tol.integrate)$value,
                     silent=TRUE)
-    if (class(variance)=="try-error")
+    if (inherits(variance, "try-error"))
       variance <- NA
   }
   sumstats[c("mean","sd"),"tau"] <- c(expectation, sqrt(variance))
@@ -3565,7 +3565,7 @@ weightsplot <- function(x, ...)
 
 weightsplot.bayesmeta <- function(x, individual=FALSE, ordered=TRUE,
                                   extramargin=4,
-                                  priorlabel="prior mean", main, ...)
+                                  priorlabel="prior mean", main, xlim,...)
 # Illustrate posterior mean weights (percentages)
 # for overall mean or shrinkage estimates in a bar plot
 # (See https://doi.org/10.1002/bimj.202000227 ).
@@ -3609,9 +3609,12 @@ weightsplot.bayesmeta <- function(x, individual=FALSE, ordered=TRUE,
     on.exit(par(mar=parmar))
     par(mar = parmar + c(0, extramargin, 0, 0))
   }
+  if (missing(xlim)) {
+    xlim <- c(0, maxweight * 1.15)
+  }
   bp <- graphics::barplot(rev(plotdat[,"weight"])*100, horiz=TRUE,
                           names.arg=rev(plotdat[,"label"]), las=1,
-                          xlim=c(0, maxweight * 1.15),
+                          xlim=xlim,
                           xlab="weight (%)", ylab="", main=main, ...)
   graphics::text(rev(plotdat[,"weight"])*100 + maxweight*0.02, bp[,1],
                  rev(plotdat[,"percentage"]), adj=c(0,0.5))
@@ -3626,11 +3629,14 @@ traceplot <- function(x, ...)
 
 
 traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
+                                ylab="effect",
                                 rightmargin=8, col=rainbow(x$k), ...)
 {
   stopifnot(missing(mulim) || (length(mulim) == 2),
             missing(taulim) || (length(taulim) <= 2),
             rightmargin >= 0, length(col) == x$k)
+  q975 <- qnorm(0.975)
+  gridcol <- "grey85"
   # convert "taulim" and "mulim" arguments
   # to eventual "taurange" and "murange" vectors:
   if (!missing(taulim) && all(is.finite(taulim))) {
@@ -3657,8 +3663,6 @@ traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
   }
   
   vertlines <- pretty(taurange)
-  gridcol <- "grey85"
-  q975 <- qnorm(0.975)
 
   mutrace <- function(x)
   {
@@ -3668,7 +3672,7 @@ traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
     cm.overall <- x$cond.moment(tau=tau)
     cm.indiv   <- x$cond.moment(tau=tau, indiv=TRUE)
     plot(taurange, murange,         
-         type="n", axes=FALSE, xlab="", ylab="effect", main="", ...)
+         type="n", axes=FALSE, xlab="", ylab=ylab, main="", ...)
     abline(v=vertlines, col=gridcol)
     abline(h=pretty(murange), col=gridcol)
     abline(v=0, col=grey(0.40))

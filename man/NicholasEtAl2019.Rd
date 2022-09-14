@@ -31,6 +31,10 @@
   \emph{Multiple Sclerosis Journal}, \bold{25}(11):1462-1471, 2019.
   \doi{10.1177/1352458518794063}.
 }
+\references{C. Roever, T. Friede.
+  Using the bayesmeta R package for Bayesian random-effects meta-regression.
+  \href{https://arxiv.org/abs/2209.06004}{arXiv preprint 2209.06004}, 2022.
+}
 \examples{
 # load data:
 data("NicholasEtAl2019")

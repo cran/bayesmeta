@@ -1,8 +1,8 @@
 Package: bayesmeta
 Type: Package
 Title: Bayesian Random-Effects Meta-Analysis and Meta-Regression
-Version: 3.0
-Date: 2022-02-21
+Version: 3.1
+Date: 2022-09-14
 Authors@R: c(person(given="Christian", family="Roever", role=c("aut","cre"), 
                     email="christian.roever@med.uni-goettingen.de",
                     comment=c(ORCID="0000-0002-6911-698X")),
@@ -13,13 +13,13 @@ Maintainer: Christian Roever <christian.roever@med.uni-goettingen.de>
 Depends: forestplot (>= 2.0.0), metafor (>= 2.0-0), mvtnorm (>= 1.1-1),
         numDeriv (>= 2016.8-1.1)
 Suggests: compute.es, knitr, rmarkdown, R.rsp
-Description: A collection of functions allowing to derive the posterior distribution of the two parameters in a random-effects meta-analysis, and providing functionality to evaluate joint and marginal posterior probability distributions, predictive distributions, shrinkage effects, posterior predictive p-values, etc.; For more details, see also Roever C (2020) <doi:10.18637/jss.v093.i06>.
+Description: A collection of functions allowing to derive the posterior distribution of the model parameters in random-effects meta-analysis or meta-regression, and providing functionality to evaluate joint and marginal posterior probability distributions, predictive distributions, shrinkage effects, posterior predictive p-values, etc.; For more details, see also Roever C (2020) <doi:10.18637/jss.v093.i06>, or Roever C and Friede T (2022) <arXiv:2209.06004>.
 License: GPL (>= 2)
 URL: https://gitlab.gwdg.de/croever/bayesmeta
 VignetteBuilder: knitr, R.rsp
 NeedsCompilation: no
-Packaged: 2022-02-21 11:31:19 UTC; christian
+Packaged: 2022-09-14 07:48:12 UTC; christian
 Author: Christian Roever [aut, cre] (<https://orcid.org/0000-0002-6911-698X>),
   Tim Friede [ctb] (<https://orcid.org/0000-0001-5347-7441>)
 Repository: CRAN
-Date/Publication: 2022-02-21 13:40:02 UTC
+Date/Publication: 2022-09-14 08:50:02 UTC

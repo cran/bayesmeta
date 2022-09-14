@@ -46,7 +46,17 @@
 \seealso{
   \code{\link{GoralczykEtAl2011}}.
 }
-\references{T.G. Heffron et al.
+\references{
+  C. Roever.
+  Bayesian random-effects meta-analysis using the bayesmeta R package.
+  \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.
+  \doi{10.18637/jss.v093.i06}.
+  
+  C. Roever, T. Friede.
+  Using the bayesmeta R package for Bayesian random-effects meta-regression.
+  \href{https://arxiv.org/abs/2209.06004}{arXiv preprint 2209.06004}, 2022.
+
+  T.G. Heffron et al.
   Pediatric liver transplantation with daclizumab induction therapy.
   \emph{Transplantation}, \bold{75}(12):2040-2043, 2003.
   \doi{10.1097/01.TP.0000065740.69296.DA}.

@@ -13,7 +13,7 @@
 \usage{
   weightsplot(x, ...)
   \method{weightsplot}{bayesmeta}(x, individual=FALSE, ordered=TRUE,
-            extramargin=4, priorlabel="prior mean", main, ...)
+            extramargin=4, priorlabel="prior mean", main, xlim, ...)
 }
 \arguments{
   \item{x}{
@@ -43,6 +43,9 @@
   }
   \item{main}{
     the plot's main title.
+  }
+  \item{xlim}{
+    the x-axis range.
   }
   \item{...}{
     other arguments passed on to the
