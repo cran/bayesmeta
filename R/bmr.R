@@ -1960,7 +1960,7 @@ forestplot.bmr <- function(x,
                            digits        = 2,
                            decplaces.X,
                            plot          = TRUE,
-                           fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
+                           fn.ci_norm, fn.ci_sum, col, legend=NULL, boxsize, ...)
 # ARGUMENTS:
 #   x            :  a "bmr" object.
 #   X.mean       :  regressor matrix for summary (mean) estimate(s)
@@ -2165,7 +2165,7 @@ forestplot.bmr <- function(x,
   if (missing(boxsize)) {
     boxsize <- c(rep(0.25,x$k+1), rep(0.4, meanNumber), rep(0.2, predNumber))
   }
-  if (shrinkage && missing(legend))
+  if (shrinkage && is.null(legend))
     legend  <- c("quoted estimate", "shrinkage estimate")
   # specify data for plotting:
   if (shrinkage) { # (show shrinkage intervals)

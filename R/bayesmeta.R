@@ -2213,7 +2213,7 @@ forestplot.bayesmeta <- function(x, labeltext,
                                  heterogeneity = TRUE,
                                  digits        = 2,
                                  plot          = TRUE,
-                                 fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
+                                 fn.ci_norm, fn.ci_sum, col, legend=NULL, boxsize, ...)
 #
 # ARGUMENTS:
 #   x            :  a "bayesmeta" object.
@@ -2330,7 +2330,7 @@ forestplot.bayesmeta <- function(x, labeltext,
     boxsize <- c(rep(0.25,x$k+1), 0.4)
     if (prediction) boxsize <- c(boxsize, 0.2)
   }
-  if (shrinkage && missing(legend))
+  if (shrinkage && is.null(legend))
     legend  <- c("quoted estimate", "shrinkage estimate")
   # specify data for plotting:
   if (shrinkage) { # (show shrinkage intervals)
@@ -2387,7 +2387,7 @@ forestplot.escalc <- function(x, labeltext,
                               exponentiate  = FALSE,
                               digits        = 2,
                               plot          = TRUE,
-                              fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
+                              fn.ci_norm, fn.ci_sum, col, boxsize, ...)
 #
 # ARGUMENTS:
 #   x            :  a "bayesmeta" object.
@@ -2516,8 +2516,7 @@ forestplot.escalc <- function(x, labeltext,
                                  fn.ci_norm = fn.ci_norm,
                                  fn.ci_sum  = fn.ci_sum,
                                  col        = col,
-                                 boxsize    = boxsize,
-                                 legend     = legend, ...)
+                                 boxsize    = boxsize, ...)
     plot(fp)
   }
   invisible(list("data"       = ma.dat[-1,],

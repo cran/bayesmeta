@@ -14,7 +14,7 @@
            labeltext, exponentiate=FALSE,
            shrinkage=TRUE, heterogeneity=TRUE, 
            digits=2, decplaces.X, plot=TRUE,
-           fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
+           fn.ci_norm, fn.ci_sum, col, legend=NULL, boxsize, ...)
 }
 \arguments{
   \item{x}{

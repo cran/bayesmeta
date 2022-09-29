@@ -13,7 +13,7 @@
   \method{forestplot}{bayesmeta}(x, labeltext, exponentiate=FALSE,
            prediction=TRUE, shrinkage=TRUE, heterogeneity=TRUE, 
            digits=2, plot=TRUE,
-           fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
+           fn.ci_norm, fn.ci_sum, col, legend=NULL, boxsize, ...)
 }
 \arguments{
   \item{x}{

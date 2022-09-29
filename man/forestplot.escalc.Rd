@@ -11,7 +11,7 @@
 \usage{
   \method{forestplot}{escalc}(x, labeltext, exponentiate=FALSE,
            digits=2, plot=TRUE,
-           fn.ci_norm, fn.ci_sum, col, legend, boxsize, ...)
+           fn.ci_norm, fn.ci_sum, col, boxsize, ...)
 }
 \arguments{
   \item{x}{
@@ -33,7 +33,7 @@
   \item{plot}{
     a logical flag indicating whether to actually generate a plot.
   }
-  \item{fn.ci_norm, fn.ci_sum, col, legend, boxsize, \ldots}{
+  \item{fn.ci_norm, fn.ci_sum, col, boxsize, \ldots}{
     other arguments passed on to the
     \pkg{forestplot} package's \code{\link[forestplot]{forestplot}}
     function (see also the help there).
