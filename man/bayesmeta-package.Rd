@@ -15,8 +15,8 @@
   \tabular{ll}{
     Package: \tab bayesmeta\cr
     Type:    \tab Package\cr
-    Version: \tab 3.2\cr
-    Date:    \tab 2022-09-29\cr
+    Version: \tab 3.3\cr
+    Date:    \tab 2023-06-27\cr
     License: \tab GPL (>=2)
   }
   The main functionality is provided by the \code{\link{bayesmeta}()}
@@ -43,7 +43,9 @@ Christian Roever <christian.roever@med.uni-goettingen.de>
   
   C. Roever, T. Friede.
   Using the bayesmeta R package for Bayesian random-effects meta-regression.
-  \href{https://arxiv.org/abs/2209.06004}{arXiv preprint 2209.06004}, 2022.
+  \emph{Computer Methods and Programs in Biomedicine},
+  \bold{299}:107303, 2023.
+  \doi{10.1016/j.cmpb.2022.107303}.
 }
 \keyword{ models }
 \keyword{ package }

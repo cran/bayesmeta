@@ -1,6 +1,6 @@
 #
 #    bayesmeta, an R package for Bayesian random-effects meta-analysis.
-#    Copyright (C) 2021  Christian Roever
+#    Copyright (C) 2023  Christian Roever
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -2016,7 +2016,7 @@ forestplot.bmr <- function(x,
     dimnames(X.mean) <- list(x$variables, x$variables)
     meanNumber <- x$d
   } else {
-    if (is.null(X.mean) || is.na(X.mean)) {
+    if (is.null(X.mean) || all(is.na(X.mean))) {
       X.mean <- NULL
       meanNumber <- 0
     } else {
@@ -2032,7 +2032,7 @@ forestplot.bmr <- function(x,
     }
   }
   # default treatment of "X.prediction" argument:
-  if (missing(X.prediction) || (is.null(X.prediction) || is.na(X.prediction))) {
+  if (missing(X.prediction) || (is.null(X.prediction) || all(is.na(X.prediction)))) {
       X.prediction <- NULL
       predNumber <- 0
   } else {
@@ -2222,13 +2222,57 @@ forestplot.bmr <- function(x,
 
 traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
                           ylab="effect",
-                          rightmargin=8, col=rainbow(x$k), ...)
+                          prior=FALSE,
+                          infinity=FALSE,
+                          rightmargin=8,
+                          col=rainbow(x$k), labcol=col,
+                          X, Xlabels,
+                          Xcols="black", Xlabcols=Xcols,
+                          ...)
 {
   stopifnot(missing(mulim) || (length(mulim) == 2),
             missing(taulim) || (length(taulim) <= 2),
-            rightmargin >= 0, length(col) == x$k)
+            is.character(ylab), length(ylab)==1,
+            is.logical(prior), length(prior)==1,
+            is.logical(infinity), length(infinity)==1,
+            rightmargin >= 0, ((length(col)==x$k) | (length(col)==1)))
   q975 <- qnorm(0.975)
   gridcol <- "grey85"
+  if (length(col)==1) col <- rep(col, x$k)
+  if (infinity & any(x$beta.prior.proper)) {
+    warning("beta prior ignored for `tau=Inf' computations!")
+  }
+  if (prior & (!x$tau.prior.proper)) {
+    warning("Note that plots of improper priors may not be sensibly scaled.")
+  }
+  # default treatment of "X" argument:
+  if (missing(X) || (is.null(X) || all(is.na(X)))) {
+      X <- NULL
+      lincoNumber <- 0
+  } else {
+    stopifnot(is.numeric(X),
+              (is.matrix(X) && (ncol(X) == x$d))
+              || (is.vector(X) && (length(X) == x$d)))
+    if (is.vector(X)) {
+      X <- matrix(X, nrow=1, ncol=x$d)
+    }
+    if (is.null(colnames(X))) colnames(X) <- x$variables      
+    lincoNumber <- nrow(X)
+  }
+  # determine "X" labels and colours:
+  if (lincoNumber > 0) {
+    if (!missing(Xlabels)) {
+      stopifnot(is.character(Xlabels), length(Xlabels) == nrow(X))
+      rownames(X) <- Xlabels
+    } else {
+      Xlabels <- rownames(X)   # take from X row names...
+      if (is.null(Xlabels)) {  # ...or make up some
+        Xlabels <- sprintf("X.%02d", 1:nrow(X))
+      }
+    }
+    stopifnot(is.vector(Xcols), ((length(Xcols)==1) | (length(Xcols)==lincoNumber)))
+    if (length(Xcols)==1) Xcols <- rep(Xcols, lincoNumber)
+  }
   # convert "taulim" and "mulim" arguments
   # to eventual "taurange" and "murange" vectors:
   if (!missing(taulim) && all(is.finite(taulim))) {
@@ -2241,44 +2285,87 @@ traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
   } else {
     taurange <- c(0, x$qposterior(tau=0.995)*1.1)
   }
-  vertlines <- pretty(taurange)
-  if (!missing(mulim) && (all(is.finite(mulim)) && (mulim[1] < mulim[2]))) {
-    murange <- mulim
+  
+  if (infinity) {
+    xlim <- taurange + c(0, 0.15) * diff(taurange)
+    infx <- xlim[2] + 0.04*diff(xlim) # the "infinity" x-coordinate
   } else {
-    cm <- matrix(NA_real_, nrow=x$k, ncol=2,
-                 dimnames=list("study"=x$labels, "moments"=c("mean", "sd")))
-    for (i in 1:x$k)
-     cm[i,] <- x$shrink.moments(tau=taurange[2], which=i)
-    if (ci){
-      murange <- range(c(cm[,"mean"]-q975*cm[,"sd"], cm[,"mean"]+q975*cm[,"sd"]))
-    } else {
-      murange <- range(cm[,"mean"])
-    }
-    murange <- murange + c(-1,1)*diff(murange)*0.05
+    xlim <- taurange
+    infx <- NA_real_
   }
+  
+  vertlines <- pretty(taurange)
+  # ensure no tickmarks beyond plotted tau range:
+  if (max(vertlines) > (taurange[2] + 0.04*diff(taurange)))
+    vertlines <- vertlines[-length(vertlines)]
+  
+  if (missing(mulim)) mulim <- NULL
   
   mutrace <- function(x)
   {
-    # range of tau values:
-    tau <- seq(max(c(0,taurange[1]-0.1*diff(taurange))),
-                   taurange[2]+0.1*diff(taurange), le=200)
-    cm.indiv   <- array(NA_real_, dim=c(length(tau), 2, x$k),
-                        dimnames=list(NULL, c("mean", "sd"), x$labels))
+    # vector of tau values:
+    tau <- seq(max(c(0,taurange[1]-0.04*diff(taurange))),
+                   taurange[2]+0.04*diff(taurange), le=200)
+    # moments for individual studies:
+    cm.indiv <- array(NA_real_, dim=c(length(tau), 2, x$k),
+                      dimnames=list(NULL, c("mean", "sd"), x$labels))
     for (i in 1:x$k) {
       cm.indiv[,,i] <- x$shrink.moment(tau=tau, which=i)
     }
-    plot(taurange, murange,         
+    # moments for linear combinations (if applicable):
+    if (lincoNumber > 0) {
+      cm.linco <- array(NA_real_, dim=c(length(tau), 2, lincoNumber),
+                        dimnames=list(NULL, c("mean", "sd"), Xlabels))
+      for (i in 1:lincoNumber) {
+        cm.linco[,,i] <- x$pred.moments(tau=tau, x=X[i,])
+      }
+    }
+
+    # determine axis range for "effect" (y-) axis
+    if (!is.null(mulim) && (all(is.finite(mulim)) && (mulim[1] < mulim[2]))) {
+      # user-defined:
+      murange <- mulim
+    } else {
+      # based on data:
+      if (ci){
+        murange <- range(c(range(cm.indiv[,"mean",]-q975*cm.indiv[,"sd",]),
+                           range(cm.indiv[,"mean",]+q975*cm.indiv[,"sd",])))
+        if (lincoNumber > 0) {
+          murange <- range(c(murange,
+                             range(cm.linco[,"mean",]-q975*cm.linco[,"sd",]),
+                             range(cm.linco[,"mean",]+q975*cm.linco[,"sd",])))
+        }
+      } else {
+        murange <- range(cm.indiv[,"mean",])
+        if (lincoNumber > 0) {
+          murange <- range(c(murange,
+                             range(cm.linco[,"mean",])))
+        }
+      }
+      # ensure that estimates are included:
+      if (infinity) murange <- range(murange, x$y)
+    }
+  
+    plot(taurange, murange, xlim=xlim,
          type="n", axes=FALSE, xlab="", ylab=ylab, main="", ...)
     abline(v=vertlines, col=gridcol)
     abline(h=pretty(murange), col=gridcol)
     abline(v=0, col=grey(0.40))
-    # grey shading:
+    # grey CI shading:
     if (ci) {
       for (i in 1:x$k) {
         polygon(c(tau, rev(tau)),
                 c(cm.indiv[,"mean",i] - q975*cm.indiv[,"sd",i],
                   rev(cm.indiv[,"mean",i] + q975*cm.indiv[,"sd",i])),
                 col=grey(0.75, alpha=0.25), border=NA)
+      }
+      if (lincoNumber > 0) {
+        for (i in 1:lincoNumber) {
+          polygon(c(tau, rev(tau)),
+                  c(cm.linco[,"mean",i] - q975*cm.linco[,"sd",i],
+                    rev(cm.linco[,"mean",i] + q975*cm.linco[,"sd",i])),
+                  col=grey(0.75, alpha=0.25), border=NA)
+        }
       }
     }    
     # individual estimates:
@@ -2287,11 +2374,54 @@ traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
       matlines(tau, cm.indiv[,"mean",]-q975*cm.indiv[,"sd",], col=col, lty=3)
       matlines(tau, cm.indiv[,"mean",]+q975*cm.indiv[,"sd",], col=col, lty=3)
     }
+    # linear combinations:
+    if (lincoNumber > 0) {
+      matlines(tau, cm.linco[,"mean",], col=Xcols, lty=2, lwd=1.5)
+      if (ci) {
+        matlines(tau, cm.linco[,"mean",]-q975*cm.linco[,"sd",],
+                 col=Xcols, lty=3, lwd=1.5)
+        matlines(tau, cm.linco[,"mean",]+q975*cm.linco[,"sd",],
+                 col=Xcols, lty=3, lwd=1.5)
+      }
+    }
+      
+    if (infinity) {
+      # individual studies:
+      labpos.indiv   <- x$y
+      for (i in 1:x$k) {
+        lines(c(max(tau), infx),
+              c(cm.indiv[length(tau),"mean",i], labpos.indiv[i]),
+              col=col[i], lty="13", lwd=1.5)
+      }
+      # linear combinations:
+      if (lincoNumber > 0) {
+        # compute (unweighted) least-squares fit:
+        lscoef <- stats::lm.fit(x=x$X, y=x$y)$coefficients
+        labpos.linco <- X %*% lscoef
+        for (i in 1:lincoNumber) {
+          lines(c(max(tau), infx),
+                c(cm.linco[length(tau),"mean",i], labpos.linco[i]),
+                col=Xcols[i], lty="13", lwd=2)
+        }
+      }
+    } else {
+      labpos.indiv <- cm.indiv[length(tau),"mean",]
+      if (lincoNumber > 0) {
+        labpos.linco <- cm.linco[length(tau),"mean",]
+      }
+    }
     axis(2)
     for (i in 1:x$k)
-      axis(side=4, at=cm.indiv[length(tau),"mean",i],
+      axis(side=4, at=labpos.indiv[i],
            labels=x$labels[i], tick=FALSE,
-           col.axis=col[i], las=1)
+           col.axis=labcol[i], las=1)
+    if (lincoNumber > 0) {
+      for (i in 1:lincoNumber) {
+        axis(side=4, at=labpos.linco[i],
+             labels=Xlabels[i], tick=FALSE,
+             col.axis=Xlabcols[i], las=1)
+      }
+    }
     invisible()
   }
   
@@ -2299,13 +2429,13 @@ traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
   # NB: function is (essentially) identical to the one within "plot.bayesmeta()"
   {
     # range of tau values:
-    tau <- seq(max(c(0,taurange[1]-0.1*diff(taurange))),
-                   taurange[2]+0.1*diff(taurange), le=200)
+    tau <- seq(max(c(0,taurange[1]-0.04*diff(taurange))),
+                   taurange[2]+0.04*diff(taurange), le=200)
     # corresponding posterior density:
     dens <- x$dposterior(tau=tau)
     # empty plot:
     maxdens <- max(dens[is.finite(dens)],na.rm=TRUE)
-    plot(c(taurange[1],taurange[2]), c(0,maxdens),         
+    plot(c(taurange[1],taurange[2]), c(0,maxdens), xlim=xlim,
          type="n", axes=FALSE, xlab="", ylab="", main="")
     abline(v=vertlines, col=gridcol)
     # "fix" diverging density:
@@ -2322,16 +2452,27 @@ traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
     lines(rep(x$summary["median","tau"],2), c(0,x$dposterior(tau=x$summary["median","tau"])), col=grey(0.6))
     # actual density line:
     lines(tau, dens, col="black")
-    # x-axis, y-axis:
-    abline(h=0, v=0, col=grey(0.40))
+    # y-axis:
+    abline(v=0, col=grey(0.40))
+    # x-axis:
+    lines(taurange + c(-1,1) * 0.04*diff(taurange), c(0,0), col=grey(0.40))
+    # plot prior density (if requested):
+    if (prior) {
+      lines(tau, x$dprior(tau=tau), col="black", lty="dashed")
+    }
     # add axes, labels, bounding box, ...
     mtext(side=1, line=par("mgp")[1], expression("heterogeneity "*tau))
     #mtext(side=2, line=par("mgp")[2], expression("marginal posterior density"))
-    axis(1)#; box()
+    if (infinity) {
+      axis(1, at=c(vertlines, infx),
+           labels=c(as.numeric(vertlines), expression(infinity)))
+    } else {
+      axis(1, at=vertlines)
+    }
     invisible()
   }
   
-  # make sure to re-set graphical parameters later:
+  # make sure to properly re-set graphical parameters later:
   prevpar <- par(no.readonly=TRUE)
   on.exit(par(prevpar))
   # generate actual plot:
@@ -2342,5 +2483,5 @@ traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
   taumarginal(x)
   graphics::layout(1)
   par(mar=c(5,4,4,2)+0.1)
-  invisible()
+  invisible(X)
 }

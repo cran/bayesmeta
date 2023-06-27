@@ -50,11 +50,11 @@ importFrom("graphics",
            "lines", "matlines", "mtext", "par", "plot", "points", "polygon",
            "text")
 importFrom("stats",
-           "dcauchy", "dlnorm", "dlogis", "dnorm", "dt", "integrate", "median",
-           "optim", "optimize", "pcauchy", "plnorm", "plogis", "pnorm",
-           "pt", "qcauchy", "qchisq", "qlnorm", "qlogis", "qnorm", "qt",
-           "rcauchy", "rexp", "rlogis", "rmultinom", "rnorm", "rt", "runif",
-           "uniroot")
+           "dcauchy", "dlnorm", "dlogis", "dnorm", "dt", "integrate", "lm.fit",
+           "median", "optim", "optimize", "pcauchy", "plnorm", "plogis",
+           "pnorm", "pt", "qcauchy", "qchisq", "qlnorm", "qlogis", "qnorm",
+           "qt", "rcauchy", "rexp", "rlogis", "rmultinom", "rnorm", "rt",
+           "runif", "uniroot")
 importFrom("forestplot",
            "forestplot", "fpDrawPointCI", "fpDrawSummaryCI","fpDrawBarCI",
            "fpColors")

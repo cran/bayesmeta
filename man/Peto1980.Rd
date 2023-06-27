@@ -7,24 +7,37 @@
 \usage{data("Peto1980")}
 \format{The data frame contains the following columns:
   \tabular{lll}{
-    \bold{publication}    \tab \code{character} \tab publication identifier \cr
-    \bold{treat.cases}    \tab \code{numeric}   \tab number of cases in treatment group \cr
-    \bold{treat.events}   \tab \code{numeric}   \tab number of events in treatment group \cr
-    \bold{control.cases}  \tab \code{numeric}   \tab number of cases in control group \cr
-    \bold{control.events} \tab \code{numeric}   \tab number of events in control group \cr
+    \bold{publication}    \tab \code{character} \tab publication reference \cr
+    \bold{study}          \tab \code{character} \tab study acronym or abbreviation \cr
+    \bold{start}, \bold{end} \tab \code{integer}   \tab duration of study (calendar years) \cr
+    \bold{age}            \tab \code{numeric}   \tab mean patient age (years) \cr
+    \bold{dose}           \tab \code{numeric}   \tab total daily dose (mg) \cr
+    \bold{followup}       \tab \code{numeric}   \tab follow-up duration (months) \cr
+    \bold{treat.cases}    \tab \code{integer}   \tab number of cases in treatment group \cr
+    \bold{treat.events}   \tab \code{integer}   \tab number of events in treatment group \cr
+    \bold{control.cases}  \tab \code{integer}   \tab number of cases in control group \cr
+    \bold{control.events} \tab \code{integer}   \tab number of events in control group \cr
   }
 }
 \details{
-  Quoting from Brockwell and Gordon (2001):
-  \dQuote{The collection consists of six studies, each examining the
-    effect of aspirin after myocardial infarction. In each study the
-    number of patients who died after having been given either aspirin
-    or a control drug is recorded.}
+  Peto (1980) investigated mortality data from six randomized,
+  placebo-controlled clinical trials of aspirin, involving a total of
+  10,703 post-myocardial infarction patients. Canner (1987) later investigated
+  potential heterogeneity between study characteristics as well as their
+  reported estimates. The included studies' abbreviations are:
+  \tabular{ll}{
+    UK-1   \tab  first United Kingdom trial \cr
+    CDPA   \tab  Coronary Drug Project Aspirin trial \cr
+    GAMS   \tab  German-Austrian Multicentre Study\cr
+    UK-2   \tab  second United Kingdom trial \cr
+    PARIS  \tab  Persantine-Aspirin Reinfarction Study \cr
+    AMIS   \tab  Aspirin Myocardial Infarction Study
+  }
 }
-\source{S.E. Brockwell, I.R. Gordon.
-  A comparison of statistical methods for meta-analysis.
-  \emph{Statistics in Medicine}, \bold{20}(6):825-840, 2001.
-  \doi{10.1002/sim.650}.
+\source{P.L. Canner. An overview of six clinical trials of aspirin
+  in coronary heart disease.
+  \emph{Statistics in Medicine}, \bold{6}(3):255-263, 1987.
+  \doi{10.1002/sim.4780060310}
 }
 \references{R. Peto.
   Aspirin after myocardial infarction. 

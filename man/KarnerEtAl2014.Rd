@@ -12,7 +12,7 @@
     \bold{inhaler}            \tab \code{factor}    \tab type of inhaler investigated (\dQuote{dry powder} or \dQuote{soft mist}) \cr
     \bold{baseline.age}       \tab \code{numeric}   \tab mean age at baseline \cr
     \bold{baseline.males}     \tab \code{numeric}   \tab proportion of males among study participants \cr
-    \bold{baseline.fev1}      \tab \code{numeric}   \tab mean FEV1 at baseline \cr
+    \bold{baseline.fev1}      \tab \code{numeric}   \tab mean FEV1 at baseline (L) \cr
     \bold{baseline.fev1pp}    \tab \code{numeric}   \tab mean FEV1 (percent of predicted) at baseline \cr
     \bold{baseline.pyr}       \tab \code{numeric}   \tab mean number of pack-years (smoking history) \cr
     \bold{tiotropium.total}   \tab \code{numeric}   \tab total number of patients in the treatment group \cr
@@ -30,7 +30,7 @@
     \bold{placebo.sae}        \tab \code{numeric}   \tab number of patients with \eqn{\geq 1}{>=1} serious adverse event (non-fatal) in the control group \cr
     \bold{placebo.dropout}    \tab \code{numeric}   \tab number of withdrawals in the control group \cr
     \bold{sgrq.md}, \bold{sgrq.se} \tab \code{numeric} \tab mean difference and associated standard error for \emph{St. George's respiratory questionnaire (SGRQ)} total score \cr
-    \bold{fev1.md}, \bold{fev1.se} \tab \code{numeric} \tab mean difference and associated standard error for \emph{forced expiratory volume in 1 second (FEV1)} \cr
+    \bold{fev1.md}, \bold{fev1.se} \tab \code{numeric} \tab mean difference and associated standard error for \emph{forced expiratory volume in 1 second (FEV1, mL)} \cr
   }
 }
 \details{Chronic obstructive pulmonary disease (COPD) is a chronic and
@@ -38,7 +38,8 @@
   phases. Various treatment options are available, aimed at both
   providing relief during an acute exacerbation, and at delaying overall
   disease progression. A common drug used in the management of COPD is
-  \emph{tiotropium}, which is administered via an inhaler device.
+  \emph{tiotropium}, a long-acting muscarinic antagonist (LAMA), which
+  is administered via an inhaler device.
 
   Karner \emph{et al.} (2014) conducted a systematic review in order to
   evaluate the evidence on the effects of tiotropium in comparison to

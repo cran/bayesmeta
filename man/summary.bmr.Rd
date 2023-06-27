@@ -56,7 +56,9 @@
 \references{
   C. Roever, T. Friede.
   Using the bayesmeta R package for Bayesian random-effects meta-regression.
-  \href{https://arxiv.org/abs/2209.06004}{arXiv preprint 2209.06004}, 2022.
+  \emph{Computer Methods and Programs in Biomedicine},
+  \bold{299}:107303, 2023.
+  \doi{10.1016/j.cmpb.2022.107303}.
 }
 \examples{
 \dontrun{

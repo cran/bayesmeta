@@ -1,6 +1,6 @@
 #
 #    bayesmeta, an R package for Bayesian random-effects meta-analysis.
-#    Copyright (C) 2021  Christian Roever
+#    Copyright (C) 2023  Christian Roever
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -3629,14 +3629,32 @@ traceplot <- function(x, ...)
 
 traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
                                 ylab="effect",
-                                rightmargin=8, col=rainbow(x$k), ...)
+                                prior=FALSE,
+                                infinity=FALSE,
+                                rightmargin=8,
+                                col=rainbow(x$k), labcol=col,
+                                meanlabel="overall mean",
+                                meancol="black", meanlabcol=meancol,
+                                ...)
 {
   stopifnot(missing(mulim) || (length(mulim) == 2),
             missing(taulim) || (length(taulim) <= 2),
-            rightmargin >= 0, length(col) == x$k)
+            is.character(ylab), length(ylab)==1,
+            is.logical(prior), length(prior)==1,
+            is.logical(infinity), length(infinity)==1,
+            rightmargin >= 0, ((length(col)==x$k) | (length(col)==1)),
+            is.character(meanlabel), length(meanlabel)==1,
+            length(meancol)==1)
   q975 <- qnorm(0.975)
   gridcol <- "grey85"
-  # convert "taulim" and "mulim" arguments
+  if (length(col)==1) col <- rep(col, x$k)
+  if (infinity & any(is.finite(x$mu.prior))) {
+    warning("mu prior ignored for `tau=Inf' computations!")
+  }
+  if (prior & (!x$tau.prior.proper)) {
+    warning("Note that plots of improper priors may not be sensibly scaled.")
+  }
+  # convert "taulim" and "mulim" input arguments
   # to eventual "taurange" and "murange" vectors:
   if (!missing(taulim) && all(is.finite(taulim))) {
     if ((length(taulim)==2) && (taulim[1]>=0) && (taulim[2]>taulim[1]))
@@ -3648,34 +3666,55 @@ traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
   } else {
     taurange <- c(0, x$qposterior(tau=0.995)*1.1)
   }
-  
-  if (!missing(mulim) && (all(is.finite(mulim)) && (mulim[1] < mulim[2]))) {
-    murange <- mulim
+  if (infinity) {
+    xlim <- taurange + c(0, 0.15) * diff(taurange)
+    infx <- xlim[2] + 0.04*diff(xlim) # the "infinity" x-coordinate
   } else {
-    cm <- x$cond.moment(tau=taurange[2], indiv=TRUE)
-    if (ci){
-      murange <- range(c(cm[,"mean",]-q975*cm[,"sd",], cm[,"mean",]+q975*cm[,"sd",]))
-    } else {
-      murange <- range(cm[,"mean",])
-    }
-    murange <- murange + c(-1,1)*diff(murange)*0.05
+    xlim <- taurange
+    infx <- NA_real_
   }
+
+  if (missing(mulim)) mulim <- NULL
   
   vertlines <- pretty(taurange)
+  # ensure no tickmarks beyond plotted tau range:
+  if (max(vertlines) > (taurange[2] + 0.04*diff(taurange)))
+    vertlines <- vertlines[-length(vertlines)]
 
   mutrace <- function(x)
-  {
-    # range of tau values:
-    tau <- seq(max(c(0,taurange[1]-0.1*diff(taurange))),
-                   taurange[2]+0.1*diff(taurange), le=200)
-    cm.overall <- x$cond.moment(tau=tau)
+  {  
+    # vector of tau values:
+    tau <- seq(max(c(0,taurange[1]-0.04*diff(taurange))),
+                   taurange[2]+0.04*diff(taurange), le=200)
+    # conditional moments for individual studies (theta_i): 
     cm.indiv   <- x$cond.moment(tau=tau, indiv=TRUE)
-    plot(taurange, murange,         
+    # conditional moments for overall mean (mu): 
+    cm.overall <- x$cond.moment(tau=tau)
+    # determine axis range for "effect" (y-) axis
+    if (!is.null(mulim) && (all(is.finite(mulim)) && (mulim[1] < mulim[2]))) {
+      # user-defined:
+      murange <- mulim
+    } else {
+      # based on data:
+      if (ci){
+        murange <- range(c(range(cm.indiv[,"mean",]-q975*cm.indiv[,"sd",]),
+                           range(cm.indiv[,"mean",]+q975*cm.indiv[,"sd",]),
+                           range(cm.overall[,"mean"]-q975*cm.overall[,"sd"]),
+                           range(cm.overall[,"mean"]+q975*cm.overall[,"sd"])))
+      } else {
+        murange <- range(c(range(cm.indiv[,"mean",]),
+                           range(cm.overall[,"mean"])))
+      }
+      # ensure that estimates are also included:
+      if (infinity) murange <- range(murange, x$y)
+    }
+
+    plot(taurange, murange, xlim=xlim,
          type="n", axes=FALSE, xlab="", ylab=ylab, main="", ...)
     abline(v=vertlines, col=gridcol)
     abline(h=pretty(murange), col=gridcol)
     abline(v=0, col=grey(0.40))
-    # grey shading:
+    # grey CI shading:
     if (ci) {
       for (i in 1:x$k) {
         polygon(c(tau, rev(tau)),
@@ -3695,18 +3734,33 @@ traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
       matlines(tau, cm.indiv[,"mean",]+q975*cm.indiv[,"sd",], col=col, lty=3)
     }
     # overall mean:
-    lines(tau, cm.overall[,"mean"], col="black", lty=2, lwd=1.5)
+    lines(tau, cm.overall[,"mean"], col=meancol, lty=2, lwd=1.5)
     if (ci) {
-      lines(tau, cm.overall[,"mean"]-q975*cm.overall[,"sd"], col="black", lty=3, lwd=1.5)
-      lines(tau, cm.overall[,"mean"]+q975*cm.overall[,"sd"], col="black", lty=3, lwd=1.5)
+      lines(tau, cm.overall[,"mean"]-q975*cm.overall[,"sd"], col=meancol, lty=3, lwd=1.5)
+      lines(tau, cm.overall[,"mean"]+q975*cm.overall[,"sd"], col=meancol, lty=3, lwd=1.5)
+    }
+    if (infinity) {
+      labpos.indiv   <- x$y
+      labpos.overall <- mean(x$y)
+      for (i in 1:x$k)
+        lines(c(max(tau), infx),
+              c(cm.indiv[length(tau),"mean",i], labpos.indiv[i]),
+              col=col[i], lty="13", lwd=1.5)
+      lines(c(max(tau), infx),
+            c(cm.overall[length(tau),"mean"], labpos.overall),
+            col=meancol, lty="13", lwd=2.0)
+    } else {
+      labpos.indiv   <- cm.indiv[length(tau),"mean",]
+      labpos.overall <- cm.overall[length(tau),"mean"]
     }
     axis(2)
     for (i in 1:x$k)
-      axis(side=4, at=cm.indiv[length(tau),"mean",i],
+      axis(side=4, at=labpos.indiv[i],
            labels=x$labels[i], tick=FALSE,
-           col.axis=col[i], las=1)
-    axis(side=4, at=cm.overall[length(tau),"mean"],
-         labels="overall mean", tick=FALSE, las=1)
+           col.axis=labcol[i], las=1)
+    axis(side=4, at=labpos.overall,
+         labels=meanlabel, tick=FALSE,
+         col.axis=meanlabcol, las=1)
     invisible()
   }
   
@@ -3714,13 +3768,13 @@ traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
   # NB: function is (essentially) identical to the one within "plot.bayesmeta()"
   {
     # range of tau values:
-    tau <- seq(max(c(0,taurange[1]-0.1*diff(taurange))),
-                   taurange[2]+0.1*diff(taurange), le=200)
+    tau <- seq(max(c(0,taurange[1]-0.04*diff(taurange))),
+                   taurange[2]+0.04*diff(taurange), le=200)
     # corresponding posterior density:
     dens <- x$dposterior(tau=tau)
     # empty plot:
     maxdens <- max(dens[is.finite(dens)],na.rm=TRUE)
-    plot(c(taurange[1],taurange[2]), c(0,maxdens),         
+    plot(c(taurange[1],taurange[2]), c(0,maxdens), xlim=xlim,       
          type="n", axes=FALSE, xlab="", ylab="", main="")
     abline(v=vertlines, col=gridcol)
     # "fix" diverging density:
@@ -3737,16 +3791,27 @@ traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
     lines(rep(x$summary["median","tau"],2), c(0,x$dposterior(tau=x$summary["median","tau"])), col=grey(0.6))
     # actual density line:
     lines(tau, dens, col="black")
-    # x-axis, y-axis:
-    abline(h=0, v=0, col=grey(0.40))
+    # y-axis:
+    abline(v=0, col=grey(0.40))
+    # x-axis:
+    lines(taurange + c(-1,1) * 0.04*diff(taurange), c(0,0), col=grey(0.40))
+    # plot prior density (if requested):
+    if (prior) {
+      lines(tau, x$dprior(tau=tau), col="black", lty="dashed")
+    }
     # add axes, labels, bounding box, ...
     mtext(side=1, line=par("mgp")[1], expression("heterogeneity "*tau))
     #mtext(side=2, line=par("mgp")[2], expression("marginal posterior density"))
-    axis(1)#; box()
+    if (infinity) {
+      axis(1, at=c(vertlines, infx),
+           labels=c(as.numeric(vertlines), expression(infinity)))
+    } else {
+      axis(1, at=vertlines)
+    }
     invisible()
   }
 
-  # make sure to re-set graphical parameters later:
+  # make sure to properly re-set graphical parameters later:
   prevpar <- par(no.readonly=TRUE)
   on.exit(par(prevpar))
   # generate actual plot:
