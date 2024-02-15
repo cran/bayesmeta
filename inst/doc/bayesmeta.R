@@ -1,4 +1,4 @@
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 knitr::opts_chunk$set(collapse=TRUE)
 
 ## -----------------------------------------------------------------------------
@@ -10,7 +10,7 @@ print(Rubin1981)
 data("CrinsEtAl2014")
 print(CrinsEtAl2014[,c(1,10,12,13,15)])
 
-## ---- message=FALSE-----------------------------------------------------------
+## ----message=FALSE------------------------------------------------------------
 library("metafor")
 crins.es <- escalc(measure="OR",
                    ai=exp.AR.events,  n1i=exp.total,
@@ -30,13 +30,13 @@ schools.example.1 <- bayesmeta(y     = Rubin1981[,"effect"],
 ## -----------------------------------------------------------------------------
 print(schools.example.1)
 
-## ---- fig.width=6.0, fig.height=3.5-------------------------------------------
+## ----fig.width=6.0, fig.height=3.5--------------------------------------------
 forestplot(schools.example.1)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  plot(schools.example.1, prior=TRUE)
 
-## ---- fig.width=6.0, fig.height=7.0, echo=FALSE-------------------------------
+## ----fig.width=6.0, fig.height=7.0, echo=FALSE--------------------------------
 par(mfrow=c(2,2))
 plot(schools.example.1, prior=TRUE)
 par(mfrow=c(1,1))
@@ -50,7 +50,7 @@ schools.example.2 <- bayesmeta(y     = Rubin1981[,"effect"],
 print(schools.example.1$summary)
 print(schools.example.2$summary)
 
-## ---- fig.width=5.0, fig.height=5.0-------------------------------------------
+## ----fig.width=5.0, fig.height=5.0--------------------------------------------
 # evaluate posterior densities:
 x <- seq(from=-10, to=30, length=100)
 plot(x, schools.example.1$dposterior(mu=x), type="l", col="red",

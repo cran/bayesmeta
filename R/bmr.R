@@ -45,7 +45,9 @@ kldiv <- function(mu1, mu2, sigma1, sigma2, symmetrized=FALSE)
     KL <- KL + 0.5 * (sum(diag(sigma1inv %*% sigma2))
                       + (t(mu2-mu1) %*% sigma1inv %*% (mu2-mu1)) - k)
   } else {
-    KL <- KL + 0.5 * (log(det(sigma2)) - log(det(sigma1)))
+    #KL <- KL + 0.5 * (log(det(sigma2)) - log(det(sigma1)))
+    KL <- KL + 0.5 * (determinant(sigma2, logarithm=TRUE)$modulus
+                      - determinant(sigma1, logarithm=TRUE)$modulus)
     # (NB: this term cancels out for the symmetrized variant)
   }
   return(as.vector(KL))
@@ -369,7 +371,9 @@ bmr.default <- function(y, sigma, labels = names(y),
         betaHat     <- Vbeta %*% t(rbind(X,Xp)) %*% sigmaTauInv %*% c(y,yp)
         residual    <- c(y,yp) - rbind(X,Xp) %*% betaHat
         logdens  <- (0.5 * ((d-k) * log(2*pi)
-                            -log(det(sigmaTau)) + log(det(Vbeta))
+                            #-log(det(sigmaTau)) + log(det(Vbeta))
+                            -determinant(sigmaTau, logarithm=TRUE)$modulus
+                            +determinant(Vbeta, logarithm=TRUE)$modulus
                             -(t(residual) %*% sigmaTauInv %*% residual))
                      + log(tau.prior(t)))
       }
@@ -2237,7 +2241,12 @@ traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
             is.logical(infinity), length(infinity)==1,
             rightmargin >= 0, ((length(col)==x$k) | (length(col)==1)))
   q975 <- qnorm(0.975)
-  gridcol <- "grey85"
+  # specify colors for axes etc.:
+  colvec <- c("axis"   = "grey40",
+              "grid"   = "grey85",
+              "median" = "grey60",
+              "ci"     = "grey80",
+              "tail"   = "grey90")
   if (length(col)==1) col <- rep(col, x$k)
   if (infinity & any(x$beta.prior.proper)) {
     warning("beta prior ignored for `tau=Inf' computations!")
@@ -2348,9 +2357,9 @@ traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
   
     plot(taurange, murange, xlim=xlim,
          type="n", axes=FALSE, xlab="", ylab=ylab, main="", ...)
-    abline(v=vertlines, col=gridcol)
-    abline(h=pretty(murange), col=gridcol)
-    abline(v=0, col=grey(0.40))
+    abline(v=vertlines, col=colvec["grid"])
+    abline(h=pretty(murange), col=colvec["grid"])
+    abline(v=0, col=colvec["axis"])
     # grey CI shading:
     if (ci) {
       for (i in 1:x$k) {
@@ -2437,25 +2446,26 @@ traceplot.bmr <- function(x, mulim, taulim, ci=FALSE,
     maxdens <- max(dens[is.finite(dens)],na.rm=TRUE)
     plot(c(taurange[1],taurange[2]), c(0,maxdens), xlim=xlim,
          type="n", axes=FALSE, xlab="", ylab="", main="")
-    abline(v=vertlines, col=gridcol)
+    abline(v=vertlines, col=colvec["grid"])
     # "fix" diverging density:
     dens[!is.finite(dens)] <- 10*maxdens
     # light grey shaded contour for density across whole range:
-    polygon(c(0,tau,max(tau)), c(0,dens,0), border=NA, col=grey(0.90))
+    polygon(c(0,tau,max(tau)), c(0,dens,0), border=NA, col=colvec["tail"])
     # dark grey shaded contour for density within 95% bounds:
     indi <- ((tau>=x$summary["95% lower","tau"]) & (tau<=x$summary["95% upper","tau"]))
     polygon(c(rep(x$summary["95% lower","tau"],2), tau[indi], rep(x$summary["95% upper","tau"],2)),
             c(0, min(c(x$dposterior(tau=x$summary["95% lower","tau"]), 10*maxdens)),
               dens[indi], x$dposterior(tau=x$summary["95% upper","tau"]), 0),
-            border=NA, col=grey(0.80))
+            border=NA, col=colvec["ci"])
     # vertical line at posterior median:
-    lines(rep(x$summary["median","tau"],2), c(0,x$dposterior(tau=x$summary["median","tau"])), col=grey(0.6))
+    lines(rep(x$summary["median","tau"],2), c(0,x$dposterior(tau=x$summary["median","tau"])),
+          col=colvec["median"])
     # actual density line:
     lines(tau, dens, col="black")
     # y-axis:
-    abline(v=0, col=grey(0.40))
+    abline(v=0, col=colvec["axis"])
     # x-axis:
-    lines(taurange + c(-1,1) * 0.04*diff(taurange), c(0,0), col=grey(0.40))
+    lines(taurange + c(-1,1) * 0.04*diff(taurange), c(0,0), col=colvec["axis"])
     # plot prior density (if requested):
     if (prior) {
       lines(tau, x$dprior(tau=tau), col="black", lty="dashed")

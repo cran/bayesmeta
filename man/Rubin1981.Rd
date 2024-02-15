@@ -7,6 +7,7 @@
 \format{The data frame contains the following columns:
   \tabular{lll}{
     \bold{school} \tab \code{character} \tab school identifier \cr
+    \bold{n}      \tab \code{integer}   \tab number of students \cr
     \bold{effect} \tab \code{numeric}   \tab effect estimate \cr
     \bold{stderr} \tab \code{numeric}   \tab associated standard error 
   }

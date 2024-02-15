@@ -147,8 +147,8 @@
   parameter (\eqn{\mu}) and considering the Fisher information element
   corresponding to the heterogeneity \eqn{\tau} only. This prior also
   constitutes the \emph{Berger/Bernardo reference prior} for the present
-  problem (Bodnar et al., 2016).  The \emph{uniform shrinkage} and
-  \emph{DuMouchel} priors are described in Spiegelhalter et al. (2004,
+  problem (Bodnar \emph{et al.}, 2016).  The \emph{uniform shrinkage} and
+  \emph{DuMouchel} priors are described in Spiegelhalter \emph{et al.} (2004,
   Sec. 5.7.3). 
   The procedure is able to handle improper priors (and does so by
   default), but of course the usual care must be taken here, as the
@@ -178,7 +178,7 @@
   The \code{predict} argument may be used to access the predictive
   distribution of a future study's effect
   (\eqn{\theta_{k+1}}{theta[k+1]}), facilitating a
-  \emph{meta-analytic-predictive (MAP)} approach (Neuenschwander et al.,
+  \emph{meta-analytic-predictive (MAP)} approach (Neuenschwander \emph{et al.},
   2010).
 
   \subsection{Prior specification details}{
@@ -192,12 +192,26 @@
       \item \code{"sqrt"} - the (improper) uniform prior in \eqn{\sqrt{\tau}}{sqrt(tau)}:
         \deqn{p(\tau) \;\propto\; \tau^{-1/2} \;=\; \frac{1}{\sqrt{\tau}}}{p(tau) = tau^(-1/2) = 1/sqrt(tau)}
       \item \code{"Jeffreys"} - \emph{Tibshirani's noninformative prior},
-        a variation of the \emph{Jeffreys prior}, which here also constitutes
+        a variation of the (\sQuote{general} or \sQuote{overall}) \emph{Jeffreys prior}, which here also constitutes
         the \emph{Berger/Bernardo reference prior} for \eqn{\tau}:
         \deqn{p(\tau) \;\propto\;
         \sqrt{\sum_{i=1}^k\Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^2}}{p(tau) = sqrt(sum((tau/(sigma[i]^2+tau^2))^2))}
-        (This is also an improper prior whose density does not integrate
-  to 1).
+        This is also an improper prior whose density does not integrate to 1.
+	This prior results from applying \emph{Jeffreys' general rule} (Kass and Wasserman, 1996),
+        and in particular considering that location parameters (here: the effect \eqn{\mu})
+	should be treated separately (Roever, 2020).
+      \item \code{"overallJeffreys"} - the \sQuote{general} or \sQuote{overall} form 
+        of the \emph{Jeffreys prior};
+        this is derived based on the Fisher information terms
+        corresponding to \emph{both} the effect (\eqn{\mu}) and heterogeneity (\eqn{\tau}).
+	The resulting (improper) prior density is
+        \deqn{p(\tau) \;\propto\;
+        \sqrt{\sum_{i=1}^k\frac{1}{\sigma_i^2+\tau^2} \; \sum_{i=1}^k\Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^2}}{p(tau) = sqrt(sum((tau/(sigma[i]^2+tau^2))^2))}
+        Use of this specification is generally \emph{not} recommended; see, e.g.,
+	Jeffreys (1946), Jeffreys (1961, Sec. III.3.10),
+	Berger (1985, Sec. 3.3.3) and Kass and Wasserman (1996, Sec. 2.2).
+	Since the effect \eqn{\mu} constitutes a \emph{location parameter} here,
+	it should be treated separately (Roever, 2020).
       \item \code{"BergerDeely"} - the (improper) \emph{Berger/Deely} prior:
         \deqn{p(\tau) \;\propto\; \prod_{i=1}^k \Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^{1/k}}{p(tau) = prod((tau / (sigma[i]^2+tau^2))^(1/k))}
         This is a variation of the above \emph{Jeffreys} prior, and both are equal in
@@ -219,10 +233,13 @@
         This prior is similar to the uniform shrinkage prior, except for
         the use of \eqn{\hat{\sigma}^2}{sigmaHat^2} instead of \eqn{s_0^2}{s0^2}.
     }
-    For empirically motivated informative heterogeneity priors see also
+    For more details on the above priors, see Roever (2020).
+    For more general information especially on (weakly)
+    informative heterogeneity prior distributions, see Roever \emph{et al.} (2021).
+    Regarding empirically motivated informative heterogeneity priors see also
     the \code{\link{TurnerEtAlPrior}()} and \code{\link{RhodesEtAlPrior}()}
-    functions. For more general information especially on (weakly)
-    informative heterogeneity prior distributions, see Roever et al. (2020).
+    functions, or Roever \emph{et al.} (2023) and Lilienthal \emph{et al.} 
+    (2023).
   }
 
   \subsection{Credible intervals}{
@@ -230,7 +247,7 @@
     may be determined in different ways. By default, \emph{shortest}
     intervals are returned, which for unimodal posteriors (the usual
     case) is equivalent to the \emph{highest posterior density region}
-    (Gelman et al., 1997, Sec. 2.3).
+    (Gelman \emph{et al.}, 1997, Sec. 2.3).
     Alternatively, central (equal-tailed) intervals may also be derived.
     The default behaviour may be controlled via the \code{interval.type}
     argument, or also by using the \code{method} argument with each
@@ -258,10 +275,10 @@
     effects on the posterior distribution may have a substantial impact
     on Bayes factors (via the marginal likelihood). For more details on
     the problems and challenges related to Bayes factors see also
-    Gelman et al. (1997, Sec. 7.4).
+    Gelman \emph{et al.} (1997, Sec. 7.4).
 
     Besides the \sQuote{actual} Bayes factors, \emph{minimum Bayes
-    factors} are also provided (Spiegelhalter et al., 2004; Sec. 4.4).
+    factors} are also provided (Spiegelhalter \emph{et al.}, 2004; Sec. 4.4).
     The minimum Bayes factor for the hypothesis of \eqn{\mu=0}
     constitutes the minimum across all possible priors for \eqn{\mu} and
     hence gives a measure of how much (or how little) evidence
@@ -460,6 +477,11 @@
   Bounds for the weight of external data in shrinkage estimation.
   \emph{Biometrical Journal}, \bold{65}(5):1131-1143, 2021.
   \doi{10.1002/bimj.202000227}.
+
+  J. O. Berger.
+  \emph{Statistical Decision Theory and Bayesian Analysis}.
+  2nd edition. Springer-Verlag, 1985.
+  \doi{10.1007/978-1-4757-4286-2}.
   
   J.O. Berger, J. Deely.
   A Bayesian approach to ranking and selection of related means with
@@ -487,12 +509,33 @@
   L.V. Hedges, I. Olkin. \emph{Statistical methods for meta-analysis}.
   Academic Press, San Diego, 1985
 
+  H. Jeffreys.
+  An invariant form for the prior probability in estimation problems.
+  \emph{Proceedings of the Royal Society of london, Series A},
+  \bold{186}(1007):453-462, 1946.
+  \doi{10.1098/rspa.1946.0056}.
+
+  H. Jeffreys.
+  \emph{Theory of Probability}. 3rd edition. Clarendon Press, Oxford, 1961.
+  
   A.E. Kass, R.E. Raftery.
   Bayes factors.
   \emph{Journal of the American Statistical Association},
   \bold{90}(430):773-795, 1995.
   \doi{10.2307/2291091}.
 
+  A.E. Kass, L. Wasserman.
+  The selection of prior distributions by formal rules.
+  \emph{Journal of the American Statistical Association}.
+  \bold{91}(453):1243-1370, 1996.
+  \doi{10.1080/01621459.1996.10477003}.
+
+  J. Lilienthal, S. Sturtz, C. Schuermann, M. Maiworm, C. Roever, T. Friede, R. Bender.
+  Bayesian random-effects meta-analysis with empirical heterogeneity priors
+  for application in health technology assessment with very few studies.
+  \emph{Research Synthesis Methods}, 2023.
+  \doi{10.1002/jrsm.1685}.
+  
   D.V. Lindley.
   A statistical paradox.
   \emph{Biometrika}, \bold{44}(1/2):187-192, 1957.
@@ -509,6 +552,12 @@
   \bold{26}(4):372-401, 2012.
   \doi{10.1214/11-BJPS164}.
 
+  C. Roever, S. Sturtz, J. Lilienthal, R. Bender, T. Friede.
+  Summarizing empirical information on between-study heterogeneity
+  for Bayesian random-effects meta-analysis. 
+  \emph{Statistics in Medicine}, \bold{42}(14):2439-2454, 2023.
+  \doi{10.1002/sim.9731}.
+  
   S. Shalloway.
   The evidentiary credible region.
   \emph{Bayesian Analysis}, \bold{9}(4):909-922, 2014.

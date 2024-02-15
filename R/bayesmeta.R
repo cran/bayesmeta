@@ -68,27 +68,35 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
   tau.prior.proper <- NA
   if (is.character(tau.prior)) {
     tau.prior <- match.arg(tolower(tau.prior),
-                           c("uniform","jeffreys","shrinkage","dumouchel","bergerdeely","conventional","i2","sqrt"))
-    tau.prior <- c("uniform"="uniform", "jeffreys"="Jeffreys",
+                           c("uniform","jeffreys","overalljeffreys","shrinkage","dumouchel","bergerdeely","conventional","i2","sqrt"))
+    tau.prior <- c("uniform"="uniform", "jeffreys"="Jeffreys", "overalljeffreys"="overallJeffreys",
                    "shrinkage"="shrinkage", "dumouchel"="DuMouchel",
-                   "bergerdeely"="BergerDeely", "conventional"="conventional", "i2"="I2", "sqrt"="sqrt")[tau.prior]
-    stopifnot(is.element(tau.prior, c("uniform", "Jeffreys", "shrinkage", "DuMouchel", "BergerDeely", "conventional", "I2", "sqrt")))
+                   "bergerdeely"="BergerDeely", "conventional"="conventional",
+                   "i2"="I2", "sqrt"="sqrt")[tau.prior]
+    stopifnot(is.element(tau.prior, c("uniform", "Jeffreys", "overallJeffreys", "shrinkage", "DuMouchel", "BergerDeely", "conventional", "I2", "sqrt")))
     if (tau.prior=="uniform") {             # uniform prior on tau:
       pdens <- function(t){d<-rep(1,length(t)); d[t<0]<-0; return(d)}
       attr(pdens, "bayesmeta.label") <- "uniform(min=0, max=Inf)"
     } else if (tau.prior=="Jeffreys") {     # Jeffreys prior:
-      pdens <- function(t){return(apply(matrix(t,ncol=1),1,function(x){return(sqrt(sum((x/(sigma^2+x^2))^2)))}))}
+      pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
+                                        function(x){return(sqrt(sum((x/(sigma^2+x^2))^2)))}))}
       attr(pdens, "bayesmeta.label") <- "Jeffreys prior"
+####
+    } else if (tau.prior=="overallJeffreys") {  # "overall" Jeffreys prior:
+      pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
+                                        function(x){return(sqrt(sum(1/(sigma^2+x^2))*sum((x/(sigma^2+x^2))^2)))}))}
+      attr(pdens, "bayesmeta.label") <- "'overall' Jeffreys prior"
+####
     } else if (tau.prior=="BergerDeely") {  # Berger/Deely prior:
-      pdens <- function(t){return(apply(matrix(t,ncol=1),1,
+      pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
                                         function(x){return(exp(log(x)-sum(log(sigma^2+x^2))/k))}))}
       attr(pdens, "bayesmeta.label") <- "Berger/Deely prior"
     } else if (tau.prior=="conventional") { # conventional prior:
-      pdens <- function(t){return(apply(matrix(t,ncol=1),1,
+      pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
                                         function(x){return(exp(log(x)-(3/(2*k))*sum(log(sigma^2+x^2))))}))}
       attr(pdens, "bayesmeta.label") <- "conventional prior"
     } else if (tau.prior=="I2") {           # uniform on I^2:
-      pdens <- function(t){return(apply(matrix(t,ncol=1),1,
+      pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
                                         function(x){return(2 * exp(log(sigma2hat)+log(x) - 2*log(sigma2hat+x^2)))}))}
       attr(pdens, "bayesmeta.label") <- "uniform prior on I-squared"
     } else if (tau.prior=="sqrt") {         # sqrt-prior:
@@ -98,15 +106,17 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       # harmonic mean of squared standard errors:
       s02 <- k/sum(1/sigma^2)
       if (tau.prior=="shrinkage") {         # "uniform shrinkage" prior:
-        pdens <- function(t){return(apply(matrix(t,ncol=1),1,function(x){return(2*x*s02/(s02+x^2)^2)}))}
+        pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
+                                          function(x){return(2*x*s02/(s02+x^2)^2)}))}
         attr(pdens, "bayesmeta.label") <- "uniform shrinkage prior"
       } else if (tau.prior=="DuMouchel") {  # DuMouchel prior:
         s0 <- sqrt(s02)
-        pdens <- function(t){return(apply(matrix(t,ncol=1),1,function(x){return(s0/(s0+x)^2)}))}
+        pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
+                                          function(x){return(s0/(s0+x)^2)}))}
         attr(pdens, "bayesmeta.label") <- "DuMouchel prior"
       } else warning("could not make sense of 'tau.prior' argument")
     }
-    if (is.element(tau.prior, c("uniform", "Jeffreys", "BergerDeely", "sqrt")))
+    if (is.element(tau.prior, c("uniform", "Jeffreys", "overallJeffreys", "BergerDeely", "sqrt")))
       tau.prior.proper <- FALSE
     tau.prior <- pdens
     rm("pdens")
@@ -453,8 +463,8 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
     stopifnot(n>0, n==round(n), length(individual)==1,
               !is.logical(individual) || !individual)
     if (tau.sample) {  # draw joint, bivariate (tau,mu) pairs:
-      samp <- matrix(NA, nrow=n, ncol=2, dimnames=list(NULL,c("tau","mu")))
-      if (is.numeric(individual) | is.character(individual))
+      samp <- matrix(NA_real_, nrow=n, ncol=2, dimnames=list(NULL,c("tau","mu")))
+      if (predict | is.numeric(individual) | is.character(individual))
           colnames(samp)[2] <- "theta"
       u <- runif(n=n)
       samp[,"tau"] <- apply(matrix(u,ncol=1), 1, function(x){return(qposterior(tau.p=x))})
@@ -465,7 +475,7 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       }
       samp[,2] <- apply(matrix(samp[,"tau"],ncol=1), 1, cond.sample)
     } else {           # draw marginal, univariate (mu or theta) numbers:
-      samp <- rep(NA, n)
+      samp <- rep(NA_real_, n)
       if (!predict & (is.logical(individual) && (!individual)))
         meansd <- support[,c("mean","sd")]
       else
@@ -3646,7 +3656,12 @@ traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
             is.character(meanlabel), length(meanlabel)==1,
             length(meancol)==1)
   q975 <- qnorm(0.975)
-  gridcol <- "grey85"
+  # specify colors for axes etc.:
+  colvec <- c("axis"   = "grey40",
+              "grid"   = "grey85",
+              "median" = "grey60",
+              "ci"     = "grey80",
+              "tail"   = "grey90")
   if (length(col)==1) col <- rep(col, x$k)
   if (infinity & any(is.finite(x$mu.prior))) {
     warning("mu prior ignored for `tau=Inf' computations!")
@@ -3711,9 +3726,9 @@ traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
 
     plot(taurange, murange, xlim=xlim,
          type="n", axes=FALSE, xlab="", ylab=ylab, main="", ...)
-    abline(v=vertlines, col=gridcol)
-    abline(h=pretty(murange), col=gridcol)
-    abline(v=0, col=grey(0.40))
+    abline(v=vertlines, col=colvec["grid"])
+    abline(h=pretty(murange), col=colvec["grid"])
+    abline(v=0, col=colvec["axis"])
     # grey CI shading:
     if (ci) {
       for (i in 1:x$k) {
@@ -3776,25 +3791,25 @@ traceplot.bayesmeta <- function(x, mulim, taulim, ci=FALSE,
     maxdens <- max(dens[is.finite(dens)],na.rm=TRUE)
     plot(c(taurange[1],taurange[2]), c(0,maxdens), xlim=xlim,       
          type="n", axes=FALSE, xlab="", ylab="", main="")
-    abline(v=vertlines, col=gridcol)
+    abline(v=vertlines, col=colvec["grid"])
     # "fix" diverging density:
     dens[!is.finite(dens)] <- 10*maxdens
     # light grey shaded contour for density across whole range:
-    polygon(c(0,tau,max(tau)), c(0,dens,0), border=NA, col=grey(0.90))
+    polygon(c(0,tau,max(tau)), c(0,dens,0), border=NA, col=colvec["tail"])
     # dark grey shaded contour for density within 95% bounds:
     indi <- ((tau>=x$summary["95% lower","tau"]) & (tau<=x$summary["95% upper","tau"]))
     polygon(c(rep(x$summary["95% lower","tau"],2), tau[indi], rep(x$summary["95% upper","tau"],2)),
             c(0, min(c(x$dposterior(tau=x$summary["95% lower","tau"]), 10*maxdens)),
               dens[indi], x$dposterior(tau=x$summary["95% upper","tau"]), 0),
-            border=NA, col=grey(0.80))
+            border=NA, col=colvec["ci"])
     # vertical line at posterior median:
-    lines(rep(x$summary["median","tau"],2), c(0,x$dposterior(tau=x$summary["median","tau"])), col=grey(0.6))
+    lines(rep(x$summary["median","tau"],2), c(0,x$dposterior(tau=x$summary["median","tau"])), col=colvec["median"])
     # actual density line:
     lines(tau, dens, col="black")
     # y-axis:
-    abline(v=0, col=grey(0.40))
+    abline(v=0, col=colvec["axis"])
     # x-axis:
-    lines(taurange + c(-1,1) * 0.04*diff(taurange), c(0,0), col=grey(0.40))
+    lines(taurange + c(-1,1) * 0.04*diff(taurange), c(0,0), col=colvec["axis"])
     # plot prior density (if requested):
     if (prior) {
       lines(tau, x$dprior(tau=tau), col="black", lty="dashed")

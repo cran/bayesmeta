@@ -117,6 +117,11 @@
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
 \references{
+  C. Roever, D. Rindskopf, T. Friede.
+  How trace plots help interpret meta-analysis results.
+  \emph{(submitted for publication)}, 2023.
+  \url{https://arxiv.org/abs/2306.17043}.
+  
   C. Roever.
   Bayesian random-effects meta-analysis using the bayesmeta R package.
   \emph{Journal of Statistical Software}, \bold{93}(6):1-51, 2020.

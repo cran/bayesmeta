@@ -169,7 +169,7 @@
    determine the labels for the associated parameters later on. Model
    specification via the regressor matrix has the advantage of being
    very explicit and transparent; if one prefers a
-   code{\link[stats]{formula}} interface instead, a regressor matrix may
+   \code{\link[stats]{formula}} interface instead, a regressor matrix may
    be generated via the \sQuote{\code{\link[stats]{model.matrix}()}}
    function.
   }

@@ -12,7 +12,7 @@
 
 <meta name="author" content="Christian Röver" />
 
-<meta name="date" content="2023-06-27" />
+<meta name="date" content="2024-02-15" />
 
 <title>An introduction to meta-analysis using the bayesmeta package</title>
 
@@ -326,7 +326,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">An introduction to meta-analysis using the bayesmeta package</h1>
 <h4 class="author">Christian Röver</h4>
-<h4 class="date">2023-06-27</h4>
+<h4 class="date">2024-02-15</h4>
 
 
 
@@ -348,7 +348,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb1-8" title="8"><span class="co">## Loading required package: metadat</span></a>
 <a class="sourceLine" id="cb1-9" title="9"><span class="co">## Loading required package: numDeriv</span></a>
 <a class="sourceLine" id="cb1-10" title="10"><span class="co">## </span></a>
-<a class="sourceLine" id="cb1-11" title="11"><span class="co">## Loading the &#39;metafor&#39; package (version 4.2-0). For an</span></a>
+<a class="sourceLine" id="cb1-11" title="11"><span class="co">## Loading the &#39;metafor&#39; package (version 4.4-0). For an</span></a>
 <a class="sourceLine" id="cb1-12" title="12"><span class="co">## introduction to the package please type: help(metafor)</span></a>
 <a class="sourceLine" id="cb1-13" title="13"><span class="co">## Loading required package: mvtnorm</span></a>
 <a class="sourceLine" id="cb1-14" title="14"><span class="co">## </span></a>
@@ -358,15 +358,15 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb1-18" title="18"><span class="co">##     convolve</span></a>
 <a class="sourceLine" id="cb1-19" title="19"><span class="kw">data</span>(<span class="st">&quot;Rubin1981&quot;</span>)</a>
 <a class="sourceLine" id="cb1-20" title="20"><span class="kw">print</span>(Rubin1981)</a>
-<a class="sourceLine" id="cb1-21" title="21"><span class="co">##   school effect stderr</span></a>
-<a class="sourceLine" id="cb1-22" title="22"><span class="co">## 1      A  28.39   14.9</span></a>
-<a class="sourceLine" id="cb1-23" title="23"><span class="co">## 2      B   7.94   10.2</span></a>
-<a class="sourceLine" id="cb1-24" title="24"><span class="co">## 3      C  -2.75   16.3</span></a>
-<a class="sourceLine" id="cb1-25" title="25"><span class="co">## 4      D   6.82   11.0</span></a>
-<a class="sourceLine" id="cb1-26" title="26"><span class="co">## 5      E  -0.64    9.4</span></a>
-<a class="sourceLine" id="cb1-27" title="27"><span class="co">## 6      F   0.63   11.4</span></a>
-<a class="sourceLine" id="cb1-28" title="28"><span class="co">## 7      G  18.01   10.4</span></a>
-<a class="sourceLine" id="cb1-29" title="29"><span class="co">## 8      H  12.16   17.6</span></a></code></pre></div>
+<a class="sourceLine" id="cb1-21" title="21"><span class="co">##   school  n effect stderr</span></a>
+<a class="sourceLine" id="cb1-22" title="22"><span class="co">## 1      A 50  28.39   14.9</span></a>
+<a class="sourceLine" id="cb1-23" title="23"><span class="co">## 2      B 79   7.94   10.2</span></a>
+<a class="sourceLine" id="cb1-24" title="24"><span class="co">## 3      C 39  -2.75   16.3</span></a>
+<a class="sourceLine" id="cb1-25" title="25"><span class="co">## 4      D 91   6.82   11.0</span></a>
+<a class="sourceLine" id="cb1-26" title="26"><span class="co">## 5      E 99  -0.64    9.4</span></a>
+<a class="sourceLine" id="cb1-27" title="27"><span class="co">## 6      F 72   0.63   11.4</span></a>
+<a class="sourceLine" id="cb1-28" title="28"><span class="co">## 7      G 94  18.01   10.4</span></a>
+<a class="sourceLine" id="cb1-29" title="29"><span class="co">## 8      H 35  12.16   17.6</span></a></code></pre></div>
 <p>The data set summarizes the results from a study on the effects of coaching programs at eight different schools. In order to compare the schools’ success, students filled out standardized questionnaires before and after the coaching, and each school’s mean increase in the score (the “effect” column) along with the standard error (the “stderr” column) was recorded. You may also consult the help (via <code>help(&quot;Rubin1981&quot;)</code>) for more details.</p>
 <p>The problem in general is that we have several numbers with associated uncertainties given, and that we want to combine these into a joint (<em>average</em> or <em>mean</em>) result, while also accounting for potential extra variability (heterogeneity) between these. The individual estimates may for example correspond to different studies that were performed, or to subgroups of a larger sample. In the present example we are interested in the effect of coaching in general, while the data we have are at the level of individual schools, which may not be sufficiently homogeneous for “naive” pooling.</p>
 </div>
@@ -480,7 +480,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb5-6" title="6"><span class="co">## </span></a>
 <a class="sourceLine" id="cb5-7" title="7"><span class="co">## tau prior (proper):</span></a>
 <a class="sourceLine" id="cb5-8" title="8"><span class="co">## function(t){dhalfcauchy(t, scale=25)}</span></a>
-<a class="sourceLine" id="cb5-9" title="9"><span class="co">## &lt;bytecode: 0x55adffa8d9f8&gt;</span></a>
+<a class="sourceLine" id="cb5-9" title="9"><span class="co">## &lt;bytecode: 0x55cba7d1a278&gt;</span></a>
 <a class="sourceLine" id="cb5-10" title="10"><span class="co">## </span></a>
 <a class="sourceLine" id="cb5-11" title="11"><span class="co">## mu prior (proper):</span></a>
 <a class="sourceLine" id="cb5-12" title="12"><span class="co">## normal(mean=0, sd=50)</span></a>
