@@ -35,10 +35,10 @@
   \code{delta} (maximum divergence \eqn{\delta}) and \code{epsilon}
   (tail probability \eqn{\epsilon}) parameters.
 
-  Convolutions here are used within the \code{\link{funnel}()} function (to
-  generate funnel plots), but are often useful more generally. The
-  original probability distributions may be specified via their
-  probability density functions or their cumulative distribution
+  Convolutions here are used within the \code{\link{funnel.bayesmeta}()}
+  function (to generate funnel plots), but are often useful more
+  generally. The original probability distributions may be specified via
+  their probability density functions or their cumulative distribution
   functions (CDFs). The \code{convolve()} function returns the
   convolution's density, CDF and quantile function (inverse CDF).
 }
@@ -65,7 +65,7 @@
   Christian Roever \email{christian.roever@med.uni-goettingen.de}
 }
 \seealso{
-  \code{\link{bayesmeta}}, \code{\link{funnel}}.
+  \code{\link{bayesmeta}}, \code{\link{funnel.bayesmeta}}.
 }
 \examples{
 \dontrun{

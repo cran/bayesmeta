@@ -53,7 +53,6 @@
   \emph{Cochrane handbook for systematic reviews of interventions}.
   Wiley and Sons, 2nd edition, 2019.
   \doi{10.1002/9781119536604}.
-  \url{http://training.cochrane.org/handbook}.
 
   C. Kiefer, S. Sturtz, R. Bender.
   Indirect comparisons and network meta-analyses.

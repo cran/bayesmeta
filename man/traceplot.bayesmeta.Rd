@@ -119,8 +119,8 @@
 \references{
   C. Roever, D. Rindskopf, T. Friede.
   How trace plots help interpret meta-analysis results.
-  \emph{(submitted for publication)}, 2023.
-  \url{https://arxiv.org/abs/2306.17043}.
+  \emph{Research Synthesis Methods}, \bold{15}(3):413-429, 2024.
+  \doi{10.1002/jrsm.1693}.
   
   C. Roever.
   Bayesian random-effects meta-analysis using the bayesmeta R package.

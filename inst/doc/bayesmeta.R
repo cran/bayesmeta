@@ -34,7 +34,7 @@ print(schools.example.1)
 forestplot(schools.example.1)
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  plot(schools.example.1, prior=TRUE)
+# plot(schools.example.1, prior=TRUE)
 
 ## ----fig.width=6.0, fig.height=7.0, echo=FALSE--------------------------------
 par(mfrow=c(2,2))

@@ -15,8 +15,8 @@
   \tabular{ll}{
     Package: \tab bayesmeta\cr
     Type:    \tab Package\cr
-    Version: \tab 3.4\cr
-    Date:    \tab 2024-02-15\cr
+    Version: \tab 3.5\cr
+    Date:    \tab 2025-08-29\cr
     License: \tab GPL (>=2)
   }
   The main functionality is provided by the \code{\link{bayesmeta}()}

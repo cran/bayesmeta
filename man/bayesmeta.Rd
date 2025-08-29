@@ -46,6 +46,7 @@
       \item \code{"uniform"}: a uniform prior in \eqn{\tau}
       \item \code{"sqrt"}: a uniform prior in \eqn{\sqrt{\tau}}{sqrt(tau)}
       \item \code{"Jeffreys"}: the Jeffreys prior for \eqn{\tau}
+      \item \code{"overallJeffreys"}: the \sQuote{overall} Jeffreys prior for \eqn{\tau}
       \item \code{"BergerDeely"}: the prior due to Berger and Deely (1988)
       \item \code{"conventional"}: the conventional prior
       \item \code{"DuMouchel"}: the DuMouchel prior
@@ -207,11 +208,12 @@
 	The resulting (improper) prior density is
         \deqn{p(\tau) \;\propto\;
         \sqrt{\sum_{i=1}^k\frac{1}{\sigma_i^2+\tau^2} \; \sum_{i=1}^k\Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^2}}{p(tau) = sqrt(sum((tau/(sigma[i]^2+tau^2))^2))}
-        Use of this specification is generally \emph{not} recommended; see, e.g.,
+        Use of this type of specification is commonly discouraged; see, e.g.,
 	Jeffreys (1946), Jeffreys (1961, Sec. III.3.10),
 	Berger (1985, Sec. 3.3.3) and Kass and Wasserman (1996, Sec. 2.2).
-	Since the effect \eqn{\mu} constitutes a \emph{location parameter} here,
-	it should be treated separately (Roever, 2020).
+        However, Mathur (2025) investigated this variant (also denoted
+        as the \dQuote{Jeffreys2} prior) and its properties, and found
+        it to perform well in certain situations.
       \item \code{"BergerDeely"} - the (improper) \emph{Berger/Deely} prior:
         \deqn{p(\tau) \;\propto\; \prod_{i=1}^k \Bigl(\frac{\tau}{\sigma_i^2+\tau^2}\Bigr)^{1/k}}{p(tau) = prod((tau / (sigma[i]^2+tau^2))^(1/k))}
         This is a variation of the above \emph{Jeffreys} prior, and both are equal in
@@ -511,7 +513,7 @@
 
   H. Jeffreys.
   An invariant form for the prior probability in estimation problems.
-  \emph{Proceedings of the Royal Society of london, Series A},
+  \emph{Proceedings of the Royal Society of London, Series A},
   \bold{186}(1007):453-462, 1946.
   \doi{10.1098/rspa.1946.0056}.
 
@@ -540,6 +542,11 @@
   A statistical paradox.
   \emph{Biometrika}, \bold{44}(1/2):187-192, 1957.
   \doi{10.1093/biomet/44.1-2.187}.
+
+  M. B. Mathur.
+  Meta-analysis with Jeffreys priors: Empirical frequentist properties.
+  \emph{Research Synthesis Methods}, \bold{16}(1):87-122, 2025.
+  \doi{10.1017/rsm.2024.2}.
   
   B. Neuenschwander, G. Capkun-Niggli, M. Branson, D.J. Spiegelhalter.
   Summarizing historical information on controls in clinical trials.

@@ -81,12 +81,10 @@ bayesmeta.default <- function(y, sigma, labels=names(y),
       pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
                                         function(x){return(sqrt(sum((x/(sigma^2+x^2))^2)))}))}
       attr(pdens, "bayesmeta.label") <- "Jeffreys prior"
-####
     } else if (tau.prior=="overallJeffreys") {  # "overall" Jeffreys prior:
       pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
                                         function(x){return(sqrt(sum(1/(sigma^2+x^2))*sum((x/(sigma^2+x^2))^2)))}))}
       attr(pdens, "bayesmeta.label") <- "'overall' Jeffreys prior"
-####
     } else if (tau.prior=="BergerDeely") {  # Berger/Deely prior:
       pdens <- function(t){return(apply(matrix(t,ncol=1), 1,
                                         function(x){return(exp(log(x)-sum(log(sigma^2+x^2))/k))}))}
